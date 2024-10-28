@@ -22,10 +22,10 @@ export default function Distribusi() {
       <div className={`my-5 w-full`}>
         <h1 className="text-start text-3xl font-bold">Distribusi</h1>
         <div className="w-full shadow-md rounded-md border border-gray-100 p-4">
-            <PageNumber total={totalPN} page={pN} setPage={setPN}/>
+          <PageNumber total={totalPN} page={pN} setPage={setPN} />
           <div className="relative overflow-x-auto overflow-y-auto shadow-md sm:rounded-lg">
             <table className="w-full justify-between text-sm text-gray-500 table-auto">
-              <thead className="justif text-xs text-gray-700 uppercase bg-slate-200 dark:bg-gray-700 dark:text-gray-400 shadow-lg sticky top-0">
+              <thead className="justif text-xs text-gray-700 uppercase bg-slate-200 shadow-lg sticky top-0">
                 <tr className="text-left">
                   <th
                     scope="col"
@@ -54,16 +54,16 @@ export default function Distribusi() {
                 {distribution.map((item) => (
                   <tr
                     key={item?.id}
-                    className="odd:bg-white text-left odd:dark:bg-gray-900 even:bg-gray-50 even:dark:bg-gray-800 border-b dark:border-gray-700 odd:hover:bg-slate-500 even:hover:bg-slate-500 odd:hover:text-white even:hover:text-white "
+                    className="odd:bg-white text-left even:bg-gray-50 border-b  odd:hover:bg-slate-500 even:hover:bg-slate-500 odd:hover:text-white even:hover:text-white "
                   >
                     <th
                       scope="row"
-                      className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap"
+                      className="px-6 py-4 font-medium whitespace-nowrap"
                     >
                       {item?.id}
                     </th>
                     <td className="px-6 py-4 text-start">
-                      Rp {formatNumber(item?.distributionAmount)}
+                      Rp {formatNumber(item?.distributionAmount || 0)}
                     </td>
                     <td className="px-6 py-4">{item?.distributionDate}</td>
                     <td className="px-6 py-4 text-start">{item?.receiver}</td>

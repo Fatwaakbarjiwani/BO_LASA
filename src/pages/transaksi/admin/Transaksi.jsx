@@ -15,9 +15,9 @@ export default function Transaksi() {
     dispatch(getTransaction(pNTransaksi - 1));
   }, [dispatch, pNTransaksi]);
 
-    const formatNumber = (value) => {
-      return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-    };
+  const formatNumber = (value) => {
+    return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  };
   return (
     <>
       <div className={`my-5 w-full`}>
@@ -48,9 +48,7 @@ export default function Transaksi() {
         </div>
         <div className="w-full shadow-md rounded-md mt-10 border border-gray-100">
           <div className="flex justify-between w-full items-center p-4">
-            <h1 className="text-start text-3xl font-bold">
-              Transaksi Donatur
-            </h1>
+            <h1 className="text-start text-3xl font-bold">Transaksi Donatur</h1>
             <div className="flex justify-center">
               <PageNumber
                 total={totalPNTransaksi}
@@ -60,8 +58,8 @@ export default function Transaksi() {
             </div>
           </div>
           <div className="relative  overflow-y-auto shadow-md sm:rounded-lg mx-4 my-2">
-            <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-              <thead className="text-xs text-gray-700 uppercase bg-slate-200 dark:bg-gray-700 dark:text-gray-400 shadow-lg sticky top-0">
+            <table className="w-full text-sm text-left text-gray-500 ">
+              <thead className="text-xs text-gray-700 uppercase bg-slate-200  shadow-lg sticky top-0">
                 <tr>
                   <th
                     scope="col"
@@ -108,7 +106,7 @@ export default function Transaksi() {
                 {transaction.map((item) => (
                   <tr
                     key={item.id}
-                    className="odd:bg-white odd:dark:bg-gray-900 even:bg-gray-50 even:dark:bg-gray-800 border-b dark:border-gray-700 odd:hover:bg-slate-500 even:hover:bg-slate-500 odd:hover:text-white even:hover:text-white "
+                    className="odd:bg-white  even:bg-gray-50 border-b  odd:hover:bg-slate-500 even:hover:bg-slate-500 odd:hover:text-white even:hover:text-white "
                   >
                     <th
                       scope="row"
@@ -120,7 +118,9 @@ export default function Transaksi() {
                     <td className="px-6 py-4">Demak</td>
                     <td className="px-6 py-4">{item?.phoneNumber}</td>
                     <td className="px-6 py-4">{item?.message}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">Rp {formatNumber(item?.transactionAmount)}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      Rp {formatNumber(item?.transactionAmount || 0)}
+                    </td>
                     <td className="px-6 py-4 ">{item?.category}</td>
                     <td className="px-6 py-4 whitespace-nowrap overflow-hidden text-ellipsis">
                       {item?.categoryData?.campaignName}

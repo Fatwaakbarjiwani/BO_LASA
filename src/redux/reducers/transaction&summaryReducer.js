@@ -9,6 +9,7 @@ const initialState = {
   transaction: [],
   distribution: [],
   summaryDashboard: [],
+  jurnal: [],
 };
 function getNmlFromLocalStorage() {
   const encryptedNml = localStorage.getItem("nml");
@@ -58,6 +59,9 @@ const authSlice = createSlice({
     setSummaryDashboard: (state, action) => {
       state.summaryDashboard = action.payload;
     },
+    setJurnal: (state, action) => {
+      state.jurnal = action.payload;
+    },
   },
 });
 
@@ -68,6 +72,7 @@ export const {
   setSummaryDashboard,
   setTransaction,
   setDistribution,
+  setJurnal,
 } = authSlice.actions;
 
 export default authSlice.reducer;

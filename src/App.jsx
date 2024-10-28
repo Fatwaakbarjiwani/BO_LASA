@@ -19,101 +19,116 @@ import Berita from "./pages/berita/admin/Berita";
 import Ziswaf from "./pages/ziswaf/admin/Ziswaf";
 import Distribusi from "./pages/distribusi/admin/Dsitribusi";
 import Amil from "./pages/amil/admin/Amil";
+import Campaign2 from "./pages/campaign/subAdmin/Campaign2";
+import Jurnal from "./pages/jurnal/admin/Jurnal";
 
 function AppContent() {
   const { isSidebarOpen } = useSelector((state) => state.page);
+  const { user } = useSelector((state) => state.auth);
   const location = useLocation();
   const isLoginPage = location.pathname === "/";
 
   return (
-    <div className="flex font-Madimi">
-      {!isLoginPage && (
-        <div className={`${isSidebarOpen ? "w-1/6" : "w-1/12"}`}>
-          <Sidebar />
-        </div>
-      )}
-      {!isLoginPage && <Navbar />}
-      <div className={`${!isLoginPage && isSidebarOpen ? `w-5/6` : `w-11/12`}`}>
-        <Routes>
-          <Route
-            path="/"
-            element={
-              <NoAccessToken>
-                <LoginAdmin />
-              </NoAccessToken>
-            }
-          />
-        </Routes>
-        <div className={`${isSidebarOpen ? `mt-10 p-8` : `mt-10 p-10`}`}>
+    <>
+      <div className="flex font-Madimi">
+        {!isLoginPage && (
+          <div className={`${isSidebarOpen ? "w-1/6" : "w-1/12"}`}>
+            <Sidebar />
+          </div>
+        )}
+        {!isLoginPage && <Navbar />}
+        <div
+          className={`${!isLoginPage && isSidebarOpen ? `w-5/6` : `w-11/12`}`}
+        >
           <Routes>
             <Route
-              path="/dashboard"
+              path="/"
               element={
-                <Protected>
-                  <Dashboard />
-                </Protected>
-              }
-            />
-            <Route
-              path="/campaign"
-              element={
-                <Protected>
-                  <Campaign />
-                </Protected>
-              }
-            />
-            <Route
-              path="/donatur"
-              element={
-                <Protected>
-                  <Pengguna />
-                </Protected>
-              }
-            />
-            <Route
-              path="/transaksi"
-              element={
-                <Protected>
-                  <Transaksi />
-                </Protected>
-              }
-            />
-            <Route
-              path="/berita"
-              element={
-                <Protected>
-                  <Berita />
-                </Protected>
-              }
-            />
-            <Route
-              path="/distribusi"
-              element={
-                <Protected>
-                  <Distribusi />
-                </Protected>
-              }
-            />
-            <Route
-              path="/ziswaf"
-              element={
-                <Protected>
-                  <Ziswaf />
-                </Protected>
-              }
-            />
-            <Route
-              path="/amil"
-              element={
-                <Protected>
-                  <Amil />
-                </Protected>
+                <NoAccessToken>
+                  <LoginAdmin />
+                </NoAccessToken>
               }
             />
           </Routes>
+          <div className={`${isSidebarOpen ? `mt-10 p-8` : `mt-10 p-10`}`}>
+            <Routes>
+              <Route
+                path="/dashboard"
+                element={
+                  <Protected>
+                    <Dashboard />
+                  </Protected>
+                }
+              />
+              <Route
+                path="/campaign"
+                element={
+                  <Protected>
+                    {user?.role == "ADMIN" ? <Campaign /> : <Campaign2 />}
+                  </Protected>
+                }
+              />
+              <Route
+                path="/pengguna"
+                element={
+                  <Protected>
+                    <Pengguna />
+                  </Protected>
+                }
+              />
+              <Route
+                path="/transaksi"
+                element={
+                  <Protected>
+                    <Transaksi />
+                  </Protected>
+                }
+              />
+              <Route
+                path="/jurnal"
+                element={
+                  <Protected>
+                    <Jurnal />
+                  </Protected>
+                }
+              />
+              <Route
+                path="/berita"
+                element={
+                  <Protected>
+                    <Berita />
+                  </Protected>
+                }
+              />
+              <Route
+                path="/distribusi"
+                element={
+                  <Protected>
+                    <Distribusi />
+                  </Protected>
+                }
+              />
+              <Route
+                path="/ziswaf"
+                element={
+                  <Protected>
+                    <Ziswaf />
+                  </Protected>
+                }
+              />
+              <Route
+                path="/amil"
+                element={
+                  <Protected>
+                    <Amil />
+                  </Protected>
+                }
+              />
+            </Routes>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
 

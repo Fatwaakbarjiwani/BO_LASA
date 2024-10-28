@@ -1,21 +1,34 @@
 import axios from "axios";
 import toast from "react-hot-toast";
-import { setDonatur, setTokenAdmin, setUser } from "../reducers/authReducer";
+import {
+  setDonatur,
+  setModalCreateOperator,
+  setOperator,
+  setTokenAdmin,
+  setUser,
+} from "../reducers/authReducer";
 import Swal from "sweetalert2";
 import { setTotalPNDonatur } from "../reducers/pageNumberReducer";
 export const API_URL = import.meta.env.VITE_API_URL;
 
 export const register =
-  (username, phoneNumber, email, password) => async () => {
+  (username, phoneNumber, email, password, address) => async (dispatch) => {
     try {
-      const response = await axios.post(`${API_URL}/auth/signup/donatur`, {
+      const response = await axios.post(`${API_URL}/auth/signup/admin`, {
         username: username,
         phoneNumber: phoneNumber,
         email: email,
         password: password,
+        address: address,
+        role: "operator",
       });
       if (response) {
-        toast.success("Proses Register Berhasil");
+        Swal.fire({
+          title: "Berhasil",
+          text: "Operator berhasil dibuat",
+          icon: "success",
+        });
+        dispatch(setModalCreateOperator(false));
       }
     } catch (error) {
       Swal.fire({
@@ -183,6 +196,18 @@ export const getAllDonatur = (pageNumber) => async (dispatch) => {
     const response = await axios.get(`${API_URL}/donatur?page=${pageNumber}`);
     const data = response.data;
     dispatch(setDonatur(data.content));
+    dispatch(setTotalPNDonatur(data.totalPages));
+  } catch (error) {
+    console.error("Error fetching Donatur", error);
+  }
+};
+export const getAllOperator = (pageNumber) => async (dispatch) => {
+  try {
+    const response = await axios.get(
+      `${API_URL}/admin/get-all-operator?page=${pageNumber}`
+    );
+    const data = response.data;
+    dispatch(setOperator(data.content));
     dispatch(setTotalPNDonatur(data.totalPages));
   } catch (error) {
     console.error("Error fetching Donatur", error);

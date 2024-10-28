@@ -90,10 +90,10 @@ export default function Ziswaf() {
                   <td className="px-6 py-4">{item?.id}</td>
                   <td className="px-6 py-4">{item?.categoryName}</td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    Rp {formatNumber(item?.amount)}
+                    Rp {formatNumber(item?.amount||0)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    Rp {formatNumber(item?.distribution)}
+                    Rp {formatNumber(item?.distribution||0)}
                   </td>
                   <td className="px-6 py-4 font-semibold">
                     {item?.active ? (

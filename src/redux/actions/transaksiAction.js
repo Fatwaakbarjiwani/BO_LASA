@@ -2,11 +2,13 @@ import axios from "axios";
 import toast from "react-hot-toast";
 import {
   setDistribution,
+  setJurnal,
   setSummaryDashboard,
   setTransaction,
   setTransactionUser,
 } from "../reducers/transaction&summaryReducer";
 import { setTotalPN, setTotalPNTransaksi } from "../reducers/pageNumberReducer";
+import Swal from "sweetalert2";
 
 export const API_URL = import.meta.env.VITE_API_URL;
 
@@ -63,6 +65,19 @@ export const getSummaryDashboard = () => async (dispatch) => {
     return;
   }
 };
+export const getJurnal = () => async (dispatch) => {
+  try {
+    const response = await axios.get(`${API_URL}/journal`);
+    const data = response.data;
+    dispatch(setJurnal(data));
+  } catch (error) {
+    Swal.fire({
+      title: "Journal gagal diproses",
+      text: error.response.data.message,
+      icon: "error",
+    });
+  }
+};
 export const getTransaction = (pageNumber) => async (dispatch) => {
   try {
     const response = await axios.get(
@@ -70,7 +85,7 @@ export const getTransaction = (pageNumber) => async (dispatch) => {
     );
     const data = response.data;
     dispatch(setTransaction(data.content));
-    dispatch(setTotalPNTransaksi(data.totalPages ));
+    dispatch(setTotalPNTransaksi(data.totalPages));
   } catch (error) {
     return;
   }
@@ -82,7 +97,7 @@ export const getDistribution = (pageNumber) => async (dispatch) => {
     );
     const data = response.data;
     dispatch(setDistribution(data.content));
-    dispatch(setTotalPN(data.totalPages ));
+    dispatch(setTotalPN(data.totalPages));
   } catch (error) {
     return;
   }

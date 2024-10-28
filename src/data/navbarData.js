@@ -26,14 +26,20 @@ export const menuItems = [
   {
     src: Pengguna,
     srcActive: PenggunaWhite,
-    title: "Donatur",
-    route: "/donatur",
+    title: "Pengguna",
+    route: "/pengguna",
   },
   {
     src: Transaksi,
     srcActive: TransaksiWhite,
     title: "Transaksi",
     route: "/transaksi",
+  },
+  {
+    src: Transaksi,
+    srcActive: TransaksiWhite,
+    title: "Jurnal",
+    route: "/jurnal",
   },
   { src: Amil, srcActive: AmilWhite, title: "Amil", route: "/amil" },
   { src: Ziswaf, srcActive: ZiswafWhite, title: "Ziswaf", route: "/ziswaf" },

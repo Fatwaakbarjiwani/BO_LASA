@@ -23,7 +23,9 @@ const initialState = {
   email: "",
   acount: "",
   user: null,
+  operator: [],
   donatur: [],
+  modalCreateOperator: false,
   ps: getPsFromLocalStorage(),
 };
 const authSlice = createSlice({
@@ -53,8 +55,14 @@ const authSlice = createSlice({
     setUser: (state, action) => {
       state.user = action.payload;
     },
+    setOperator: (state, action) => {
+      state.operator = action.payload;
+    },
     setDonatur: (state, action) => {
       state.donatur = action.payload;
+    },
+    setModalCreateOperator: (state, action) => {
+      state.modalCreateOperator = action.payload;
     },
     setPs: (state, action) => {
       if (action.payload) {
@@ -78,8 +86,10 @@ export const {
   setPhoneNumber,
   setAcount,
   setUser,
+  setOperator,
   setPs,
   setDonatur,
+  setModalCreateOperator
 } = authSlice.actions;
 
 export default authSlice.reducer;

@@ -11,6 +11,15 @@ const initialState = {
   // modal
   modalCreateActive: false,
   modalEditActive: false,
+  modalCreateCategory: false,
+  modalEditCategory: false,
+  // operator
+  campaignPending: [],
+  campaignHistory: [],
+  kategoricampaign: [],
+  idCategoryCampaign: "",
+  chart1: [],
+  chart2: [],
 };
 const authSlice = createSlice({
   name: "campaign",
@@ -46,6 +55,30 @@ const authSlice = createSlice({
     setModalEditActive: (state, action) => {
       state.modalEditActive = action.payload;
     },
+    setModalCreateCategory: (state, action) => {
+      state.modalCreateCategory = action.payload;
+    },
+    setModalEditCategory: (state, action) => {
+      state.modalEditCategory = action.payload;
+    },
+    setCampaignPending: (state, action) => {
+      state.campaignPending = action.payload;
+    },
+    setCampaignHistory: (state, action) => {
+      state.campaignHistory = action.payload;
+    },
+    setKategoriCampaign: (state, action) => {
+      state.kategoriCampaign = action.payload;
+    },
+    setIdCategoryCampaign: (state, action) => {
+      state.idCategoryCampaign = action.payload;
+    },
+    setChart1: (state, action) => {
+      state.chart1 = action.payload;
+    },
+    setChart2: (state, action) => {
+      state.chart2 = action.payload;
+    },
   },
 });
 
@@ -58,8 +91,16 @@ export const {
   setAllCampaignCategory,
   setSearchCampaign,
   setModalCreateActive,
+  setModalCreateCategory,
   setModalEditActive,
   setAmilCampaign,
+  setCampaignPending,
+  setCampaignHistory,
+  setKategoriCampaign,
+  setIdCategoryCampaign,
+  setModalEditCategory,
+  setChart1,
+  setChart2,
 } = authSlice.actions;
 
 export default authSlice.reducer;
