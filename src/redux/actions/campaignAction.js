@@ -25,6 +25,12 @@ import {
   setTotalPNAmilCampaign,
 } from "../reducers/pageNumberReducer";
 import Swal from "sweetalert2";
+import {
+  setAmilDskl,
+  setAmilInfak,
+  setAmilWakaf,
+  setAmilZakat,
+} from "../reducers/ziswafReducer";
 export const API_URL = import.meta.env.VITE_API_URL;
 
 export const getActiveAproveCampaign = (pageNumber) => async (dispatch) => {
@@ -387,7 +393,21 @@ export const getAmilCampaign = (pageNumber, pilih) => async (dispatch) => {
       `${API_URL}/amil/${pilih}?page=${pageNumber}`
     );
     const data = response.data;
-    dispatch(setAmilCampaign(data.content));
+    if (pilih == "campaign") {
+      dispatch(setAmilCampaign(data.content));
+    }
+    if (pilih == "zakat") {
+      dispatch(setAmilZakat(data.content));
+    }
+    if (pilih == "infak") {
+      dispatch(setAmilInfak(data.content));
+    }
+    if (pilih == "wakaf") {
+      dispatch(setAmilWakaf(data.content));
+    }
+    if (pilih == "dskl") {
+      dispatch(setAmilDskl(data.content));
+    }
     dispatch(setTotalPNAmilCampaign(data.totalPages));
   } catch (error) {
     console.error("Error fetching amil campaign", error);
@@ -524,11 +544,15 @@ export const tutupCampaignActive = (id) => async (dispatch, getState) => {
 
     if (result.isConfirmed) {
       const { tokenAdmin } = getState().auth;
-      const response = await axios.put(`${API_URL}/campaign/close/${id}`, {
-        headers: {
-          Authorization: `Bearer ${tokenAdmin}`,
-        },
-      });
+      const response = await axios.put(
+        `${API_URL}/campaign/close/${id}`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${tokenAdmin}`,
+          },
+        }
+      );
 
       if (response) {
         Swal.fire({

@@ -1,9 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
 import { useDispatch, useSelector } from "react-redux";
 import { getJurnal } from "../../../redux/actions/transaksiAction";
-import logo from "../../../assets/logoUnissula.png";
+import logo from "../../../assets/logo2.png";
+import Swal from "sweetalert2";
+import DokumentasiJurnal from "./DokumentasiJurnal";
 import { OrbitProgress } from "react-loading-indicators";
 
 export default function Jurnal() {
@@ -13,263 +15,235 @@ export default function Jurnal() {
   const { jurnal } = useSelector((state) => state.summary);
   const dispatch = useDispatch();
   const [isLoading, setLoading] = useState(false);
+  const reportTemplateRef = useRef(null);
 
   useEffect(() => {
-    dispatch(getJurnal());
-  }, [dispatch]);
+    if (startDate && endDate) {
+      dispatch(getJurnal(startDate, endDate));
+    }
+  }, [dispatch, startDate, endDate]);
 
-const handleSubmit = (e) => {
-  e.preventDefault();
+  const handleSubmit = (e) => {
+    e.preventDefault();
 
-  if (format === "html") {
+    if (!startDate || !endDate || !format) {
+      Swal.fire({
+        icon: "warning",
+        title: "Input Tidak Lengkap",
+        text: "Silakan isi semua input sebelum melanjutkan!",
+        confirmButtonColor: "#3085d6",
+        confirmButtonText: "OK",
+      });
+      return;
+    }
+
     setLoading(true);
+
     setTimeout(() => {
-      openHtmlReport();
+      if (format === "html") {
+        openHtmlReport();
+      } else if (format === "pdf") {
+        downloadPdfReport();
+      }
       setLoading(false);
     }, 1000);
-  } else if (format === "pdf") {
-    setLoading(true);
-    downloadPdfReport();
-     setLoading(true);
-     setTimeout(() => {
-       openHtmlReport();
-       setLoading(false);
-     }, 1000); 
-  }
-};
-
+  };
 
   const openHtmlReport = () => {
+    const formatNumber = (value) => {
+      return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    };
+
     const newWindow = window.open("", "_blank");
     if (newWindow) {
-      newWindow.document.write(`
-      <html>
-        <head>
-          <title>Laporan Jurnal</title>
-          <style>
-            body { font-family: Arial, sans-serif; margin: 20px; }
-            .header { text-align: center; display:flex;}
-            .header img { width: 80px; }
-            .header2 {text-align: center; width:100%;}
-            .header h1 { font-size: 20px; font-weight: bold; margin: 5px 0; }
-            .header p { margin: 2px 0; font-size: 12px; }
-            .report-title { text-align: center; margin: 20px 0; font-size: 18px; font-weight: bold; }
-            .period { font-size: 14px; margin: 10px 0; }
-            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-            th, td { border: 1px solid black; padding: 8px; text-align: center; }
-            th { background-color: #f2f2f2; font-size: 14px; }
-            td { font-size: 12px; }
-          </style>
-        </head>
-        <body>
-          <div class="header">
-            <img src=${logo} alt="UNISSULA Logo" />
-            <div class="header2">
-            <h1>UNIVERSITAS ISLAM SULTAN AGUNG</h1>
-            <p>Jl. Raya Kaligawe Km.4, Semarang, Jawa Tengah</p>
-            <p>Info : Telp. +62 24 6583584</p>
-            <p><a href="http://www.unissula.ac.id" target="_blank">http://www.unissula.ac.id</a></p>
-            </div>
-          </div>
-          <hr />
-          <div class="report-title">LAPORAN JURNAL</div>
-          <p class="period">Periode: ${startDate} - ${endDate}</p>
-          <table>
-            <thead>
+         newWindow.document.write(`
+<html>
+  <head>
+    <title>Laporan Jurnal</title>
+    <style>
+      body { font-family: Arial, sans-serif; margin: 20px; }
+      .header { display: flex; align-items: center; justify-content: center; margin-bottom: 20px; }
+      .header img { width: 150px; position: absolute; left: 20px; }
+      .header div { text-align: center; }
+      .header h1 { font-size: 24px; font-weight: bold; margin: 5px 0; }
+      .header p { margin: 2px 0; font-size: 14px; }
+      .header a { color: blue; text-decoration: none; }
+      .header a:hover { text-decoration: underline; }
+      hr { border: 1px solid black; }
+      .report-title { text-align: center; margin: 20px 0; font-size: 18px; font-weight: bold; }
+      .period { font-size: 14px; margin: 10px 0; }
+      table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+      th, td { border: 1px solid black; padding: 8px; text-align: center; }
+      th { background-color: #f2f2f2; font-size: 14px; }
+      td { font-size: 12px; }
+      .bg-gray { background-color: #f2f2f2; font-weight: bold; }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <img src="${logo}" alt="LAZIS Logo" />
+      <div>
+        <h1>LAZIS SULTAN AGUNG</h1>
+        <p>Jl. Raya Kaligawe Km.4, Semarang, Jawa Tengah</p>
+        <p>Info: Telp. +62 24 6583584</p>
+        <p>
+          <a href="https://lazis-sa.org/" target="_blank" rel="noopener noreferrer">
+            https://lazis-sa.org/
+          </a>
+        </p>
+      </div>
+    </div>
+    <hr />
+    <div class="report-title">LAPORAN JURNAL</div>
+    <p class="period">Periode: ${startDate} - ${endDate}</p>
+    <p class="period">Unit: Lazis Sultan Agung</p>
+    <table>
+      <thead>
+        <tr>
+          <th>TANGGAL</th>
+          <th>UNIT</th>
+          <th>NOMOR BUKTI</th>
+          <th>URAIAN</th>
+          <th>COA</th>
+          <th>DEBET</th>
+          <th>KREDIT</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${jurnal?.jurnalResponses
+          ?.map((item) => {
+            const jumlahBaris = item.coa.length || 1;
+            return `
+            <tr>
+              <td rowspan="${jumlahBaris + 1}">${item.tanggal}</td>
+              <td rowspan="${jumlahBaris + 1}">${item.unit}</td>
+              <td rowspan="${jumlahBaris + 1}">${item.nomorBukti}</td>
+              <td rowspan="${jumlahBaris + 1}">${item.uraian}</td>
+              <td>${item.coa[0]?.akun || "-"}</td>
+              <td>${formatNumber(item.coa[0]?.debit || 0)}</td>
+              <td>${formatNumber(item.coa[0]?.kredit || 0)}</td>
+            </tr>
+            ${item.coa
+              .slice(1)
+              .map(
+                (coaItem) => `
               <tr>
-                <th>TANGGAL</th>
-                <th>UNIT</th>
-                <th>NOMOR BUKTI</th>
-                <th>URAIAN</th>
-                <th>COA</th>
-                <th>DEBIT</th>
-                <th>KREDIT</th>
+                <td>${coaItem.akun || "-"}</td>
+                <td>${formatNumber(coaItem.debit || 0)}</td>
+                <td>${formatNumber(coaItem.kredit || 0)}</td>
               </tr>
-            </thead>
-            <tbody>
-              ${jurnal
-                .map(
-                  (item) => `
-                  <tr>
-                    <td rowspan="2">${item.tanggal}</td>
-                    <td rowspan="2">${item.unit}</td>
-                    <td rowspan="2">${item.nomorBukti}</td>
-                    <td rowspan="2">${item.uraian}</td>
-                    <td>${item.coaDebit}</td>
-                    <td>${item.debit}</td>
-                    <td>0</td>
-                  </tr>
-                  <tr>
-                    <td>${item.coaKredit}</td>
-                    <td>0</td>
-                    <td>${item.kredit}</td>
-                  </tr>`
-                )
-                .join("")}
-            </tbody>
-          </table>
-        </body>
-      </html>
-    `);
+            `
+              )
+              .join("")}
+            <tr class="bg-gray">
+              <td>Jumlah</td>
+              <td>${formatNumber(item.totalDebit || 0)}</td>
+              <td>${formatNumber(item.totalKredit || 0)}</td>
+            </tr>
+            `;
+          })
+          .join("")}
+            <tr class="bg-gray">
+              <td colspan="5">Jumlah Total</td>
+              <td>${formatNumber(jurnal?.totalDebitKeseluruhan || 0)}</td>
+              <td>${formatNumber(jurnal.totalKreditKeseluruhan || 0)}</td>
+            </tr>
+      </tbody>
+    </table>
+  </body>
+</html>
+`);
       newWindow.document.close();
     }
   };
 
   const downloadPdfReport = () => {
-    const doc = new jsPDF();
-
-    // Load the logo and draw it on the PDF
-    doc.addImage(logo, "PNG", 15, 10, 18, 20);
-
-    // Set up header
-    doc.setFontSize(10);
-    doc.text("UNIVERSITAS ISLAM SULTAN AGUNG", 105, 20, null, null, "center");
-    doc.setFontSize(6);
-    doc.text(
-      "Jl. Raya Kaligawe Km.4, Semarang, Jawa Tengah",
-      105,
-      24,
-      null,
-      null,
-      "center"
-    );
-
-    doc.text("Info : Telp. +62 24 6583584", 105, 27, null, null, "center");
-    doc.setTextColor(0, 102, 204); // Optional: add color for link
-    doc.textWithLink(
-      "http://www.unissula.ac.id",
-      94,
-      30,
-      {
-        url: "http://www.unissula.ac.id",
-      },
-      "center"
-    );
-    // Draw a line below the header
-    doc.setDrawColor(0, 0, 0); // Set line color to black
-    doc.setLineWidth(0.5); // Set line width
-    doc.line(15, 32, 200, 32); // Draw line from (x1, y1) to (x2, y2)
-
-    // Report title and period
-    doc.setFontSize(10);
-    doc.setTextColor(0, 0, 0);
-    doc.text("LAPORAN JURNAL", 105, 40, null, null, "center");
-    doc.setFontSize(8);
-    doc.text(`Periode: ${startDate} - ${endDate}`, 15, 43, null, null, "left");
-
-    // Define table headers
-    const tableHeaders = [
-      ["TANGGAL", "UNIT", "NOMOR BUKTI", "URAIAN", "COA", "DEBIT", "KREDIT"],
-    ];
-
-    // Prepare data for the table with alternating debit and credit rows
-    const tableData = jurnal.flatMap((item) => [
-      [
-        item.tanggal,
-        item.unit,
-        item.nomorBukti,
-        item.uraian,
-        item.coaDebit,
-        item.debit,
-        "0", // Empty for Kredit row
-        "0",
-      ],
-      ["", "", "", "", item.coaKredit, "0", item.kredit],
-    ]);
-
-    // Add table to PDF with autoTable
-    doc.autoTable({
-      startY: 46,
-      head: tableHeaders,
-      body: tableData,
-      theme: "grid",
-      styles: {
-        fontSize: 6,
-        halign: "center",
-        valign: "middle",
-      },
-      headStyles: {
-        fillColor: [242, 242, 242],
-        textColor: [0, 0, 0],
-        fontStyle: "bold",
-      },
-      columnStyles: {
-        0: { cellWidth: 20 },
-        1: { cellWidth: 25 },
-        2: { cellWidth: 30 },
-        3: { cellWidth: 50 },
-        4: { cellWidth: 20 },
-        5: { cellWidth: 20 },
-        6: { cellWidth: 20 },
-        7: { cellWidth: 20 },
-      },
+    const doc = new jsPDF({
+      format: "a4",
+      unit: "px",
     });
 
-    doc.save("Laporan_Jurnal.pdf");
+    const content = reportTemplateRef.current;
+    const contentWidth = content.offsetWidth;
+    const pdfWidth = doc.internal.pageSize.getWidth();
+    const scaleFactor = pdfWidth / contentWidth;
+
+    doc.html(content, {
+      x: 4,
+      y: 4,
+      html2canvas: { scale: scaleFactor },
+      callback: (doc) => {
+        doc.save("document.pdf");
+      },
+    });
   };
 
   return (
-    <div className="max-w-lg mx-auto bg-white shadow-lg rounded-lg p-8 mt-10">
-      <h1 className="text-start text-3xl font-bold text-gray-800 mb-6">
-        Journal
-      </h1>
-      <div className="mb-4">
-        <span className="font-semibold text-lg">Periode</span>
-        <div className="mt-2">
-          <label className="block text-sm font-medium text-gray-600 mb-1">
-            Tanggal Mulai
-          </label>
-          <input
-            type="date"
-            value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
-            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-          />
+    <>
+      <div className="mx-auto bg-white shadow-lg rounded-lg p-6">
+        <h2 className="text-lg font-semibold text-gray-800 mb-4">
+          Filter Jurnal
+        </h2>
+        <div className="mb-4 grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-600">
+              Tanggal Mulai
+            </label>
+            <input
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              className="w-full p-3 border border-gray-300 rounded-lg"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-600">
+              Tanggal Selesai
+            </label>
+            <input
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              className="w-full p-3 border border-gray-300 rounded-lg"
+            />
+          </div>
         </div>
-        <div className="mt-4">
-          <label className="block text-sm font-medium text-gray-600 mb-1">
-            Tanggal Selesai
-          </label>
-          <input
-            type="date"
-            value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
-            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-          />
+        <div className="grid grid-cols-2 gap-4 items-end">
+          <div>
+            <label className="block text-sm font-medium text-gray-600">
+              Format
+            </label>
+            <select
+              value={format}
+              onChange={(e) => setFormat(e.target.value)}
+              className="w-full p-3 border border-gray-300 rounded-lg"
+            >
+              <option value="">Select Format</option>
+              <option value="html">HTML</option>
+              <option value="pdf">PDF</option>
+            </select>
+          </div>
+          {isLoading ? (
+            <div className="w-full flex justify-center">
+              <OrbitProgress
+                variant="spokes"
+                color="#69c53e"
+                style={{ fontSize: "8px" }}
+              />
+            </div>
+          ) : (
+            <button
+              onClick={handleSubmit}
+              className="w-full bg-green-500 text-white p-3 rounded-lg"
+            >
+              Download Jurnal
+            </button>
+          )}
         </div>
       </div>
-      <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-600 mb-1">
-          Format
-        </label>
-        <select
-          value={format}
-          onChange={(e) => setFormat(e.target.value)}
-          className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-        >
-          <option value="">Select Format</option>
-          <option value="html">HTML</option>
-          <option value="pdf">PDF</option>
-        </select>
+      <div ref={reportTemplateRef}>
+        <DokumentasiJurnal startDate={startDate} endDate={endDate} />
       </div>
-      {isLoading ? (
-        <div className="w-full flex justify-center mt-8">
-          <OrbitProgress
-            variant="dotted"
-            color="#69c53e"
-            text=""
-            style={{ fontSize: "8px" }}
-            textColor=""
-          />
-        </div>
-      ) : (
-        <button
-          onClick={handleSubmit}
-          className="w-full mt-6 bg-green-500 text-white font-semibold p-3 rounded-lg hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500"
-        >
-          Download Jurnal
-        </button>
-      )}
-    </div>
+    </>
   );
 }

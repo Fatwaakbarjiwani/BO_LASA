@@ -20,8 +20,10 @@ export default function Transaksi() {
   };
   return (
     <>
-      <div className={`my-5 w-full`}>
-        <h1 className="text-start text-3xl font-bold mb-5">Transaksi</h1>
+      <div className={`mb-4 w-full`}>
+        <h1 className="text-3xl font-extrabold text-gray-800 mb-4">
+          Transaksi
+        </h1>
         <div className="grid grid-cols-4 gap-4">
           <div className="shadow-md rounded-md border border-gray-100">
             <div className="flex justify-between items-center p-2 gap-5">
@@ -34,7 +36,7 @@ export default function Transaksi() {
               <img src={ImportPengguna} alt="" />
             </div>
           </div>
-          <div className="shadow-md rounded-md border border-gray-100">
+          <div className="shadow-md rounded-md border border-gray-100 ">
             <div className="flex justify-between items-center p-2 gap-5">
               <div>
                 <h1 className="text-slate-500 text-start font-semibold ">

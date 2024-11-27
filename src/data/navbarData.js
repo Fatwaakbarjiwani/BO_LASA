@@ -38,9 +38,10 @@ export const menuItems = [
   {
     src: Transaksi,
     srcActive: TransaksiWhite,
-    title: "Jurnal",
-    route: "/jurnal",
+    title: "Administrasi",
+    route: "/administrasi",
   },
+
   { src: Amil, srcActive: AmilWhite, title: "Amil", route: "/amil" },
   { src: Ziswaf, srcActive: ZiswafWhite, title: "Ziswaf", route: "/ziswaf" },
   {

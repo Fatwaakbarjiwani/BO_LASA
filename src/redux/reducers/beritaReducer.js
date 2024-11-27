@@ -5,7 +5,10 @@ const initialState = {
   detailBerita: [],
   categoryBerita: [],
   modalCreateBerita: false,
+  modalCreateTopicBerita: false,
   modalEditBerita: false,
+  modalEditTopicBerita: false,
+  idTopic: 0,
 };
 const authSlice = createSlice({
   name: "berita",
@@ -26,8 +29,17 @@ const authSlice = createSlice({
     setModalCreateBerita: (state, action) => {
       state.modalCreateBerita = action.payload;
     },
+    setModalCreateTopicBerita: (state, action) => {
+      state.modalCreateTopicBerita = action.payload;
+    },
     setModalEditBerita: (state, action) => {
       state.modalEditBerita = action.payload;
+    },
+    setModalEditTopicBerita: (state, action) => {
+      state.modalEditTopicBerita = action.payload;
+    },
+    setIdTopic: (state, action) => {
+      state.idTopic = action.payload;
     },
   },
 });
@@ -39,6 +51,9 @@ export const {
   setCategoryBerita,
   setModalCreateBerita,
   setModalEditBerita,
+  setModalCreateTopicBerita,
+  setModalEditTopicBerita,
+  setIdTopic,
 } = authSlice.actions;
 
 export default authSlice.reducer;

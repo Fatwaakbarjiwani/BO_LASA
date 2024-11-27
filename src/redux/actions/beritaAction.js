@@ -4,7 +4,9 @@ import {
   setCategoryBerita,
   setDetailBerita,
   setModalCreateBerita,
+  setModalCreateTopicBerita,
   setModalEditBerita,
+  setModalEditTopicBerita,
   setTopBerita,
 } from "../reducers/beritaReducer";
 import { setTotalPNBerita } from "../reducers/pageNumberReducer";
@@ -168,6 +170,66 @@ export const deleteNews = (id) => async () => {
       text:
         error.response?.data?.message ||
         "Terjadi kesalahan saat menghapus berita",
+      icon: "error",
+    });
+  }
+};
+export const createTopicBerita = (newsTopic) => async (dispatch, getState) => {
+  try {
+    const { tokenAdmin } = getState().auth;
+    const response = await axios.post(
+      `${API_URL}/newsTopic/create`,
+      { newsTopic: newsTopic },
+      {
+        headers: {
+          Authorization: `Bearer ${tokenAdmin}`,
+        },
+      }
+    );
+    if (response) {
+      Swal.fire({
+        title: `Berhasil`,
+        text: "Proses membuat topik berita berhasil",
+        icon: "success",
+      });
+      dispatch(setModalCreateTopicBerita(false));
+    }
+  } catch (error) {
+    Swal.fire({
+      title: "Proses membuat topik berita gagal",
+      text:
+        error.response?.data?.message ||
+        "Terjadi kesalahan saat membuat topik berita",
+      icon: "error",
+    });
+  }
+};
+export const editTopicBerita = (newsTopic, id) => async (dispatch, getState) => {
+  try {
+    const { tokenAdmin } = getState().auth;
+    const response = await axios.put(
+      `${API_URL}/newsTopic/update/${id}`,
+      { newsTopic: newsTopic },
+      {
+        headers: {
+          Authorization: `Bearer ${tokenAdmin}`,
+        },
+      }
+    );
+    if (response) {
+      Swal.fire({
+        title: `Berhasil`,
+        text: "Proses mengedit topik berita berhasil",
+        icon: "success",
+      });
+      dispatch(setModalEditTopicBerita(false));
+    }
+  } catch (error) {
+    Swal.fire({
+      title: "Proses mengedit topik berita gagal",
+      text:
+        error.response?.data?.message ||
+        "Terjadi kesalahan saat mengedit topik berita",
       icon: "error",
     });
   }

@@ -7,6 +7,13 @@ import Logout from "../assets/logout-01.svg";
 import LogoutWhite from "../assets/logoutwhite.svg";
 import { logout } from "../redux/actions/authAction";
 import logo from "../../src/assets/logo.svg";
+import {
+  setPN,
+  setPN1,
+  setPN2,
+  setPN3,
+  setPN4,
+} from "../redux/reducers/pageNumberReducer";
 
 export default function Sidebar() {
   const location = useLocation();
@@ -40,7 +47,14 @@ export default function Sidebar() {
                   }`}
                 >
                   <button
-                    onClick={() => setActiveMenu(item.route)}
+                    onClick={() => {
+                      setActiveMenu(item.route);
+                      dispatch(setPN(1));
+                      dispatch(setPN1(1));
+                      dispatch(setPN2(1));
+                      dispatch(setPN3(1));
+                      dispatch(setPN4(1));
+                    }}
                     className={`flex items-center w-full gap-2 ${
                       activeMenu === item.route
                         ? "rounded-3xl bg-[#69C53E] shadow-md text-white"
@@ -60,7 +74,7 @@ export default function Sidebar() {
                     <span
                       className={`${isSidebarOpen ? "block" : "hidden"}  ${
                         activeMenu === item.route ? "text-white" : ""
-                      }`}
+                      } text-nowrap`}
                     >
                       {item.title}
                     </span>
@@ -82,7 +96,14 @@ export default function Sidebar() {
                     }`}
                   >
                     <button
-                      onClick={() => setActiveMenu(item.route)}
+                      onClick={() => {
+                        setActiveMenu(item.route);
+                        dispatch(setPN(1));
+                        dispatch(setPN1(1));
+                        dispatch(setPN2(1));
+                        dispatch(setPN3(1));
+                        dispatch(setPN4(1));
+                      }}
                       className={`flex items-center w-full gap-2 ${
                         activeMenu === item.route
                           ? "rounded-3xl bg-[#69C53E] shadow-md text-white"

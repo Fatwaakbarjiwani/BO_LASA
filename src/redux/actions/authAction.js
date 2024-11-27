@@ -190,6 +190,86 @@ export const logout = (navigate) => (dispatch) => {
     }
   });
 };
+export const nonActiveOperator = (id) => async (dispatch, getState) => {
+  try {
+    const result = await Swal.fire({
+      title: "Yakin ingin menonaktifkan operator ini?",
+      text: "Operator ini akan dinonaktifkan",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Setujui",
+      cancelButtonText: "Batal",
+    });
+
+    if (result.isConfirmed) {
+      const { tokenAdmin } = getState().auth;
+      const response = await axios.put(
+        `${API_URL}/admin/nonaktive-Operator/${id}`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${tokenAdmin}`,
+          },
+        }
+      );
+      if (response) {
+        Swal.fire({
+          title: `Berhasil dinonaktifkan`,
+          text: "Proses menonaktifan operator berhasil",
+          icon: "success",
+        });
+      }
+    }
+  } catch (error) {
+    Swal.fire({
+      title: "Proses menonaktifan operator gagal",
+      text: error.response.data.message,
+      icon: "error",
+    });
+  }
+};
+export const activeOperator = (id) => async (dispatch, getState) => {
+  try {
+    const result = await Swal.fire({
+      title: "Yakin ingin menonaktifkan operator ini?",
+      text: "Operator ini akan dinonaktifkan",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Setujui",
+      cancelButtonText: "Batal",
+    });
+
+    if (result.isConfirmed) {
+      const { tokenAdmin } = getState().auth;
+      const response = await axios.put(
+        `${API_URL}/admin/aktive-Operator/${id}`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${tokenAdmin}`,
+          },
+        }
+      );
+      if (response) {
+        Swal.fire({
+          title: `Berhasil dinonaktifkan`,
+          text: "Proses mengaktifkan operator berhasil",
+          icon: "success",
+        });
+      }
+    }
+  } catch (error) {
+    Swal.fire({
+      title: "Proses mengaktifkan operator gagal",
+      text: error.response.data.message,
+      icon: "error",
+    });
+  }
+};
 
 export const getAllDonatur = (pageNumber) => async (dispatch) => {
   try {

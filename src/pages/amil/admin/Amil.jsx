@@ -10,20 +10,28 @@ import { menuDropdown } from "../../../data/menu";
 export default function Amil() {
   const dispatch = useDispatch();
   const { amilCampaign } = useSelector((state) => state.campaign);
+  const { amilZakat } = useSelector((state) => state.ziswaf);
+  const { amilWakaf } = useSelector((state) => state.ziswaf);
+  const { amilInfak } = useSelector((state) => state.ziswaf);
+  const { amilDskl } = useSelector((state) => state.ziswaf);
   const { pNAmilCampaign } = useSelector((state) => state.pn);
   const { totalPNAmilCampaign } = useSelector((state) => state.pn);
   const [pilih, setPilih] = useState("campaign");
   useEffect(() => {
-    dispatch(getAmilCampaign(pNAmilCampaign - 1, pilih));
-  }, [dispatch, pNAmilCampaign, pilih]);
+    dispatch(getAmilCampaign(pNAmilCampaign - 1, "zakat"));
+    dispatch(getAmilCampaign(pNAmilCampaign - 1, "infak"));
+    dispatch(getAmilCampaign(pNAmilCampaign - 1, "wakaf"));
+    dispatch(getAmilCampaign(pNAmilCampaign - 1, "dskl"));
+    dispatch(getAmilCampaign(pNAmilCampaign - 1, "campaign"));
+  }, [dispatch, pNAmilCampaign]);
 
   const formatNumber = (value) => {
     return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
   };
   return (
     <>
-      <div className={`my-5 w-full`}>
-        <h1 className="text-start text-3xl font-bold mb-5">Amil</h1>
+      <div className={`mb-4 w-full`}>
+        <h1 className="text-3xl font-extrabold text-gray-800 mb-2">Amil</h1>
         <div className="grid grid-cols-4 gap-3">
           <div className="shadow-md rounded-md border border-gray-100 p-2">
             <div className="flex justify-between items-center">
@@ -32,8 +40,9 @@ export default function Amil() {
                   Total Pendapatan
                 </h1>
                 <p className="font-bold text-2xl text-start text-primary">
-                  Rp {formatNumber(
-                    amilCampaign[amilCampaign.length-1]?.totalAmount || 0
+                  Rp{" "}
+                  {formatNumber(
+                    amilCampaign[amilCampaign.length - 1]?.totalAmount || 0
                   )}
                 </p>
               </div>
@@ -47,8 +56,9 @@ export default function Amil() {
                   Total Amil
                 </h1>
                 <p className="font-bold text-2xl text-start text-primary">
-                  Rp {formatNumber(
-                    amilCampaign[amilCampaign.length-1]?.totalAmil || 0
+                  Rp{" "}
+                  {formatNumber(
+                    amilCampaign[amilCampaign.length - 1]?.totalAmil || 0
                   )}
                 </p>
               </div>
@@ -69,11 +79,13 @@ export default function Amil() {
               ))}
             </select>
 
-            <PageNumber
-              total={totalPNAmilCampaign}
-              page={pNAmilCampaign}
-              setPage={setPNAmilCampaign}
-            />
+            {pilih == "campaign" && (
+              <PageNumber
+                total={totalPNAmilCampaign}
+                page={pNAmilCampaign}
+                setPage={setPNAmilCampaign}
+              />
+            )}
           </div>
           <div className="relative overflow-x-auto overflow-y-auto shadow-md sm:rounded-lg">
             <table className="w-full text-sm text-left rtl:text-right text-gray-500 ">
@@ -171,24 +183,29 @@ export default function Amil() {
                 </tbody>
               ) : (
                 <tbody>
-                  {amilCampaign
-                    .slice(0, amilCampaign.length - 1)
-                    ?.map((item) => (
-                      <tr
-                        key={item?.id}
-                        className="odd:bg-white even:bg-gray-50 border-b odd:hover:bg-slate-500 even:hover:bg-slate-500 odd:hover:text-white even:hover:text-white "
-                      >
-                        <td className="px-6 py-4 text-wrap w-1/12">{item?.id}</td>
-                        <td className="px-6 py-4 text-wrap">{item?.type}</td>
-                        <td className="px-6 py-4">{item?.categoryName}</td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          Rp {formatNumber(item?.amount || 0)}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          Rp {formatNumber(item?.amil || 0)}
-                        </td>
-                      </tr>
-                    ))}
+                  {(pilih == "zakat"
+                    ? amilZakat.slice(0, amilZakat.length - 1)
+                    : pilih == "infak"
+                    ? amilInfak.slice(0, amilInfak.length - 1)
+                    : pilih == "wakaf"
+                    ? amilWakaf.slice(0, amilWakaf.length - 1)
+                    : amilDskl.slice(0, amilDskl.length - 1)
+                  )?.map((item) => (
+                    <tr
+                      key={item?.id}
+                      className="odd:bg-white even:bg-gray-50 border-b odd:hover:bg-slate-500 even:hover:bg-slate-500 odd:hover:text-white even:hover:text-white "
+                    >
+                      <td className="px-6 py-4 text-wrap w-1/12">{item?.id}</td>
+                      <td className="px-6 py-4 text-wrap">{item?.type}</td>
+                      <td className="px-6 py-4">{item?.categoryName}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        Rp {formatNumber(item?.amount || 0)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        Rp {formatNumber(item?.amil || 0)}
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               )}
             </table>

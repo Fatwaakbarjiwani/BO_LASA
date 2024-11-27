@@ -11,6 +11,14 @@ export default function LoginAdmin() {
   const [loading, setLoading] = useState(false);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+
+  const handleLogin = (e) => {
+    e.preventDefault();
+    setLoading(true);
+    dispatch(login(acount, password, navigate)).finally(() =>
+      setLoading(false)
+    );
+  };
   return (
     <div className="flex w-full h-screen absolute">
       <div className="w-2/6 h-full bg-primary flex items-center justify-center">
@@ -21,7 +29,10 @@ export default function LoginAdmin() {
         />
       </div>
 
-      <div className="w-4/6 h-full flex items-center justify-center">
+      <form
+        onSubmit={handleLogin}
+        className="w-4/6 h-full flex items-center justify-center"
+      >
         <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-lg">
           <h2 className="text-3xl font-bold text-center text-primary">
             Admin Login
@@ -77,12 +88,7 @@ export default function LoginAdmin() {
               </div>
             ) : (
               <button
-                onClick={() => {
-                  setLoading(true);
-                  dispatch(login(acount, password,navigate)).finally(() =>
-                    setLoading(false)
-                  );
-                }}
+                onClick={handleLogin}
                 type="submit"
                 className="active:scale-105 duration-300 w-full py-3 mt-6 font-semibold text-white bg-primary rounded-lg hover:bg-primary-dark transition duration-300"
               >
@@ -100,7 +106,7 @@ export default function LoginAdmin() {
             </p>
           </div>
         </div>
-      </div>
+      </form>
     </div>
   );
 }

@@ -2,9 +2,13 @@ import { createSlice } from "@reduxjs/toolkit";
 const initialState = {
   categoryZiswaf: [],
   zakat: [],
+  amilZakat: [],
   infak: [],
+  amilInfak: [],
   wakaf: [],
+  amilWakaf: [],
   dskl: [],
+  amilDskl: [],
   coaCategory: [],
   detailZiswaf: [],
   modalCreateZiswaf: false,
@@ -20,14 +24,26 @@ const authSlice = createSlice({
     setZakat: (state, action) => {
       state.zakat = action.payload;
     },
+    setAmilZakat: (state, action) => {
+      state.amilZakat = action.payload;
+    },
     setInfak: (state, action) => {
       state.infak = action.payload;
+    },
+    setAmilInfak: (state, action) => {
+      state.amilInfak = action.payload;
     },
     setWakaf: (state, action) => {
       state.wakaf = action.payload;
     },
+    setAmilWakaf: (state, action) => {
+      state.amilWakaf = action.payload;
+    },
     setDskl: (state, action) => {
       state.dskl = action.payload;
+    },
+    setAmilDskl: (state, action) => {
+      state.amilDskl = action.payload;
     },
     setCoaCategory: (state, action) => {
       state.coaCategory = action.payload;
@@ -54,6 +70,10 @@ export const {
   setModalEditZiswaf,
   setCoaCategory,
   setDetailZiswaf,
+  setAmilDskl,
+  setAmilInfak,
+  setAmilWakaf,
+  setAmilZakat,
 } = authSlice.actions;
 
 export default authSlice.reducer;

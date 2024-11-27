@@ -33,17 +33,18 @@ export default function Campaign() {
       <CreateCategoryCampaign />
       <EditCampaign />
       <EditCategoryCampaign />
-      <div className={`w-full my-5`}>
-        <h1 className="text-start text-3xl font-bold mb-5 flex gap-4 items-center">
-          Kategori Campaign{" "}
-          <button
-            onClick={() => dispatch(setModalCreateCategory(true))}
-            className="text-lg shadow active:scale-105 duration-200 flex items-center justify-center bg-primary px-6 py-1 rounded-full text-white font-semibold"
-          >
-            Buat Kategori Campaign
-          </button>
-        </h1>
+      <h1 className="text-3xl font-extrabold text-gray-800">Campaign</h1>
+      <div className={`w-full my-4`}>
         <div className="w-full shadow-md p-4 border-gray-100">
+          <h1 className="text-start text-3xl font-bold mb-5 flex gap-4 items-center">
+            Kategori Campaign{" "}
+            <button
+              onClick={() => dispatch(setModalCreateCategory(true))}
+              className="text-lg shadow active:scale-105 duration-200 flex items-center justify-center bg-primary px-6 py-1 rounded-full text-white font-semibold"
+            >
+              Buat Kategori Campaign
+            </button>
+          </h1>
           <div className="flex justify-between w-full items-center">
             <div className="flex justify-center w-full">
               <TableCategoryCampaign />
@@ -52,20 +53,18 @@ export default function Campaign() {
         </div>
       </div>
       <div className={`w-full my-5 mt-10`}>
-        <h1 className="text-start text-3xl font-bold mb-5 flex gap-4 items-center">
-          Campaign{" "}
-          <button
-            onClick={() => dispatch(setModalCreateActive(true))}
-            className="text-lg shadow active:scale-105 duration-200 flex items-center justify-center bg-primary bg-primary px-6 py-1 rounded-full text-white font-semibold"
-          >
-            Buat Campaign
-          </button>
-        </h1>
         <div className="w-full shadow-md p-4 border-gray-100">
           <div className="flex justify-between w-full items-center">
-            <h1 className="text-start text-3xl font-bold">
-              Aktif dan Disetujui
+            <h1 className="text-start text-3xl font-bold mt-2 flex gap-4 items-center">
+              Campaign Aktif Dan Disetujui
+              <button
+                onClick={() => dispatch(setModalCreateActive(true))}
+                className="text-lg shadow active:scale-105 duration-200 flex items-center justify-center bg-primary bg-primary px-6 py-1 rounded-full text-white font-semibold"
+              >
+                Buat Campaign
+              </button>
             </h1>
+
             <div className="flex justify-center">
               <PageNumber
                 total={totalPNActiveCampaign}

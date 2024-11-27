@@ -29,7 +29,10 @@ export default function Ziswaf() {
   };
 
   useEffect(() => {
-    dispatch(getCategoryZiswaf(selectedCategory));
+    dispatch(getCategoryZiswaf("zakat"));
+    dispatch(getCategoryZiswaf("infak"));
+    dispatch(getCategoryZiswaf("wakaf"));
+    dispatch(getCategoryZiswaf("dskl"));
     setSelectedState(categories[selectedCategory] || []);
   }, [dispatch, selectedCategory, categories]);
   useEffect(() => {
@@ -46,10 +49,10 @@ export default function Ziswaf() {
     return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
   };
   return (
-    <div className="my-5 w-full">
+    <div className="mb-4 w-full">
       <CreateZiswaf type={selectedCategory} />
       <EditZiswaf type={selectedCategory} />
-      <h1 className="text-start text-3xl font-bold mb-5">Ziswaf</h1>
+      <h1 className="text-3xl font-extrabold text-gray-800">Ziswaf</h1>
       <div className="w-full shadow-md rounded-2xl mt-5 border border-gray-100 p-4 space-y-2">
         <select
           className="text-lg shadow active:scale-105 duration-200 flex items-center justify-center bg-gray-500 w-2/12 px-6 py-1 rounded-full text-white font-semibold"
@@ -90,10 +93,10 @@ export default function Ziswaf() {
                   <td className="px-6 py-4">{item?.id}</td>
                   <td className="px-6 py-4">{item?.categoryName}</td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    Rp {formatNumber(item?.amount||0)}
+                    Rp {formatNumber(item?.amount || 0)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    Rp {formatNumber(item?.distribution||0)}
+                    Rp {formatNumber(item?.distribution || 0)}
                   </td>
                   <td className="px-6 py-4 font-semibold">
                     {item?.active ? (

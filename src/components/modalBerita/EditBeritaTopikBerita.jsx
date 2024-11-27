@@ -1,47 +1,32 @@
 import { useSelector, useDispatch } from "react-redux";
 import { useEffect, useState } from "react";
 import { OrbitProgress } from "react-loading-indicators";
-import { editZiswaf, getCategoryCoa } from "../../redux/actions/ziswafAction";
-import {
-  setDetailZiswaf,
-  setModalEditZiswaf,
-} from "../../redux/reducers/ziswafReducer";
-import PropTypes from "prop-types";
+import { setModalEditTopicBerita } from "../../redux/reducers/beritaReducer";
+import { editTopicBerita } from "../../redux/actions/beritaAction";
 
-function EditZiswaf({ type }) {
+function EditTopicBerita() {
   const dispatch = useDispatch();
-  const { modalEditZiswaf } = useSelector((state) => state.ziswaf);
-  const { detailZiswaf } = useSelector((state) => state.ziswaf);
+  const { modalEditTopicBerita } = useSelector((state) => state.berita);
+  const { idTopic } = useSelector((state) => state.berita);
+  const { categoryBerita } = useSelector((state) => state.berita);
   const [isLoading, setLoading] = useState(false);
-
-  const [name, setName] = useState("");
-
+  // State for form inputs
+  const [topicName, setTopicName] = useState("");
   useEffect(() => {
-    dispatch(getCategoryCoa());
-    setName(detailZiswaf?.categoryName || "");
-  }, [dispatch, detailZiswaf]);
+    const adjustedCategoryIndex = parseInt(idTopic) - 1;
+    setTopicName(
+      categoryBerita[adjustedCategoryIndex]?.newsTopic || ""
+    );
+  }, [dispatch, idTopic]);
 
-  useEffect(() => {
-    if (modalEditZiswaf == false) {
-      dispatch(setDetailZiswaf([]));
-    }
-  }, [modalEditZiswaf]);
-
-  if (!modalEditZiswaf) {
+  if (!modalEditTopicBerita) {
     return null;
   }
-
-  const handleEditZiswaf = (e) => {
+  const handleEditCampaign = (e) => {
     e.preventDefault();
     setLoading(true);
     dispatch(
-      editZiswaf(
-        type,
-        name,
-        detailZiswaf?.amount,
-        detailZiswaf?.distribution,
-        detailZiswaf?.id
-      )
+      editTopicBerita(topicName, idTopic)
     ).finally(() => setLoading(false));
   };
 
@@ -50,32 +35,31 @@ function EditZiswaf({ type }) {
       <div className="bg-white rounded-xl p-4 w-full max-w-lg shadow-lg relative m-4 max-h-[95vh] overflow-y-auto">
         <button
           className="absolute top-4 right-4 text-gray-500 hover:text-red-600 text-2xl"
-          onClick={() => dispatch(setModalEditZiswaf(false))}
+          onClick={() => dispatch(setModalEditTopicBerita(false))}
         >
           &times;
         </button>
-        <h2 className="text-3xl font-semibold mb-6 text-center text-gray-600 capitalize">
-          Edit {type}
+        <h2 className="text-3xl font-semibold mb-6 text-center text-gray-600">
+          Edit Kategori Campaign Baru
         </h2>
-        <form className="space-y-6" onSubmit={handleEditZiswaf}>
-
+        <form className="space-y-6" onSubmit={handleEditCampaign}>
           <div>
-            <label className="block text-sm font-medium text-gray-600 mb-1 capitalize">
-              Nama {type}
+            <label className="block text-sm font-medium text-gray-600 mb-1">
+              Nama Topik Berita
             </label>
             <input
               type="text"
               className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-              placeholder={`Enter ${type} title`}
-              value={name}
-              onChange={(e) => setName(e.target.value)}
+              placeholder="Enter new topic name"
+              value={topicName}
+              onChange={(e) => setTopicName(e.target.value)}
             />
           </div>
           <div className="space-y-2">
             <button
               type="button"
               className="px-6 py-2 w-full bg-gray-300 text-gray-700 rounded-lg active:scale-105 transition duration-200"
-              onClick={() => dispatch(setModalEditZiswaf(false))}
+              onClick={() => dispatch(setModalEditTopicBerita(false))}
             >
               Cancel
             </button>
@@ -92,10 +76,10 @@ function EditZiswaf({ type }) {
             ) : (
               <button
                 type="submit"
-                onClick={handleEditZiswaf}
-                className="px-6 py-2 w-full bg-primary text-white rounded-lg active:scale-105 transition duration-200 capitalize"
+                onClick={handleEditCampaign}
+                className="px-6 py-2 w-full bg-primary text-white rounded-lg active:scale-105 transition duration-200"
               >
-                Buat {type}
+                Edit topik berita
               </button>
             )}
           </div>
@@ -104,8 +88,5 @@ function EditZiswaf({ type }) {
     </div>
   );
 }
-EditZiswaf.propTypes = {
-  type: PropTypes.oneOf(["zakat", "infak", "dskl", "wakaf"]).isRequired,
-};
 
-export default EditZiswaf;
+export default EditTopicBerita;

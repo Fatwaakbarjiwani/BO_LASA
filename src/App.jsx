@@ -20,7 +20,8 @@ import Ziswaf from "./pages/ziswaf/admin/Ziswaf";
 import Distribusi from "./pages/distribusi/admin/Dsitribusi";
 import Amil from "./pages/amil/admin/Amil";
 import Campaign2 from "./pages/campaign/subAdmin/Campaign2";
-import Jurnal from "./pages/jurnal/admin/Jurnal";
+import Dashboard2 from "./pages/dashboard/subAdmin/Dashboard2";
+import Administrasi from "./pages/administrasi/Administrasi";
 
 function AppContent() {
   const { isSidebarOpen } = useSelector((state) => state.page);
@@ -56,7 +57,7 @@ function AppContent() {
                 path="/dashboard"
                 element={
                   <Protected>
-                    <Dashboard />
+                    {user?.role == "ADMIN" ? <Dashboard /> : <Dashboard2 />}
                   </Protected>
                 }
               />
@@ -85,10 +86,10 @@ function AppContent() {
                 }
               />
               <Route
-                path="/jurnal"
+                path="/administrasi"
                 element={
                   <Protected>
-                    <Jurnal />
+                    <Administrasi />
                   </Protected>
                 }
               />

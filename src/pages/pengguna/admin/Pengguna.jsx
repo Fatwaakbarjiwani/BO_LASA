@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
+  activeOperator,
   getAllDonatur,
   getAllOperator,
+  nonActiveOperator,
 } from "../../../redux/actions/authAction";
 import PageNumber from "../../../components/PageNumber";
 import {
@@ -25,16 +27,19 @@ export default function Pengguna() {
   const [isLoading, setLoading] = useState(false);
   const [id, setId] = useState("");
   useEffect(() => {
-    if (modalCreateOperator == false) {
+    if (modalCreateOperator == false || isLoading == false) {
       dispatch(getAllOperator(pNOperator - 1));
     }
     dispatch(getAllDonatur(pNDonatur - 1));
-  }, [dispatch, pNDonatur, pNOperator, modalCreateOperator]);
+  }, [dispatch, pNDonatur, pNOperator, modalCreateOperator, isLoading]);
 
   return (
     <>
       <ModalOperator />
-      <div className={`mt-5 w-full`}>
+      <div className={`mb-4 w-full`}>
+        <h1 className="text-3xl font-extrabold text-gray-800 mb-4">
+          Pengguna
+        </h1>
         <h1 className="text-start text-3xl font-bold mb-5 flex gap-4">
           Daftar Operator
           <button
@@ -73,14 +78,17 @@ export default function Pengguna() {
                     Alamat
                   </th>
                   <th scope="col" className="px-6 py-3">
+                    Status
+                  </th>
+                  <th scope="col" className="px-6 py-3">
                     Aksi
                   </th>
                 </tr>
               </thead>
               <tbody>
-                {operator?.map((item) => (
+                {operator?.map((item, isId) => (
                   <tr
-                    key={item?.id}
+                    key={isId}
                     className="odd:bg-white text-left even:bg-gray-50 border-b  odd:hover:bg-slate-500 even:hover:bg-slate-500 odd:hover:text-white even:hover:text-white "
                   >
                     <th
@@ -93,9 +101,18 @@ export default function Pengguna() {
                     <td className="px-6 py-4">{item?.email}</td>
                     <td className="px-6 py-4">{item?.createdAt}</td>
                     <td className="px-6 py-4">{item?.address}</td>
+                    {item?.status == true ? (
+                      <td className="px-6 py-4 text-nowrap font-semibold text-green-400">
+                        Aktif
+                      </td>
+                    ) : (
+                      <td className="px-6 py-4 text-nowrap font-semibold">
+                        Tidak Aktif
+                      </td>
+                    )}
                     <td className="px-6 py-4 flex items-center justify-center">
                       <div className="w-full flex items-center gap-2">
-                        {isLoading && id == item?.id ? (
+                        {isLoading && id == isId ? (
                           <div className="w-full flex justify-center">
                             <OrbitProgress
                               variant="dotted"
@@ -105,15 +122,31 @@ export default function Pengguna() {
                               textColor=""
                             />
                           </div>
+                        ) : item?.status == true ? (
+                          <button
+                            onClick={() => {
+                              setLoading(true);
+                              setId(isId);
+                              dispatch(nonActiveOperator(item?.id)).finally(
+                                () => setLoading(false)
+                              );
+                            }}
+                            className="p-1 px-2 rounded-full text-nowrap shadow-md bg-red-500 text-white font-semibold"
+                          >
+                            Non aktif
+                          </button>
                         ) : (
                           <button
                             onClick={() => {
                               setLoading(true);
-                              setId(item?.id);
+                              setId(isId);
+                              dispatch(activeOperator(item?.id)).finally(() =>
+                                setLoading(false)
+                              );
                             }}
-                            className="p-1 px-2 rounded-full shadow-md bg-red-500 text-white font-semibold"
+                            className="p-1 px-2 rounded-full text-nowrap shadow-md bg-green-500 w-full text-white font-semibold"
                           >
-                            Non aktif
+                            Aktif
                           </button>
                         )}
                       </div>

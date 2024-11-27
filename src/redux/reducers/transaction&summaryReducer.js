@@ -10,6 +10,13 @@ const initialState = {
   distribution: [],
   summaryDashboard: [],
   jurnal: [],
+  bukuBesar: [],
+  createDokumentasi: false,
+  id: "",
+  type: "campaign",
+  modalCreateCoa: false,
+  modalEditCoa: false,
+  detailCoa: [],
 };
 function getNmlFromLocalStorage() {
   const encryptedNml = localStorage.getItem("nml");
@@ -62,6 +69,27 @@ const authSlice = createSlice({
     setJurnal: (state, action) => {
       state.jurnal = action.payload;
     },
+    setBukuBesar: (state, action) => {
+      state.bukuBesar = action.payload;
+    },
+    setCreateDokumentasi: (state, action) => {
+      state.createDokumentasi = action.payload;
+    },
+    setId: (state, action) => {
+      state.id = action.payload;
+    },
+    setType: (state, action) => {
+      state.type = action.payload;
+    },
+    setModalCreateCoa: (state, action) => {
+      state.modalCreateCoa = action.payload;
+    },
+    setModalEditCoa: (state, action) => {
+      state.modalEditCoa = action.payload;
+    },
+    setDetailCoa: (state, action) => {
+      state.detailCoa = action.payload;
+    },
   },
 });
 
@@ -73,6 +101,13 @@ export const {
   setTransaction,
   setDistribution,
   setJurnal,
+  setBukuBesar,
+  setCreateDokumentasi,
+  setId,
+  setType,
+  setModalCreateCoa,
+  setModalEditCoa,
+  setDetailCoa,
 } = authSlice.actions;
 
 export default authSlice.reducer;
