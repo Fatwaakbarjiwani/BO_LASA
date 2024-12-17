@@ -61,7 +61,7 @@ export default function DokumentasiJurnal({ startDate, endDate }) {
         LAPORAN JURNAL
       </div>
       <p style={{ fontSize: "14px", margin: "10px 0" }}>
-        Periode: {startDate} - {endDate}
+        Periode: {startDate} sampai dengan {endDate}
       </p>
       <p style={{ fontSize: "14px", margin: "10px 0" }}>
         Unit : Lazis Sultan Agung

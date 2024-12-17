@@ -4,7 +4,6 @@ import {
   setAllCampaignCategory,
   setAllCampaignEmergency,
   setAmilCampaign,
-  setCampaignBySearch,
   setCampaignHistory,
   setCampaignPending,
   setChart1,
@@ -200,16 +199,40 @@ export const getAllCampaign = () => async (dispatch) => {
     console.error("Error fetching campaign data:", error);
   }
 };
-export const getSearchCampaign = (name) => async (dispatch) => {
+export const getSearchCampaign = (name, page) => async (dispatch) => {
   try {
     const response = await axios.get(
-      `${API_URL}/campaign/campaign-name?campaignName=${name}`
+      `${API_URL}/campaign/campaign-name?campaignName=${name}&page=${page}`
     );
     const data = response.data;
-    dispatch(setCampaignBySearch(data.content));
+    dispatch(setAllCampaign(data.content));
     dispatch(setTotalPNActiveCampaign(data.totalPages));
   } catch (error) {
-    console.error("Error fetching campaign data:", error);
+    return;
+  }
+};
+export const getSearchCampaignPending = (name, page) => async (dispatch) => {
+  try {
+    const response = await axios.get(
+      `${API_URL}/campaign/campaign-name-pending?campaignName=${name}&page=${page}`
+    );
+    const data = response.data;
+    dispatch(setCampaignPending(data.content));
+    dispatch(setTotalPN2(data.totalPages));
+  } catch (error) {
+    return;
+  }
+};
+export const getSearchCampaignNonaktif = (name, page) => async (dispatch) => {
+  try {
+    const response = await axios.get(
+      `${API_URL}/campaign/campaign-name-nonaktif?campaignName=${name}&page=${page}`
+    );
+    const data = response.data;
+    dispatch(setCampaignHistory(data.content));
+    dispatch(setTotalPN3(data.totalPages));
+  } catch (error) {
+    return;
   }
 };
 export const getCampaignByCategory =
@@ -395,6 +418,7 @@ export const getAmilCampaign = (pageNumber, pilih) => async (dispatch) => {
     const data = response.data;
     if (pilih == "campaign") {
       dispatch(setAmilCampaign(data.content));
+      dispatch(setTotalPNAmilCampaign(data.totalPages));
     }
     if (pilih == "zakat") {
       dispatch(setAmilZakat(data.content));
@@ -408,7 +432,6 @@ export const getAmilCampaign = (pageNumber, pilih) => async (dispatch) => {
     if (pilih == "dskl") {
       dispatch(setAmilDskl(data.content));
     }
-    dispatch(setTotalPNAmilCampaign(data.totalPages));
   } catch (error) {
     console.error("Error fetching amil campaign", error);
   }

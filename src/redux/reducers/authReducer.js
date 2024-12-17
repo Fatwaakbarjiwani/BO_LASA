@@ -23,6 +23,8 @@ const initialState = {
   email: "",
   acount: "",
   user: null,
+  searchOperator: "",
+  searchDonatur: "",
   operator: [],
   donatur: [],
   modalCreateOperator: false,
@@ -54,6 +56,12 @@ const authSlice = createSlice({
     },
     setUser: (state, action) => {
       state.user = action.payload;
+    },
+    setSearchDonatur: (state, action) => {
+      state.searchDonatur = action.payload;
+    },
+    setSearchOperator: (state, action) => {
+      state.searchOperator = action.payload;
     },
     setOperator: (state, action) => {
       state.operator = action.payload;
@@ -88,6 +96,8 @@ export const {
   setUser,
   setOperator,
   setPs,
+  setSearchDonatur,
+  setSearchOperator,
   setDonatur,
   setModalCreateOperator
 } = authSlice.actions;

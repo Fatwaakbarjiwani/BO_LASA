@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import {
   getActiveAproveCampaign,
   getDetailCampaign,
+  getSearchCampaign,
   tutupCampaignActive,
 } from "../../../redux/actions/campaignAction";
 import { OrbitProgress } from "react-loading-indicators";
@@ -14,6 +15,7 @@ export default function TableCampaignActiveAprove() {
   const { allCampaign } = useSelector((state) => state.campaign);
   const { modalCreateActive } = useSelector((state) => state.campaign);
   const { modalEditActive } = useSelector((state) => state.campaign);
+  const { searchCampaign } = useSelector((state) => state.campaign);
   const { pNActiveCampaign } = useSelector((state) => state.pn);
   const [isLoading, setLoading] = useState(false);
 
@@ -21,11 +23,15 @@ export default function TableCampaignActiveAprove() {
     return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
   };
   useEffect(() => {
+    if (searchCampaign) {
+      dispatch(getSearchCampaign(searchCampaign, pNActiveCampaign - 1));
+    }
     if (
-      pNActiveCampaign ||
-      modalCreateActive == false ||
-      modalEditActive == false ||
-      isLoading == false
+      !searchCampaign &&
+      (pNActiveCampaign ||
+        modalCreateActive == false ||
+        modalEditActive == false ||
+        isLoading == false)
     ) {
       dispatch(getActiveAproveCampaign(pNActiveCampaign - 1));
     }
@@ -35,6 +41,7 @@ export default function TableCampaignActiveAprove() {
     modalCreateActive,
     modalEditActive,
     isLoading,
+    searchCampaign,
   ]);
 
   return (

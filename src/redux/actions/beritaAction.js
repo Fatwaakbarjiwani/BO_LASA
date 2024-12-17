@@ -47,7 +47,7 @@ export const getSearchBerita =
       dispatch(setAllBerita(data.content));
       dispatch(setTotalPNBerita(data.totalPages));
     } catch (error) {
-      console.error("Error fetching search news :", error);
+      return;
     }
   };
 export const getDetailBerita = (id) => async (dispatch) => {
@@ -204,33 +204,48 @@ export const createTopicBerita = (newsTopic) => async (dispatch, getState) => {
     });
   }
 };
-export const editTopicBerita = (newsTopic, id) => async (dispatch, getState) => {
-  try {
-    const { tokenAdmin } = getState().auth;
-    const response = await axios.put(
-      `${API_URL}/newsTopic/update/${id}`,
-      { newsTopic: newsTopic },
-      {
-        headers: {
-          Authorization: `Bearer ${tokenAdmin}`,
-        },
+export const editTopicBerita =
+  (newsTopic, id) => async (dispatch, getState) => {
+    try {
+      const { tokenAdmin } = getState().auth;
+      const response = await axios.put(
+        `${API_URL}/newsTopic/update/${id}`,
+        { newsTopic: newsTopic },
+        {
+          headers: {
+            Authorization: `Bearer ${tokenAdmin}`,
+          },
+        }
+      );
+      if (response) {
+        Swal.fire({
+          title: `Berhasil`,
+          text: "Proses mengedit topik berita berhasil",
+          icon: "success",
+        });
+        dispatch(setModalEditTopicBerita(false));
       }
-    );
-    if (response) {
+    } catch (error) {
       Swal.fire({
-        title: `Berhasil`,
-        text: "Proses mengedit topik berita berhasil",
-        icon: "success",
+        title: "Proses mengedit topik berita gagal",
+        text:
+          error.response?.data?.message ||
+          "Terjadi kesalahan saat mengedit topik berita",
+        icon: "error",
       });
-      dispatch(setModalEditTopicBerita(false));
     }
+  };
+export const getSearchNews = (name, page) => async (dispatch) => {
+  try {
+    const response = await axios.get(
+      `${API_URL}/news/search?title=${name}&page=${page}`
+    );
+    const data = response.data;
+    console.log(data);
+    
+    dispatch(setAllBerita(data.content));
+    dispatch(setTotalPNBerita(data.totalPages));
   } catch (error) {
-    Swal.fire({
-      title: "Proses mengedit topik berita gagal",
-      text:
-        error.response?.data?.message ||
-        "Terjadi kesalahan saat mengedit topik berita",
-      icon: "error",
-    });
+    return;
   }
 };

@@ -22,6 +22,7 @@ import Amil from "./pages/amil/admin/Amil";
 import Campaign2 from "./pages/campaign/subAdmin/Campaign2";
 import Dashboard2 from "./pages/dashboard/subAdmin/Dashboard2";
 import Administrasi from "./pages/administrasi/Administrasi";
+import Tampilan from "./pages/tampilan/Tampilan";
 
 function AppContent() {
   const { isSidebarOpen } = useSelector((state) => state.page);
@@ -122,6 +123,14 @@ function AppContent() {
                 element={
                   <Protected>
                     <Amil />
+                  </Protected>
+                }
+              />
+              <Route
+                path="/tampilan"
+                element={
+                  <Protected>
+                    <Tampilan />
                   </Protected>
                 }
               />

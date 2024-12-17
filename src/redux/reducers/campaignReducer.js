@@ -7,6 +7,8 @@ const initialState = {
   detailCampaign: [],
   allCampaignCategory: [],
   searchCampaign: "",
+  searchCampaignPending: "",
+  searchCampaignHistory: "",
   amilCampaign: [],
   // modal
   modalCreateActive: false,
@@ -45,6 +47,12 @@ const authSlice = createSlice({
     },
     setSearchCampaign: (state, action) => {
       state.searchCampaign = action.payload;
+    },
+    setSearchCampaignPending: (state, action) => {
+      state.searchCampaignPending = action.payload;
+    },
+    setSearchCampaignHistory: (state, action) => {
+      state.searchCampaignHistory = action.payload;
     },
     setAmilCampaign: (state, action) => {
       state.amilCampaign = action.payload;
@@ -90,6 +98,8 @@ export const {
   setDetailCampaign,
   setAllCampaignCategory,
   setSearchCampaign,
+  setSearchCampaignPending,
+  setSearchCampaignHistory,
   setModalCreateActive,
   setModalCreateCategory,
   setModalEditActive,

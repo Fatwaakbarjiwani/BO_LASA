@@ -66,10 +66,10 @@ export default function Amil() {
             </div>
           </div>
         </div>
-        <div className="w-full shadow-md rounded-2xl mt-8 p-4 space-y-4 border border-gray-100 ">
+        <div className="w-full my-4">
           <div className="flex justify-between items-center items-center font-semibold font-Inter">
             <select
-              className="bg-primary outline-none text-white rounded-full w-48 p-3 text-lg"
+              className="bg-primary outline-none text-white rounded-lg mb-2 w-48 p-3 text-lg"
               onChange={(e) => setPilih(e.target.value)}
             >
               {menuDropdown.map((item, id) => (

@@ -5,6 +5,7 @@ import {
   setCreateDokumentasi,
   setDistribution,
   setJurnal,
+  setPersentase,
   setSummaryDashboard,
   setTransaction,
   setTransactionUser,
@@ -107,13 +108,40 @@ export const getBukuBesar =
 export const getTransaction = (pageNumber) => async (dispatch) => {
   try {
     const response = await axios.get(
-      `${API_URL}/transaction?page=${pageNumber}&month=9&year=2024`
+      `${API_URL}/transaction?page=${pageNumber}`
     );
     const data = response.data;
     dispatch(setTransaction(data.content));
     dispatch(setTotalPNTransaksi(data.totalPages));
   } catch (error) {
     return;
+  }
+};
+export const getPresentage = () => async (dispatch) => {
+  try {
+    const response = await axios.get(`${API_URL}/percentage/rincian/1`);
+    const data = response.data;
+    dispatch(setPersentase(data));
+  } catch (error) {
+    return;
+  }
+};
+export const getEditPresentage = (number) => async (dispatch) => {
+  try {
+    await axios.put(`${API_URL}/percentage/edit/0`, {
+      percentage: number,
+    });
+    Swal.fire({
+      title: "Berhasil",
+      text: "Proses membuat saldo awal berhasil",
+      icon: "success",
+    });
+  } catch (error) {
+    Swal.fire({
+      title: "Gagal",
+      text: "terjadi kesalahan",
+      icon: "error",
+    });
   }
 };
 export const getDistribution = (pageNumber) => async (dispatch) => {
@@ -209,7 +237,7 @@ export const createJurnalUmum =
       }
 
       // Kirim permintaan API
-       await axios.post(
+      await axios.post(
         `${API_URL}/transaction/jurnal-umum`,
         {
           transactionDate: date,
@@ -243,3 +271,36 @@ export const createJurnalUmum =
       });
     }
   };
+
+export const getSearchTransaksi = (name, page) => async (dispatch) => {
+  try {
+    const response = await axios.get(
+      `${API_URL}/transaction/search?search=${name}&page=${page}`
+    );
+    const data = response.data;
+    dispatch(setTransaction(data.content));
+    dispatch(setTotalPNTransaksi(data.totalPages));
+  } catch (error) {
+    return;
+  }
+};
+export const createSaldoAwal = (idCoa, nominal) => async (dispatch) => {
+  try {
+    const response = await axios.post(
+      `${API_URL}/saldo-awal/input?coaId=${idCoa}&saldoAwal=${nominal}`
+    );
+    if (response) {
+      Swal.fire({
+        title: "Berhasil",
+        text: "Proses membuat saldo awal berhasil",
+        icon: "success",
+      });
+    }
+  } catch (error) {
+    Swal.fire({
+      title: "Gagal",
+      text: error?.response?.data?.message || "Proses membuat saldo awal gagal",
+      icon: "error",
+    });
+  }
+};

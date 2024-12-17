@@ -95,7 +95,7 @@ export default function Jurnal() {
     </div>
     <hr />
     <div class="report-title">LAPORAN JURNAL</div>
-    <p class="period">Periode: ${startDate} - ${endDate}</p>
+    <p class="period">Periode: ${startDate} sampai dengan ${endDate}</p>
     <p class="period">Unit: Lazis Sultan Agung</p>
     <table>
       <thead>

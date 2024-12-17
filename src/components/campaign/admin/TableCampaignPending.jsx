@@ -6,6 +6,7 @@ import {
   getApproveCampaign,
   getCampaignPending,
   getDetailCampaign,
+  getSearchCampaignPending,
 } from "../../../redux/actions/campaignAction";
 import { setModalEditActive } from "../../../redux/reducers/campaignReducer";
 
@@ -14,6 +15,7 @@ export default function TableCampaignPending() {
   const [id2, setId2] = useState("");
   const dispatch = useDispatch();
   const { campaignPending } = useSelector((state) => state.campaign);
+  const { searchCampaignPending } = useSelector((state) => state.campaign);
   const { modalCreateActive } = useSelector((state) => state.campaign);
   const { modalEditActive } = useSelector((state) => state.campaign);
   const { pN2 } = useSelector((state) => state.pn);
@@ -24,12 +26,16 @@ export default function TableCampaignPending() {
     return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
   };
   useEffect(() => {
+    if (searchCampaignPending) {
+      dispatch(getSearchCampaignPending(searchCampaignPending, pN2 - 1));
+    }
     if (
-      pN2 ||
-      modalCreateActive == false ||
-      modalEditActive == false ||
-      isLoading == false ||
-      isLoadingPending == false
+      !searchCampaignPending &&
+      (pN2 ||
+        modalCreateActive == false ||
+        modalEditActive == false ||
+        isLoading == false ||
+        isLoadingPending == false)
     ) {
       dispatch(getCampaignPending(pN2 - 1));
     }
@@ -40,6 +46,7 @@ export default function TableCampaignPending() {
     modalEditActive,
     isLoading,
     isLoadingPending,
+    searchCampaignPending,
   ]);
 
   return (

@@ -1,11 +1,17 @@
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { deleteNews, getAllBerita, getDetailBerita } from "../../redux/actions/beritaAction";
+import {
+  deleteNews,
+  getAllBerita,
+  getDetailBerita,
+  getSearchNews,
+} from "../../redux/actions/beritaAction";
 import { setModalEditBerita } from "../../redux/reducers/beritaReducer";
 import { OrbitProgress } from "react-loading-indicators";
 
 export default function TableBerita() {
   const { allBerita } = useSelector((state) => state.berita);
+  const { searchBerita } = useSelector((state) => state.berita);
   const { modalCreateBerita } = useSelector((state) => state.berita);
   const { modalEditBerita } = useSelector((state) => state.berita);
   const { pNBerita } = useSelector((state) => state.pn);
@@ -14,20 +20,31 @@ export default function TableBerita() {
   const dispatch = useDispatch();
 
   useEffect(() => {
+    if (searchBerita) {
+      dispatch(getSearchNews(searchBerita, pNBerita - 1));
+    }
     if (
-      modalCreateBerita == false ||
-      modalEditBerita == false ||
-      isLoading == false
+      !searchBerita &&
+      (modalCreateBerita == false ||
+        modalEditBerita == false ||
+        isLoading == false)
     ) {
       dispatch(getAllBerita(pNBerita - 1));
     }
-  }, [dispatch, pNBerita, modalCreateBerita, modalEditBerita, isLoading]);
+  }, [
+    dispatch,
+    searchBerita,
+    pNBerita,
+    modalCreateBerita,
+    modalEditBerita,
+    isLoading,
+  ]);
   return (
-    <div className="relative overflow-x-auto overflow-y-auto shadow-md rounded-lg">
+    <div className="relative overflow-x-auto overflow-y-auto">
       <table className="w-full text-sm text-left rtl:text-right text-gray-500">
-        <thead className="text-xs text-gray-700 uppercase bg-slate-200 shadow-lg sticky top-0">
+        <thead className="text-xs text-gray-700 uppercase bg-slate-200 shadow sticky top-0">
           <tr>
-            <th scope="col" className="px-6 py-3 rounded-tl-lg rounded-bl-lg">
+            <th scope="col" className="px-6 py-3">
               Pembuat
             </th>
             <th scope="col" className="px-6 py-3 w-60">
@@ -41,7 +58,7 @@ export default function TableBerita() {
             </th>
             <th
               scope="col"
-              className="text-center px-6 py-3 rounded-tr-lg rounded-br-lg"
+              className="text-center px-6 py-3"
             >
               Aksi
             </th>

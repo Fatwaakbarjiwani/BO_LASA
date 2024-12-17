@@ -4,6 +4,7 @@ const initialState = {
   topBerita: [],
   detailBerita: [],
   categoryBerita: [],
+  searchBerita: "",
   modalCreateBerita: false,
   modalCreateTopicBerita: false,
   modalEditBerita: false,
@@ -35,6 +36,9 @@ const authSlice = createSlice({
     setModalEditBerita: (state, action) => {
       state.modalEditBerita = action.payload;
     },
+    setSearchBerita: (state, action) => {
+      state.searchBerita = action.payload;
+    },
     setModalEditTopicBerita: (state, action) => {
       state.modalEditTopicBerita = action.payload;
     },
@@ -54,6 +58,7 @@ export const {
   setModalCreateTopicBerita,
   setModalEditTopicBerita,
   setIdTopic,
+  setSearchBerita,
 } = authSlice.actions;
 
 export default authSlice.reducer;

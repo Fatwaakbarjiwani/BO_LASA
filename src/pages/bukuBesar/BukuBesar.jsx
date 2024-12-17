@@ -135,7 +135,7 @@ export default function BukuBesar() {
           </div>
           <hr />
           <div class="report-title">LAPORAN BUKU BESAR</div>
-          <p class="period">Periode: ${startDate} - ${endDate}</p>
+          <p class="period">Periode: ${startDate} sampai dengan ${endDate}</p>
           <p class="period">Unit: Lazis Sultan Agung</p>
           <p class="coa">COA: ${coaCategory[coaId - 1].accountName}</p>
           <table>
@@ -307,7 +307,7 @@ export default function BukuBesar() {
               </option>
               {coaCategory.map((item) => (
                 <option key={item.id} value={item.id}>
-                  {item?.accountName}
+                  {item?.accountCode} {item?.accountName}
                 </option>
               ))}
             </select>
@@ -326,7 +326,7 @@ export default function BukuBesar() {
               </option>
               {coaCategory.map((item) => (
                 <option key={item.id} value={item.id}>
-                  {item?.accountName}
+                  {item?.accountCode} {item?.accountName}
                 </option>
               ))}
             </select>

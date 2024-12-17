@@ -2,18 +2,25 @@ import { useEffect } from "react";
 import ImportPengguna from "../../../assets/Icon.svg";
 import Donatur from "../../../assets/donatur.svg";
 import { useDispatch, useSelector } from "react-redux";
-import { getTransaction } from "../../../redux/actions/transaksiAction";
+import {
+  getSearchTransaksi,
+  getTransaction,
+} from "../../../redux/actions/transaksiAction";
 import PageNumber from "../../../components/PageNumber";
 import { setPNTransaksi } from "../../../redux/reducers/pageNumberReducer";
+import { setSearchTransaksi } from "../../../redux/reducers/transaction&summaryReducer";
 
 export default function Transaksi() {
   const dispatch = useDispatch();
   const { transaction } = useSelector((state) => state.summary);
+  const { searchTransaksi } = useSelector((state) => state.summary);
   const { totalPNTransaksi } = useSelector((state) => state.pn);
   const { pNTransaksi } = useSelector((state) => state.pn);
   useEffect(() => {
-    dispatch(getTransaction(pNTransaksi - 1));
-  }, [dispatch, pNTransaksi]);
+    if (searchTransaksi) {
+      dispatch(getSearchTransaksi(searchTransaksi, pNTransaksi - 1));
+    } else dispatch(getTransaction(pNTransaksi - 1));
+  }, [searchTransaksi, dispatch, pNTransaksi]);
 
   const formatNumber = (value) => {
     return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
@@ -48,10 +55,20 @@ export default function Transaksi() {
             </div>
           </div>
         </div>
-        <div className="w-full shadow-md rounded-md mt-10 border border-gray-100">
-          <div className="flex justify-between w-full items-center p-4">
+        <div className="w-full rounded-md mt-10">
+          <div className="flex justify-between w-full items-end ">
             <h1 className="text-start text-3xl font-bold">Transaksi Donatur</h1>
-            <div className="flex justify-center">
+            <div className="flex w-2/4 flex-wrap justify-end gap-2">
+              <input
+                type="text"
+                className="outline-none border border-gray-200 rounded-lg w-1/2 p-2 text-sm bg-gray-200"
+                placeholder="search transaksi donatur"
+                value={searchTransaksi}
+                onChange={(e) => {
+                  dispatch(setSearchTransaksi(e.target.value));
+                  dispatch(setPNTransaksi(1));
+                }}
+              />
               <PageNumber
                 total={totalPNTransaksi}
                 page={pNTransaksi}
@@ -59,7 +76,7 @@ export default function Transaksi() {
               />
             </div>
           </div>
-          <div className="relative  overflow-y-auto shadow-md sm:rounded-lg mx-4 my-2">
+          <div className="relative overflow-y-auto my-2">
             <table className="w-full text-sm text-left text-gray-500 ">
               <thead className="text-xs text-gray-700 uppercase bg-slate-200  shadow-lg sticky top-0">
                 <tr>
@@ -67,13 +84,13 @@ export default function Transaksi() {
                     scope="col"
                     className="px-6 py-3 rounded-tl-lg rounded-bl-lg"
                   >
-                    ID
+                    No
                   </th>
                   <th scope="col" className="px-6 py-3">
                     Nama
                   </th>
                   <th scope="col" className="px-6 py-3">
-                    PIC
+                    No Bukti
                   </th>
                   <th scope="col" className="px-6 py-3">
                     Handphone
@@ -105,7 +122,7 @@ export default function Transaksi() {
                 </tr>
               </thead>
               <tbody>
-                {transaction.map((item) => (
+                {transaction.map((item, nomor) => (
                   <tr
                     key={item.id}
                     className="odd:bg-white  even:bg-gray-50 border-b  odd:hover:bg-slate-500 even:hover:bg-slate-500 odd:hover:text-white even:hover:text-white "
@@ -114,7 +131,7 @@ export default function Transaksi() {
                       scope="row"
                       className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap"
                     >
-                      {item?.id}
+                      {nomor + 1}
                     </th>
                     <td className="px-6 py-4">{item?.username}</td>
                     <td className="px-6 py-4">Demak</td>

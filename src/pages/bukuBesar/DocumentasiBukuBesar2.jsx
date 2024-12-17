@@ -87,7 +87,7 @@ const DocumentasiBukuBesar = ({
         LAPORAN BUKU BESAR
       </div>
       <p style={{ margin: "5px 0", fontSize: "14px" }}>
-        Periode: {startDate} - {endDate}
+        Periode: {startDate} sampai dengan {endDate}
       </p>
       <p style={{ margin: "5px 0", fontSize: "14px" }}>
         Unit: Universitas Islam Sultan Agung

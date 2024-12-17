@@ -9,6 +9,7 @@ import {
 } from "../reducers/authReducer";
 import Swal from "sweetalert2";
 import { setTotalPNDonatur } from "../reducers/pageNumberReducer";
+import { setPageImage } from "../reducers/pageReducer";
 export const API_URL = import.meta.env.VITE_API_URL;
 
 export const register =
@@ -291,5 +292,40 @@ export const getAllOperator = (pageNumber) => async (dispatch) => {
     dispatch(setTotalPNDonatur(data.totalPages));
   } catch (error) {
     console.error("Error fetching Donatur", error);
+  }
+};
+
+export const getSearchDonatur = (name, page) => async (dispatch) => {
+  try {
+    const response = await axios.get(
+      `${API_URL}/donatur/search?search=${name}&page=${page}`
+    );
+    const data = response.data;
+    dispatch(setDonatur(data.content));
+    dispatch(setTotalPNDonatur(data.totalPages));
+  } catch (error) {
+    return;
+  }
+};
+
+export const getSearchOperator = (name, page) => async (dispatch) => {
+  try {
+    const response = await axios.get(
+      `${API_URL}/admin/search-operator?search=${name}&page=${page}`
+    );
+    const data = response.data;
+    dispatch(setOperator(data.content));
+    dispatch(setTotalPNDonatur(data.totalPages));
+  } catch (error) {
+    return;
+  }
+};
+export const getPageImage = () => async (dispatch) => {
+  try {
+    const response = await axios.get(`${API_URL}/dashboardImage`);
+    const data = response.data;
+    dispatch(setPageImage(data));
+  } catch (error) {
+    return;
   }
 };

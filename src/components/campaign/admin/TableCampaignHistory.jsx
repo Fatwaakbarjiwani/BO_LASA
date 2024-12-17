@@ -2,21 +2,26 @@ import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   getCampaignHistoryAdmin,
+  getSearchCampaignNonaktif,
 } from "../../../redux/actions/campaignAction";
 
 export default function TableCampaignHistory() {
   const dispatch = useDispatch();
   const { campaignHistory } = useSelector((state) => state.campaign);
+  const { searchCampaignHistory } = useSelector((state) => state.campaign);
   const { pN3 } = useSelector((state) => state.pn);
 
   const formatNumber = (value) => {
     return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
   };
   useEffect(() => {
-    if (pN3) {
+    if (searchCampaignHistory) {
+      dispatch(getSearchCampaignNonaktif(searchCampaignHistory, pN3 - 1));
+    }
+    if (!searchCampaignHistory && pN3) {
       dispatch(getCampaignHistoryAdmin(pN3 - 1));
     }
-  }, [dispatch, pN3, campaignHistory]);
+  }, [dispatch, pN3, campaignHistory, searchCampaignHistory]);
 
   return (
     <table className="w-full text-sm text-left rtl:text-right text-gray-500">

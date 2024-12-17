@@ -10,6 +10,7 @@ const initialState = {
   dskl: [],
   amilDskl: [],
   coaCategory: [],
+  allCoaCategory: [],
   detailZiswaf: [],
   modalCreateZiswaf: false,
   modalEditZiswaf: false,
@@ -48,6 +49,9 @@ const authSlice = createSlice({
     setCoaCategory: (state, action) => {
       state.coaCategory = action.payload;
     },
+    setAllCoaCategory: (state, action) => {
+      state.allCoaCategory = action.payload;
+    },
     setDetailZiswaf: (state, action) => {
       state.detailZiswaf = action.payload;
     },
@@ -74,6 +78,7 @@ export const {
   setAmilInfak,
   setAmilWakaf,
   setAmilZakat,
+  setAllCoaCategory,
 } = authSlice.actions;
 
 export default authSlice.reducer;

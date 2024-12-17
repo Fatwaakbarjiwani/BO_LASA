@@ -11,25 +11,25 @@ const DocumentasiBukuBesar = ({
 }) => {
   const { bukuBesar } = useSelector((state) => state.summary);
 
-  const monthNames = [
-    "Januari",
-    "Februari",
-    "Maret",
-    "April",
-    "Mei",
-    "Juni",
-    "Juli",
-    "Agustus",
-    "September",
-    "Oktober",
-    "November",
-    "Desember",
-  ];
+  // const monthNames = [
+  //   "Januari",
+  //   "Februari",
+  //   "Maret",
+  //   "April",
+  //   "Mei",
+  //   "Juni",
+  //   "Juli",
+  //   "Agustus",
+  //   "September",
+  //   "Oktober",
+  //   "November",
+  //   "Desember",
+  // ];
   const formatNumber = (value) => {
     return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
   };
-  const startMonth = new Date(startDate).getMonth();
-  const namaBulan = monthNames[startMonth];
+  // const startMonth = new Date(startDate).getMonth();
+  // const namaBulan = monthNames[startMonth];
 
   return (
     <>
@@ -93,7 +93,7 @@ const DocumentasiBukuBesar = ({
           LAPORAN BUKU BESAR
         </div>
         <p style={{ margin: "5px 0", fontSize: "14px" }}>
-          Periode: {startDate} - {endDate}
+          Periode: {startDate} sampai dengan {endDate}
         </p>
         <p style={{ margin: "5px 0", fontSize: "14px" }}>
           Unit: Lazis Sultan Agung
@@ -157,7 +157,7 @@ const DocumentasiBukuBesar = ({
                   whiteSpace: "nowrap",
                 }}
               >
-                Saldo Bulan {namaBulan} =
+                Saldo Awal =
               </td>
               <td
                 style={{
@@ -237,6 +237,29 @@ const DocumentasiBukuBesar = ({
                 </td>
               </tr>
             ))}
+            <tr>
+              <td
+                className="bg-gray-200"
+                colSpan={6}
+                style={{
+                  border: "1px solid black",
+                  padding: "8px",
+                  textAlign: "right",
+                }}
+              >
+                Jumlah Total
+              </td>
+              <td
+                className="bg-gray-200 text-left"
+                style={{
+                  border: "1px solid black",
+                  padding: "8px",
+                  textAlign: "right",
+                }}
+              >
+                {/* {formatNumber()} */}
+              </td>
+            </tr>
           </tbody>
         </table>
       </div>
@@ -368,7 +391,7 @@ const DocumentasiBukuBesar = ({
                     whiteSpace: "nowrap",
                   }}
                 >
-                  Saldo Bulan {namaBulan} =
+                  Saldo Awal =
                 </td>
                 <td
                   style={{
@@ -448,6 +471,29 @@ const DocumentasiBukuBesar = ({
                   </td>
                 </tr>
               ))}
+              <tr>
+                <td
+                  className="bg-gray-200"
+                  colSpan={6}
+                  style={{
+                    border: "1px solid black",
+                    padding: "8px",
+                    textAlign: "right",
+                  }}
+                >
+                  Jumlah Total
+                </td>
+                <td
+                  className="bg-gray-200"
+                  style={{
+                    border: "1px solid black",
+                    padding: "8px",
+                    textAlign: "right",
+                  }}
+                >
+                  0
+                </td>
+              </tr>
             </tbody>
           </table>
         </div>

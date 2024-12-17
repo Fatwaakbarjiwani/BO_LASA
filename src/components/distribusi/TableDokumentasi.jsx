@@ -14,23 +14,31 @@ import CreateDokumentasi from "./CreateDokumentasi";
 export default function TableDokumentasi() {
   const dispatch = useDispatch();
   const { amilCampaign } = useSelector((state) => state.campaign);
+  const { amilZakat } = useSelector((state) => state.ziswaf);
+  const { amilWakaf } = useSelector((state) => state.ziswaf);
+  const { amilInfak } = useSelector((state) => state.ziswaf);
+  const { amilDskl } = useSelector((state) => state.ziswaf);
   const { type } = useSelector((state) => state.summary);
   const { pNAmilCampaign } = useSelector((state) => state.pn);
   const { totalPNAmilCampaign } = useSelector((state) => state.pn);
 
   useEffect(() => {
-    dispatch(getAmilCampaign(pNAmilCampaign - 1, type));
+    dispatch(getAmilCampaign(pNAmilCampaign - 1, "zakat"));
+    dispatch(getAmilCampaign(pNAmilCampaign - 1, "infak"));
+    dispatch(getAmilCampaign(pNAmilCampaign - 1, "wakaf"));
+    dispatch(getAmilCampaign(pNAmilCampaign - 1, "dskl"));
+    dispatch(getAmilCampaign(pNAmilCampaign - 1, "campaign"));
   }, [dispatch, pNAmilCampaign, type]);
 
   const formatNumber = (value) => {
     return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
   };
   return (
-    <div className="w-full shadow-md rounded-2xl p-4 space-y-4 border border-gray-100 ">
+    <div className="w-full">
       <CreateDokumentasi />
       <div className="flex justify-between items-center items-center font-semibold font-Inter">
         <select
-          className="bg-primary outline-none text-white rounded-full w-48 p-3 text-lg"
+          className="bg-primary outline-none text-white rounded-lg w-48 p-2 text-lg my-2"
           onChange={(e) => {
             dispatch(setType(e.target.value));
             dispatch(setPNAmilCampaign(1));
@@ -43,11 +51,13 @@ export default function TableDokumentasi() {
           ))}
         </select>
 
-        <PageNumber
-          total={totalPNAmilCampaign}
-          page={pNAmilCampaign}
-          setPage={setPNAmilCampaign}
-        />
+        {type == "campaign" && (
+          <PageNumber
+            total={totalPNAmilCampaign}
+            page={pNAmilCampaign}
+            setPage={setPNAmilCampaign}
+          />
+        )}
       </div>
       <div className="relative overflow-x-auto overflow-y-auto shadow-md sm:rounded-lg">
         <table className="w-full text-sm text-left rtl:text-right text-gray-500 ">
@@ -161,7 +171,14 @@ export default function TableDokumentasi() {
             </tbody>
           ) : (
             <tbody>
-              {amilCampaign.slice(0, amilCampaign.length - 1)?.map((item) => (
+              {(type == "zakat"
+                ? amilZakat.slice(0, amilZakat.length - 1)
+                : type == "infak"
+                ? amilInfak.slice(0, amilInfak.length - 1)
+                : type == "wakaf"
+                ? amilWakaf.slice(0, amilWakaf.length - 1)
+                : amilDskl.slice(0, amilDskl.length - 1)
+              )?.map((item) => (
                 <tr
                   key={item?.id}
                   className="odd:bg-white even:bg-gray-50 border-b odd:hover:bg-slate-500 even:hover:bg-slate-500 odd:hover:text-white even:hover:text-white "

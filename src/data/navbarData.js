@@ -51,4 +51,5 @@ export const menuItems = [
     route: "/distribusi",
   },
   { src: Berita, srcActive: BeritaWhite, title: "Berita", route: "/berita" },
+  { src: Berita, srcActive: BeritaWhite, title: "Tampilan", route: "/tampilan" },
 ];

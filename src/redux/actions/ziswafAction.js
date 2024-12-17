@@ -1,5 +1,6 @@
 import axios from "axios";
 import {
+  setAllCoaCategory,
   setCoaCategory,
   setDetailZiswaf,
   setDskl,
@@ -10,7 +11,11 @@ import {
   setZakat,
 } from "../reducers/ziswafReducer";
 import Swal from "sweetalert2";
-import { setDetailCoa, setModalCreateCoa, setModalEditCoa } from "../reducers/transaction&summaryReducer";
+import {
+  setDetailCoa,
+  setModalCreateCoa,
+  setModalEditCoa,
+} from "../reducers/transaction&summaryReducer";
 export const API_URL = import.meta.env.VITE_API_URL;
 
 export const getCategoryZiswaf = (type) => async (dispatch) => {
@@ -35,6 +40,17 @@ export const getCategoryCoa = () => async (dispatch) => {
     const response = await axios.get(`${API_URL}/coa`);
     const data = response.data;
     dispatch(setCoaCategory(data));
+  } catch (error) {
+    console.error("Error fetching coa category", error);
+  }
+};
+export const getAllCategoryCoa = (list) => async (dispatch) => {
+  try {
+    const response = await axios.get(
+      `${API_URL}/coa${list && `/list?accountType=${list}`}`
+    );
+    const data = response.data;
+    dispatch(setAllCoaCategory(data));
   } catch (error) {
     console.error("Error fetching coa category", error);
   }
@@ -91,7 +107,7 @@ export const createCategoryCoa =
     }
   };
 export const editCategoryCoa =
-  (code, name, type, idParent,id) => async (dispatch) => {
+  (code, name, type, idParent, id) => async (dispatch) => {
     try {
       // Validasi input
       if (!code || !name || !type) {

@@ -1,8 +1,9 @@
 import { useState } from "react";
-import Coa from "../coa/coa";
+import Coa from "../coa/Coa";
 import Jurnal from "../jurnal/admin/Jurnal";
 import JurnalUmum from "../jurnal/admin/JurnalUmum";
 import BukuBesar from "../bukuBesar/BukuBesar";
+import SaldoAwal from "../saldoAwal/SaldoAwal";
 
 export default function Administrasi() {
   const [page, setPage] = useState("coa");
@@ -17,6 +18,8 @@ export default function Administrasi() {
         return <JurnalUmum />;
       case "bukuBesar":
         return <BukuBesar />;
+      case "saldoAwal":
+        return <SaldoAwal />;
       default:
         return null;
     }
@@ -37,14 +40,14 @@ export default function Administrasi() {
           COA
         </button>
         <button
-          onClick={() => setPage("jurnal")}
+          onClick={() => setPage("saldoAwal")}
           className={`px-6 py-2 text-sm font-medium rounded-lg transition ${
-            page === "jurnal"
+            page === "saldoAwal"
               ? "bg-blue-600 text-white"
               : "bg-gray-100 text-gray-700 hover:bg-blue-100"
           }`}
         >
-          Jurnal
+          Saldo Awal
         </button>
         <button
           onClick={() => setPage("jurnalUmum")}
@@ -55,6 +58,16 @@ export default function Administrasi() {
           }`}
         >
           Jurnal Umum
+        </button>
+        <button
+          onClick={() => setPage("jurnal")}
+          className={`px-6 py-2 text-sm font-medium rounded-lg transition ${
+            page === "jurnal"
+              ? "bg-blue-600 text-white"
+              : "bg-gray-100 text-gray-700 hover:bg-blue-100"
+          }`}
+        >
+          Jurnal
         </button>
         <button
           onClick={() => setPage("bukuBesar")}

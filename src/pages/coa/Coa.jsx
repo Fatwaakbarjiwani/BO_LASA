@@ -5,25 +5,48 @@ import {
   setModalEditCoa,
 } from "../../redux/reducers/transaction&summaryReducer";
 import CreateCoa from "../../components/modalCoa/CreateCoa";
-import { deleteCoa, getCategoryCoa } from "../../redux/actions/ziswafAction";
+import { deleteCoa, getAllCategoryCoa } from "../../redux/actions/ziswafAction";
 import { OrbitProgress } from "react-loading-indicators";
 import EditCoa from "../../components/modalCoa/EditCoa";
 
 export default function Coa() {
-  const { coaCategory } = useSelector((state) => state.ziswaf);
+  const { allCoaCategory } = useSelector((state) => state.ziswaf);
   const { modalCreateCoa } = useSelector((state) => state.summary);
   const { modalEditCoa } = useSelector((state) => state.summary);
   const [isLoading, setLoading] = useState(false);
   const [idDelete, setIdDelete] = useState("");
   const [id, setId] = useState("");
+  const [type, setType] = useState("");
   const dispatch = useDispatch();
 
   useEffect(() => {
     {
-      (!modalCreateCoa || !modalEditCoa || !isLoading) &&
-        dispatch(getCategoryCoa());
+      (!modalCreateCoa || !modalEditCoa || !isLoading || type) &&
+        dispatch(getAllCategoryCoa(type));
     }
-  }, [dispatch, modalCreateCoa, isLoading, modalEditCoa]);
+  }, [dispatch, modalCreateCoa, isLoading, modalEditCoa, type]);
+  const typedata = [
+    {
+      id: 1,
+      name: "asset",
+    },
+    {
+      id: 2,
+      name: "liability",
+    },
+    {
+      id: 3,
+      name: "equity",
+    },
+    {
+      id: 4,
+      name: "revenue",
+    },
+    {
+      id: 5,
+      name: "expense",
+    },
+  ];
 
   return (
     <div>
@@ -32,14 +55,30 @@ export default function Coa() {
       {/* Header */}
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold">Daftar COA</h1>
-        <button
-          onClick={() => {
-            dispatch(setModalCreateCoa(true));
-          }}
-          className="px-4 py-2 bg-blue-600 text-white rounded shadow hover:bg-blue-700"
-        >
-          Tambah COA
-        </button>
+        <div className="flex gap-2 items-center w-1/2 justify-end">
+          <div className="w-1/2">
+            <select
+              value={type}
+              onChange={(e) => setType(e.target.value)}
+              className="w-full p-3 border border-gray-300 rounded-lg"
+            >
+              <option value="">Pilih Tipe Akun</option>
+              {typedata.map((item) => (
+                <option key={item.id} value={item.name}>
+                  {item.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <button
+            onClick={() => {
+              dispatch(setModalCreateCoa(true));
+            }}
+            className="px-4 py-2 bg-blue-600 text-white rounded shadow hover:bg-blue-700"
+          >
+            Tambah COA
+          </button>
+        </div>
       </div>
 
       {/* Table */}
@@ -55,7 +94,7 @@ export default function Coa() {
             </tr>
           </thead>
           <tbody className="text-gray-700 text-sm font-light">
-            {coaCategory.map((item) => (
+            {allCoaCategory.map((item) => (
               <tr
                 key={item.id}
                 className="border-b border-gray-200 hover:bg-gray-100"

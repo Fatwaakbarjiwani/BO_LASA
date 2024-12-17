@@ -13,10 +13,12 @@ const initialState = {
   bukuBesar: [],
   createDokumentasi: false,
   id: "",
+  searchTransaksi: "",
   type: "campaign",
   modalCreateCoa: false,
   modalEditCoa: false,
   detailCoa: [],
+  persentase: [],
 };
 function getNmlFromLocalStorage() {
   const encryptedNml = localStorage.getItem("nml");
@@ -78,6 +80,9 @@ const authSlice = createSlice({
     setId: (state, action) => {
       state.id = action.payload;
     },
+    setSearchTransaksi: (state, action) => {
+      state.searchTransaksi = action.payload;
+    },
     setType: (state, action) => {
       state.type = action.payload;
     },
@@ -89,6 +94,9 @@ const authSlice = createSlice({
     },
     setDetailCoa: (state, action) => {
       state.detailCoa = action.payload;
+    },
+    setPersentase: (state, action) => {
+      state.persentase = action.payload;
     },
   },
 });
@@ -108,6 +116,8 @@ export const {
   setModalCreateCoa,
   setModalEditCoa,
   setDetailCoa,
+  setSearchTransaksi,
+  setPersentase,
 } = authSlice.actions;
 
 export default authSlice.reducer;
