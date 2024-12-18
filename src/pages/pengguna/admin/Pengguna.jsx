@@ -7,6 +7,7 @@ import {
   getSearchDonatur,
   getSearchOperator,
   nonActiveOperator,
+  resetPassword,
 } from "../../../redux/actions/authAction";
 import PageNumber from "../../../components/PageNumber";
 import {
@@ -14,12 +15,14 @@ import {
   setPNOperator,
 } from "../../../redux/reducers/pageNumberReducer";
 import {
+  setModalCreateAdmin,
   setModalCreateOperator,
   setSearchDonatur,
   setSearchOperator,
 } from "../../../redux/reducers/authReducer";
 import ModalOperator from "../../../components/modalPengguna/CreateOperator";
 import { OrbitProgress } from "react-loading-indicators";
+import ModalAdmin from "../../../components/modalPengguna/CreateAdmin";
 
 const data = [
   { id: 1, nama: "Operator", value: "operator" },
@@ -39,8 +42,10 @@ export default function Pengguna() {
   const { operator } = useSelector((state) => state.auth);
   const { modalCreateOperator } = useSelector((state) => state.auth);
   const [isLoading, setLoading] = useState(false);
+  const [isLoading2, setLoading2] = useState(false);
   const [typeButton, setTypeButton] = useState("operator");
   const [id, setId] = useState("");
+  const [email, setEmail] = useState("");
 
   useEffect(() => {
     if (searchOperator) {
@@ -71,6 +76,7 @@ export default function Pengguna() {
   return (
     <>
       <ModalOperator />
+      <ModalAdmin />
       <div className={`mb-4 w-full`}>
         <h1 className="text-3xl font-extrabold text-gray-800 mb-4">Pengguna</h1>
         <div className="flex gap-4 items-center my-5">
@@ -189,7 +195,7 @@ export default function Pengguna() {
                         )}
                         <td className="px-6 py-4 flex items-center justify-center">
                           <div className="w-full flex items-center gap-2">
-                            {isLoading && id == isId ? (
+                            {isLoading && id == item?.id - 2 ? (
                               <div className="w-full flex justify-center">
                                 <OrbitProgress
                                   variant="dotted"
@@ -224,6 +230,30 @@ export default function Pengguna() {
                                 className="p-1 px-2 rounded-full text-nowrap shadow-md bg-green-500 w-full text-white font-semibold"
                               >
                                 Aktif
+                              </button>
+                            )}
+                            {isLoading2 && email == item.email ? (
+                              <div className="w-full flex justify-center">
+                                <OrbitProgress
+                                  variant="dotted"
+                                  color="#69c53e"
+                                  text=""
+                                  style={{ fontSize: "6px" }}
+                                  textColor=""
+                                />
+                              </div>
+                            ) : (
+                              <button
+                                onClick={() => {
+                                  setEmail(item?.email);
+                                  setLoading2(true);
+                                  dispatch(resetPassword(item?.email)).finally(
+                                    () => setLoading2(false)
+                                  );
+                                }}
+                                className="p-1 px-2 rounded-full text-nowrap shadow-md bg-yellow-500 w-full text-white font-semibold"
+                              >
+                                Reset Password
                               </button>
                             )}
                           </div>
@@ -319,6 +349,16 @@ export default function Pengguna() {
               </table>
             </div>
           </div>
+        </div>
+      )}
+      {typeButton == "administrasi" && (
+        <div>
+          <button
+            onClick={() => dispatch(setModalCreateAdmin(true))}
+            className="text-lg shadow active:scale-105 duration-200 flex items-center justify-center bg-primary bg-primary px-6 py-1 rounded-lg text-white font-semibold"
+          >
+            Buat Admin
+          </button>
         </div>
       )}
     </>

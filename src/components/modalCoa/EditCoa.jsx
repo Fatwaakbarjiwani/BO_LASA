@@ -189,5 +189,5 @@ function EditCoa({ id }) {
 export default EditCoa;
 
 EditCoa.propTypes = {
-  id: PropTypes,
+  id: PropTypes.string,
 };

@@ -52,7 +52,7 @@ export default function TableOperasional() {
               <OrbitProgress
                 variant="dotted"
                 color="#69c53e"
-                style={{ fontSize: "24px" }}
+                style={{ fontSize: "12px" }}
               />
             </div>
           ) : (

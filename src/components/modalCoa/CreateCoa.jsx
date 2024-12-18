@@ -1,7 +1,6 @@
 import { useSelector, useDispatch } from "react-redux";
 import { useEffect, useState } from "react";
 import { OrbitProgress } from "react-loading-indicators";
-import PropTypes from "prop-types";
 import { setModalCreateCoa } from "../../redux/reducers/transaction&summaryReducer";
 import {
   createCategoryCoa,
@@ -163,8 +162,6 @@ function CreateCoa() {
     </div>
   );
 }
-CreateCoa.propTypes = {
-  type: PropTypes.oneOf(["zakat", "infak", "dskl", "wakaf"]).isRequired,
-};
+
 
 export default CreateCoa;

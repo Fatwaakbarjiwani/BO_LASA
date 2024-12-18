@@ -128,7 +128,7 @@ export const getPresentage = () => async (dispatch) => {
 };
 export const getEditPresentage = (number) => async (dispatch) => {
   try {
-    await axios.put(`${API_URL}/percentage/edit/0`, {
+    await axios.put(`${API_URL}/percentage/edit/1`, {
       percentage: number,
     });
     Swal.fire({

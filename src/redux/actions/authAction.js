@@ -39,6 +39,33 @@ export const register =
       });
     }
   };
+export const registerAdmin =
+  (username, phoneNumber, email, password, address) => async (dispatch) => {
+    try {
+      const response = await axios.post(`${API_URL}/auth/signup/admin`, {
+        username: username,
+        phoneNumber: phoneNumber,
+        email: email,
+        password: password,
+        address: address,
+        role: "keuangan",
+      });
+      if (response) {
+        Swal.fire({
+          title: "Berhasil",
+          text: "Admin berhasil dibuat",
+          icon: "success",
+        });
+        dispatch(setModalCreateOperator(false));
+      }
+    } catch (error) {
+      Swal.fire({
+        title: "Proses membuat admin gagal",
+        text: error.response.data.message,
+        icon: "error",
+      });
+    }
+  };
 export const login = (acount, password, navigate) => async (dispatch) => {
   try {
     const response = await axios.post(`${API_URL}/auth/signin/admin`, {
@@ -147,18 +174,33 @@ export const editProfileUser =
     }
   };
 
-export const resetPassword = (email, setSucces) => async () => {
+export const resetPassword = (email) => async () => {
   try {
-    const response = await axios.post(`${API_URL}/auth/reset-password`, {
-      email: email,
+    const result = await Swal.fire({
+      title: "Yakin ingin mereset password operator ini?",
+      text: "Operator ini akan direset password",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Reset",
+      cancelButtonText: "Batal",
     });
-    if (response) {
-      setSucces(true);
-      Swal.fire({
-        title: "Reset password berhasil",
-        text: "Silahkan cek email anda",
-        icon: "success",
-      });
+
+    if (result.isConfirmed) {
+      const response = await axios.post(
+        `${API_URL}/auth/reset-password-admin`,
+        {
+          email: email,
+        }
+      );
+      if (response) {
+        Swal.fire({
+          title: "Reset password berhasil",
+          text: "Silahkan cek email anda",
+          icon: "success",
+        });
+      }
     }
   } catch (error) {
     Swal.fire({
@@ -234,8 +276,8 @@ export const nonActiveOperator = (id) => async (dispatch, getState) => {
 export const activeOperator = (id) => async (dispatch, getState) => {
   try {
     const result = await Swal.fire({
-      title: "Yakin ingin menonaktifkan operator ini?",
-      text: "Operator ini akan dinonaktifkan",
+      title: "Yakin ingin mengaktifkan operator ini?",
+      text: "Operator ini akan diaktifkan",
       icon: "warning",
       showCancelButton: true,
       confirmButtonColor: "#3085d6",
@@ -257,7 +299,7 @@ export const activeOperator = (id) => async (dispatch, getState) => {
       );
       if (response) {
         Swal.fire({
-          title: `Berhasil dinonaktifkan`,
+          title: `Berhasil diaktifkan`,
           text: "Proses mengaktifkan operator berhasil",
           icon: "success",
         });

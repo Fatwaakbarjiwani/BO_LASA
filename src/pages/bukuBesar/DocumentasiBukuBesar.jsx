@@ -2,13 +2,7 @@ import PropTypes from "prop-types"; // Import PropTypes
 import logo2 from "../../assets/logo2.png";
 import { useSelector } from "react-redux";
 
-const DocumentasiBukuBesar = ({
-  startDate,
-  endDate,
-  coaCategory,
-  coaId,
-  coaId2,
-}) => {
+const DocumentasiBukuBesar = ({ startDate, endDate, coaId, coaId2 }) => {
   const { bukuBesar } = useSelector((state) => state.summary);
 
   // const monthNames = [
@@ -99,7 +93,7 @@ const DocumentasiBukuBesar = ({
           Unit: Lazis Sultan Agung
         </p>
         <p style={{ margin: "5px 0", fontSize: "14px", color: "red" }}>
-          COA: {coaCategory[coaId - 1]?.accountName}
+          COA: {coaId}
         </p>
         {/* Table Section */}
         <table
@@ -239,7 +233,7 @@ const DocumentasiBukuBesar = ({
             ))}
             <tr>
               <td
-                className="bg-gray-200"
+                className="bg-gray-200 font-semibold"
                 colSpan={6}
                 style={{
                   border: "1px solid black",
@@ -249,15 +243,21 @@ const DocumentasiBukuBesar = ({
               >
                 Jumlah Total
               </td>
+
               <td
-                className="bg-gray-200 text-left"
+                className="bg-gray-200"
                 style={{
                   border: "1px solid black",
                   padding: "8px",
                   textAlign: "right",
                 }}
               >
-                {/* {formatNumber()} */}
+                {bukuBesar?.bukuBesarCoa1 &&
+                  bukuBesar.bukuBesarCoa1.length > 0 &&
+                  formatNumber(
+                    bukuBesar.bukuBesarCoa1[bukuBesar.bukuBesarCoa1.length - 1]
+                      ?.saldo || 0
+                  )}
               </td>
             </tr>
           </tbody>
@@ -333,7 +333,7 @@ const DocumentasiBukuBesar = ({
             Unit: Lazis Sultan Agung
           </p>
           <p style={{ margin: "5px 0", fontSize: "14px", color: "red" }}>
-            COA: {coaCategory[coaId2 - 1]?.accountName}
+            COA: {coaId2}
           </p>
           {/* Table Section */}
           <table
@@ -473,7 +473,7 @@ const DocumentasiBukuBesar = ({
               ))}
               <tr>
                 <td
-                  className="bg-gray-200"
+                  className="bg-gray-200 font-semibold"
                   colSpan={6}
                   style={{
                     border: "1px solid black",
@@ -491,7 +491,13 @@ const DocumentasiBukuBesar = ({
                     textAlign: "right",
                   }}
                 >
-                  0
+                  {bukuBesar?.bukuBesarCoa2 &&
+                    bukuBesar.bukuBesarCoa2.length > 0 &&
+                    formatNumber(
+                      bukuBesar.bukuBesarCoa2[
+                        bukuBesar.bukuBesarCoa2.length - 1
+                      ]?.saldo || 0
+                    )}
                 </td>
               </tr>
             </tbody>
@@ -511,8 +517,8 @@ DocumentasiBukuBesar.propTypes = {
       accountName: PropTypes.string.isRequired,
     })
   ).isRequired,
-  coaId: PropTypes.number.isRequired,
-  coaId2: PropTypes.number.isRequired,
+  coaId: PropTypes.string.isRequired,
+  coaId2: PropTypes.string.isRequired,
 };
 
 export default DocumentasiBukuBesar;

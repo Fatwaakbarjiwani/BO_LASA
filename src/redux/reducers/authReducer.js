@@ -28,6 +28,7 @@ const initialState = {
   operator: [],
   donatur: [],
   modalCreateOperator: false,
+  modalCreateAdmin: false,
   ps: getPsFromLocalStorage(),
 };
 const authSlice = createSlice({
@@ -72,6 +73,9 @@ const authSlice = createSlice({
     setModalCreateOperator: (state, action) => {
       state.modalCreateOperator = action.payload;
     },
+    setModalCreateAdmin: (state, action) => {
+      state.modalCreateAdmin = action.payload;
+    },
     setPs: (state, action) => {
       if (action.payload) {
         const encryptedPs = CryptoJS.AES.encrypt(
@@ -99,7 +103,8 @@ export const {
   setSearchDonatur,
   setSearchOperator,
   setDonatur,
-  setModalCreateOperator
+  setModalCreateOperator,
+  setModalCreateAdmin,
 } = authSlice.actions;
 
 export default authSlice.reducer;
