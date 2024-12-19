@@ -4,7 +4,6 @@ import "jspdf-autotable";
 import { useDispatch, useSelector } from "react-redux";
 import { getBukuBesar } from "../../redux/actions/transaksiAction";
 import logo2 from "../../assets/logo2.png";
-// import logo3 from "../../assets/logo3.png";
 import { getCategoryCoa } from "../../redux/actions/ziswafAction";
 import Swal from "sweetalert2";
 import DocumentasiBukuBesar from "./DocumentasiBukuBesar";
@@ -15,11 +14,14 @@ export default function BukuBesar() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [coaId, setCoaId] = useState("");
+  const [coaName, setCoaName] = useState("");
   const [coaId2, setCoaId2] = useState("");
+  const [coaName2, setCoaName2] = useState("");
   const { bukuBesar } = useSelector((state) => state.summary);
   const dispatch = useDispatch();
   const [isLoading, setLoading] = useState(false);
   const reportTemplateRef = useRef(null);
+  const [dateTime, setDateTime] = useState("");
 
   useEffect(() => {
     dispatch(getCategoryCoa());
@@ -33,8 +35,8 @@ export default function BukuBesar() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-
-    // Validasi input
+    const currentDateTime = new Date().toLocaleString();
+    setDateTime(currentDateTime);
     if (!startDate) {
       Swal.fire({
         title: "Tanggal mulai harus diisi",
@@ -119,7 +121,12 @@ export default function BukuBesar() {
             th { background-color: #f2f2f2; font-size: 14px; }
             td { font-size: 12px; }
             .left-align { text-align: left; font-weight: bold; }
-            .coa { color:red; }
+            .coa {
+              color: red;
+              display: flex;
+              justify-content: space-between;
+              width:100%
+            }
             .page-break { page-break-before: always; margin-top:20vh }
           </style>
         </head>
@@ -137,7 +144,9 @@ export default function BukuBesar() {
           <div class="report-title">LAPORAN BUKU BESAR</div>
           <p class="period">Periode: ${startDate} sampai dengan ${endDate}</p>
           <p class="period">Unit: Lazis Sultan Agung</p>
-          <p class="coa">COA: ${coaCategory[coaId - 1].accountName}</p>
+          <p class="coa flex">COA: ${coaName} ${
+        dateTime && `<p style={{ color: "black"}}>${dateTime}</p>`
+      }</p>
           <table>
             <thead>
               <tr>
@@ -190,7 +199,9 @@ export default function BukuBesar() {
           <div class="report-title">LAPORAN BUKU BESAR</div>
           <p class="period">Periode: ${startDate} - ${endDate}</p>
           <p class="period">Unit: Universitas Islam Sultan Agung</p>
-          <p class="coa">COA: ${coaCategory[coaId2 - 1].accountName}</p>
+          <p class="coa">COA: ${coaName2} ${
+                  dateTime && `<p style={{ color: "black" }}>${dateTime}</p>`
+                }</p>
           <table>
             <thead>
               <tr>
@@ -299,14 +310,22 @@ export default function BukuBesar() {
             </label>
             <select
               value={coaId}
-              onChange={(e) => setCoaId(e.target.value)}
+              onChange={(e) => {
+                const selectedOption = e.target.options[e.target.selectedIndex];
+                setCoaId(e.target.value); // Menyimpan ID dari value
+                setCoaName(selectedOption.text); // Mendapatkan accountName dari data attribute
+              }}
               className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
             >
               <option value="" disabled>
                 Pilih Kategori
               </option>
               {coaCategory.map((item) => (
-                <option key={item.id} value={item.id}>
+                <option
+                  key={item.id}
+                  value={item.id}
+                  data-account-name={item.accountName}
+                >
                   {item?.accountCode} {item?.accountName}
                 </option>
               ))}
@@ -318,14 +337,23 @@ export default function BukuBesar() {
             </label>
             <select
               value={coaId2}
-              onChange={(e) => setCoaId2(e.target.value)}
+              onChange={(e) => {
+                const selectedOption = e.target.options[e.target.selectedIndex];
+
+                setCoaId2(e.target.value); // Menyimpan ID dari value
+                setCoaName2(selectedOption.text); // Mendapatkan accountName dari data attribute
+              }}
               className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
             >
               <option value="" disabled>
                 Pilih Kategori
               </option>
               {coaCategory.map((item) => (
-                <option key={item.id} value={item.id}>
+                <option
+                  key={item.id}
+                  value={item.id}
+                  data-account-name={item.accountName} // Menyimpan accountName di data attribute
+                >
                   {item?.accountCode} {item?.accountName}
                 </option>
               ))}
@@ -372,7 +400,9 @@ export default function BukuBesar() {
           coaCategory={coaCategory}
           coaId={coaId}
           coaId2={coaId2}
-          bukuBesar={bukuBesar}
+          coaName={coaName}
+          coaName2={coaName2}
+          dateTime={dateTime}
         />
       </div>
     </div>

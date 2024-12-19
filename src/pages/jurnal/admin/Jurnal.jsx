@@ -16,6 +16,7 @@ export default function Jurnal() {
   const dispatch = useDispatch();
   const [isLoading, setLoading] = useState(false);
   const reportTemplateRef = useRef(null);
+  const [dateTime, setDateTime] = useState("");
 
   useEffect(() => {
     if (startDate && endDate) {
@@ -25,6 +26,8 @@ export default function Jurnal() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    const currentDateTime = new Date().toLocaleString();
+    setDateTime(currentDateTime);
 
     if (!startDate || !endDate || !format) {
       Swal.fire({
@@ -56,7 +59,7 @@ export default function Jurnal() {
 
     const newWindow = window.open("", "_blank");
     if (newWindow) {
-         newWindow.document.write(`
+      newWindow.document.write(`
 <html>
   <head>
     <title>Laporan Jurnal</title>
@@ -96,7 +99,9 @@ export default function Jurnal() {
     <hr />
     <div class="report-title">LAPORAN JURNAL</div>
     <p class="period">Periode: ${startDate} sampai dengan ${endDate}</p>
-    <p class="period">Unit: Lazis Sultan Agung</p>
+    <p style={{ display=flex ; justify-content=space-between }} class="period">Unit: Lazis Sultan Agung   ${
+      dateTime && `<p className="text-black">${dateTime}</p>`
+    }</p>
     <table>
       <thead>
         <tr>
@@ -242,7 +247,11 @@ export default function Jurnal() {
         </div>
       </div>
       <div ref={reportTemplateRef}>
-        <DokumentasiJurnal startDate={startDate} endDate={endDate} />
+        <DokumentasiJurnal
+          startDate={startDate}
+          endDate={endDate}
+          dateTime={dateTime}
+        />
       </div>
     </>
   );

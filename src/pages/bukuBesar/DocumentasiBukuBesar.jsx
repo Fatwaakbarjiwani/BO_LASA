@@ -2,28 +2,20 @@ import PropTypes from "prop-types"; // Import PropTypes
 import logo2 from "../../assets/logo2.png";
 import { useSelector } from "react-redux";
 
-const DocumentasiBukuBesar = ({ startDate, endDate, coaId, coaId2 }) => {
+const DocumentasiBukuBesar = ({
+  startDate,
+  endDate,
+  coaId,
+  coaId2,
+  coaName,
+  coaName2,
+  dateTime,
+}) => {
   const { bukuBesar } = useSelector((state) => state.summary);
 
-  // const monthNames = [
-  //   "Januari",
-  //   "Februari",
-  //   "Maret",
-  //   "April",
-  //   "Mei",
-  //   "Juni",
-  //   "Juli",
-  //   "Agustus",
-  //   "September",
-  //   "Oktober",
-  //   "November",
-  //   "Desember",
-  // ];
   const formatNumber = (value) => {
     return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
   };
-  // const startMonth = new Date(startDate).getMonth();
-  // const namaBulan = monthNames[startMonth];
 
   return (
     <>
@@ -92,8 +84,12 @@ const DocumentasiBukuBesar = ({ startDate, endDate, coaId, coaId2 }) => {
         <p style={{ margin: "5px 0", fontSize: "14px" }}>
           Unit: Lazis Sultan Agung
         </p>
-        <p style={{ margin: "5px 0", fontSize: "14px", color: "red" }}>
-          COA: {coaId}
+        <p
+          className="w-full flex justify-between"
+          style={{ margin: "5px 0", fontSize: "14px", color: "red" }}
+        >
+          COA: {coaName}
+          {dateTime && <p className="text-black">{dateTime}</p>}
         </p>
         {/* Table Section */}
         <table
@@ -332,8 +328,12 @@ const DocumentasiBukuBesar = ({ startDate, endDate, coaId, coaId2 }) => {
           <p style={{ margin: "5px 0", fontSize: "14px" }}>
             Unit: Lazis Sultan Agung
           </p>
-          <p style={{ margin: "5px 0", fontSize: "14px", color: "red" }}>
-            COA: {coaId2}
+          <p
+            className="w-full flex justify-between"
+            style={{ margin: "5px 0", fontSize: "14px", color: "red" }}
+          >
+            COA: {coaName2}
+            {dateTime && <p className="text-black">{dateTime}</p>}
           </p>
           {/* Table Section */}
           <table
@@ -519,6 +519,9 @@ DocumentasiBukuBesar.propTypes = {
   ).isRequired,
   coaId: PropTypes.string.isRequired,
   coaId2: PropTypes.string.isRequired,
+  coaName: PropTypes.string.isRequired,
+  coaName2: PropTypes.string.isRequired,
+  dateTime: PropTypes.string.isRequired,
 };
 
 export default DocumentasiBukuBesar;

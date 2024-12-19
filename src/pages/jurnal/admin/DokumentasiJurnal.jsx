@@ -2,7 +2,7 @@ import { useSelector } from "react-redux";
 import logo from "../../../assets/logo2.png";
 import PropTypes from "prop-types";
 
-export default function DokumentasiJurnal({ startDate, endDate }) {
+export default function DokumentasiJurnal({ startDate, endDate, dateTime }) {
   const { jurnal } = useSelector((state) => state.summary);
 
   const formatNumber = (value) => {
@@ -63,8 +63,9 @@ export default function DokumentasiJurnal({ startDate, endDate }) {
       <p style={{ fontSize: "14px", margin: "10px 0" }}>
         Periode: {startDate} sampai dengan {endDate}
       </p>
-      <p style={{ fontSize: "14px", margin: "10px 0" }}>
+      <p className="flex w-full justify-between items-center" style={{ fontSize: "14px", margin: "10px 0" }}>
         Unit : Lazis Sultan Agung
+        {dateTime && <p className="text-black">{dateTime}</p>}
       </p>
 
       {/* Table */}
@@ -142,14 +143,10 @@ export default function DokumentasiJurnal({ startDate, endDate }) {
               Jumlah Total
             </td>
             <td className="bg-gray-200" style={cellStyle}>
-              {formatNumber(
-                jurnal?.totalDebitKeseluruhan || 0
-              )}
+              {formatNumber(jurnal?.totalDebitKeseluruhan || 0)}
             </td>
             <td className="bg-gray-200" style={cellStyle}>
-              {formatNumber(
-                jurnal?.totalKreditKeseluruhan || 0
-              )}
+              {formatNumber(jurnal?.totalKreditKeseluruhan || 0)}
             </td>
           </tr>
         </tbody>
@@ -176,4 +173,5 @@ const cellStyle = {
 DokumentasiJurnal.propTypes = {
   startDate: PropTypes.string.isRequired,
   endDate: PropTypes.string.isRequired,
+  dateTime: PropTypes.string.isRequired,
 };

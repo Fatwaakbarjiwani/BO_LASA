@@ -371,3 +371,34 @@ export const getPageImage = () => async (dispatch) => {
     return;
   }
 };
+export const uploadPageImage = (images) => async (dispatch) => {
+  try {
+    const formData = new FormData();
+    {
+      images.image1 != null && formData.append("image_1", images.image1);
+    }
+    {
+      images.image2 != null && formData.append("image_2", images.image2);
+    }
+    {
+      images.image3 != null && formData.append("image_3", images.image3);
+    }
+    const response = await axios.post(
+      `${API_URL}/dashboardImage/create`,
+      formData
+    );
+    if (response) {
+      Swal.fire({
+        title: `Berhasil`,
+        text: "Proses upload gambar berhasil",
+        icon: "success",
+      });
+    }
+  } catch (error) {
+    Swal.fire({
+      title: "Proses upload gambar gagal",
+      text: error.response.data.message,
+      icon: "error",
+    });
+  }
+};
