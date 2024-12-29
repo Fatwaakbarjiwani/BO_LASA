@@ -14,6 +14,7 @@ import {
   setPN3,
   setPN4,
 } from "../redux/reducers/pageNumberReducer";
+import { menuItemsKeuangan } from "../data/navbarDataKeuangan";
 
 export default function Sidebar() {
   const location = useLocation();
@@ -83,10 +84,60 @@ export default function Sidebar() {
               </Link>
             ))}
           </>
-        ) : (
+        ) : user?.role == "OPERATOR" ? (
           <>
             <div className="mt-4 flex flex-col gap-4">
               {menuItemsOperator.map((item, index) => (
+                <Link to={item.route} key={index}>
+                  <div
+                    className={`w-full flex items-center px-4 ${
+                      activeMenu === item.route
+                        ? "border-4 border-transparent border-l-[#69C53E]"
+                        : ""
+                    }`}
+                  >
+                    <button
+                      onClick={() => {
+                        setActiveMenu(item.route);
+                        dispatch(setPN(1));
+                        dispatch(setPN1(1));
+                        dispatch(setPN2(1));
+                        dispatch(setPN3(1));
+                        dispatch(setPN4(1));
+                      }}
+                      className={`flex items-center w-full gap-2 ${
+                        activeMenu === item.route
+                          ? "rounded-3xl bg-[#69C53E] shadow-md text-white"
+                          : ""
+                      } ${
+                        isSidebarOpen ? "px-8 py-2" : "justify-center px-2 py-1"
+                      }`}
+                      title={item.title}
+                    >
+                      <img
+                        src={
+                          activeMenu === item.route ? item.srcActive : item.src
+                        }
+                        alt={item.title}
+                        className={`${isSidebarOpen ? "w-6" : "w-6 h-8"} `}
+                      />
+                      <span
+                        className={`${isSidebarOpen ? "block" : "hidden"}  ${
+                          activeMenu === item.route ? "text-white" : ""
+                        }`}
+                      >
+                        {item.title}
+                      </span>
+                    </button>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="mt-4 flex flex-col gap-4">
+              {menuItemsKeuangan.map((item, index) => (
                 <Link to={item.route} key={index}>
                   <div
                     className={`w-full flex items-center px-4 ${

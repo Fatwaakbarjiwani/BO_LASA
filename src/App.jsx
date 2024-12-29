@@ -70,70 +70,94 @@ function AppContent() {
                   </Protected>
                 }
               />
-              <Route
-                path="/pengguna"
-                element={
-                  <Protected>
-                    <Pengguna />
-                  </Protected>
-                }
-              />
-              <Route
-                path="/transaksi"
-                element={
-                  <Protected>
-                    <Transaksi />
-                  </Protected>
-                }
-              />
-              <Route
-                path="/administrasi"
-                element={
-                  <Protected>
-                    <Administrasi />
-                  </Protected>
-                }
-              />
-              <Route
-                path="/berita"
-                element={
-                  <Protected>
-                    <Berita />
-                  </Protected>
-                }
-              />
-              <Route
-                path="/distribusi"
-                element={
-                  <Protected>
-                    <Distribusi />
-                  </Protected>
-                }
-              />
-              <Route
-                path="/ziswaf"
-                element={
-                  <Protected>
-                    <Ziswaf />
-                  </Protected>
-                }
-              />
-              <Route
-                path="/amil"
-                element={
-                  <Protected>
-                    <Amil />
-                  </Protected>
-                }
-              />
-              <Route
-                path="/tampilan"
-                element={
-                  <Protected>
-                    <Tampilan />
-                  </Protected>
-                }
-              />
+              {user?.role == "ADMIN" && (
+                <>
+                  <Route
+                    path="/pengguna"
+                    element={
+                      <Protected>
+                        <Pengguna />
+                      </Protected>
+                    }
+                  />
+                  <Route
+                    path="/transaksi"
+                    element={
+                      <Protected>
+                        <Transaksi />
+                      </Protected>
+                    }
+                  />
+                  <Route
+                    path="/administrasi"
+                    element={
+                      <Protected>
+                        <Administrasi />
+                      </Protected>
+                    }
+                  />
+                  <Route
+                    path="/berita"
+                    element={
+                      <Protected>
+                        <Berita />
+                      </Protected>
+                    }
+                  />
+                  <Route
+                    path="/distribusi"
+                    element={
+                      <Protected>
+                        <Distribusi />
+                      </Protected>
+                    }
+                  />
+                  <Route
+                    path="/ziswaf"
+                    element={
+                      <Protected>
+                        <Ziswaf />
+                      </Protected>
+                    }
+                  />
+                  <Route
+                    path="/amil"
+                    element={
+                      <Protected>
+                        <Amil />
+                      </Protected>
+                    }
+                  />
+                  <Route
+                    path="/tampilan"
+                    element={
+                      <Protected>
+                        <Tampilan />
+                      </Protected>
+                    }
+                  />
+                </>
+              )}
+              {user?.role == "KEUANGAN" && (
+                <>
+                  <Route
+                    path="/transaksi"
+                    element={
+                      <Protected>
+                        <Transaksi />
+                      </Protected>
+                    }
+                  />
+                  <Route
+                    path="/administrasi"
+                    element={
+                      <Protected>
+                        <Administrasi />
+                      </Protected>
+                    }
+                  />
+                </>
+              )}
             </Routes>
           </div>
         </div>

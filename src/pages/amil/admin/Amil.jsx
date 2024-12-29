@@ -150,9 +150,9 @@ export default function Amil() {
                 <tbody>
                   {amilCampaign
                     ?.slice(0, amilCampaign.length - 1)
-                    .map((item) => (
+                    .map((item,id) => (
                       <tr
-                        key={item?.campaingId}
+                        key={id}
                         className="odd:bg-white even:bg-gray-50 border-b odd:hover:bg-slate-500 even:hover:bg-slate-500 odd:hover:text-white even:hover:text-white "
                       >
                         <td className="px-6 py-4 w-1/12">{item?.campaignId}</td>
@@ -190,9 +190,9 @@ export default function Amil() {
                     : pilih == "wakaf"
                     ? amilWakaf.slice(0, amilWakaf.length - 1)
                     : amilDskl.slice(0, amilDskl.length - 1)
-                  )?.map((item) => (
+                  )?.map((item,id) => (
                     <tr
-                      key={item?.id}
+                      key={id}
                       className="odd:bg-white even:bg-gray-50 border-b odd:hover:bg-slate-500 even:hover:bg-slate-500 odd:hover:text-white even:hover:text-white "
                     >
                       <td className="px-6 py-4 text-wrap w-1/12">{item?.id}</td>

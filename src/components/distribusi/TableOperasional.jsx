@@ -20,51 +20,49 @@ export default function TableOperasional() {
   }, [dispatch, loading]);
 
   return (
-    <div className="p-6 bg-gradient-to-r from-gray-50 via-gray-100 to-gray-50 min-h-screen">
-      <h1 className="text-3xl font-bold text-gray-800 mb-6 border-b-2 pb-2 border-primary">
-        Penyaluran Dana
-      </h1>
+    <div className="flex justify-center">
+      <div className="w-full max-w-md bg-white shadow-lg border border-gray-100 rounded-lg p-6">
+        <h1 className="text-2xl font-bold text-gray-800 text-center mb-6">
+          Penyaluran Dana
+        </h1>
 
-      {/* Button to toggle edit mode */}
-      <div className="mb-4">
-        <button
-          onClick={() => setEdit(!edit)}
-          className="bg-primary p-2 rounded text-white font-semibold hover:bg-primary-dark focus:outline-none"
-        >
-          {edit ? "Keluar" : "Ubah Prosentase"}
-        </button>
-      </div>
+        {/* Tombol Ubah Persentase */}
+        <div className="flex justify-center mb-4">
+          <button
+            onClick={() => setEdit(!edit)}
+            className="bg-green-500 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-600 focus:outline-none"
+          >
+            {edit ? "Batal" : "Ubah Persentase"}
+          </button>
+        </div>
 
-      {/* Display persentase or edit input */}
-      <div className="grid grid-cols-1 gap-4">
-        <div className="p-4 bg-white shadow-md rounded-lg">
+        {/* Konten */}
+        <div className="bg-gray-100 p-4 rounded-lg shadow-sm">
           {!edit ? (
-            <div className="text-gray-600 font-bold">
-              <p>
-                <span className="font-normal">Persentase : </span>
-                <span className="text-lg">
-                  {persentase?.persentase?.persen_operasional} %
-                </span>
+            <div className="text-center">
+              <p className="text-gray-700 text-sm">Persentase Operasional:</p>
+              <p className="text-3xl font-semibold text-green-600 mt-2">
+                {persentase?.persentase?.persen_operasional ?? "0"}%
               </p>
             </div>
           ) : loading ? (
-            <div className="w-full flex justify-center">
+            <div className="flex justify-center">
               <OrbitProgress
                 variant="dotted"
-                color="#69c53e"
+                color="#4CAF50"
                 style={{ fontSize: "12px" }}
               />
             </div>
           ) : (
-            <div className="flex flex-col">
-              <label className="text-sm font-semibold text-gray-600 mb-2">
-                Masukkan Persentase:
+            <div className="flex flex-col space-y-4">
+              <label className="text-sm font-medium text-gray-700">
+                Masukkan Persentase Baru:
               </label>
               <input
-                className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
                 type="number"
                 value={nominal}
                 onChange={(e) => setNominal(e.target.value)}
+                className="p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-none"
                 placeholder="Masukkan persentase"
               />
               <button
@@ -75,7 +73,7 @@ export default function TableOperasional() {
                     setEdit(false);
                   });
                 }}
-                className="mt-4 bg-primary text-white font-semibold p-2 rounded-md hover:bg-primary-dark focus:outline-none"
+                className="bg-green-500 text-white py-2 rounded-lg font-medium hover:bg-green-600 focus:outline-none"
               >
                 Submit
               </button>

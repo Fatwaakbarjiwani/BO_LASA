@@ -5,7 +5,11 @@ import {
   setModalEditCoa,
 } from "../../redux/reducers/transaction&summaryReducer";
 import CreateCoa from "../../components/modalCoa/CreateCoa";
-import { deleteCoa, getAllCategoryCoa } from "../../redux/actions/ziswafAction";
+import {
+  deleteCoa,
+  getAllCategoryCoa,
+  getAllCoa,
+} from "../../redux/actions/ziswafAction";
 import { OrbitProgress } from "react-loading-indicators";
 import EditCoa from "../../components/modalCoa/EditCoa";
 
@@ -21,8 +25,14 @@ export default function Coa() {
 
   useEffect(() => {
     {
-      (!modalCreateCoa || !modalEditCoa || !isLoading || type) &&
-        dispatch(getAllCategoryCoa(type));
+      {
+        !type
+          ? dispatch(getAllCoa())
+          : (!modalCreateCoa || !modalEditCoa || !isLoading || type) &&
+            dispatch(getAllCategoryCoa(type));
+      }
+      // (!modalCreateCoa || !modalEditCoa || !isLoading || type) &&
+      //   dispatch(getAllCategoryCoa(type));
     }
   }, [dispatch, modalCreateCoa, isLoading, modalEditCoa, type]);
   const typedata = [

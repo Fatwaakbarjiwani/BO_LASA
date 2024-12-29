@@ -14,15 +14,16 @@ const data = [
 export default function Distribusi() {
   const { pN } = useSelector((state) => state.pn);
   const { totalPN } = useSelector((state) => state.pn);
+  const { createDokumentasi } = useSelector((state) => state.summary);
   const [typeButton, setTypeButton] = useState("distribusi");
 
   return (
     <>
       <h1 className="text-3xl font-extrabold text-gray-800 mb-2">Distribusi</h1>
       <div className="flex gap-4 items-center my-5">
-        {data.map((item) => (
+        {data.map((item, id) => (
           <button
-            key={item.id}
+            key={id}
             className={`${
               typeButton == item?.value
                 ? "bg-blue-600 text-white"
@@ -48,7 +49,9 @@ export default function Distribusi() {
         )}
         {typeButton == "documentasi" && (
           <>
-            <h1 className="text-start text-3xl font-bold ">Dokumentasi</h1>
+            {!createDokumentasi && (
+              <h1 className="text-start text-3xl font-bold ">Dokumentasi</h1>
+            )}
             <PageNumber total={totalPN} page={pN} setPage={setPN} />
             <TableDokumentasi />
           </>

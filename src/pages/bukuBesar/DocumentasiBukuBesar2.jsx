@@ -139,7 +139,6 @@ const DocumentasiBukuBesar = ({
                 fontWeight: "bold",
               }}
             >
-              Saldo Awal Tahun 2024 =
             </td>
             <td
               colSpan="2"

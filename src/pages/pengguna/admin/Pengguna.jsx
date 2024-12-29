@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   activeOperator,
+  getAdminKeuangan,
   getAllDonatur,
   getAllOperator,
   getSearchDonatur,
@@ -39,8 +40,10 @@ export default function Pengguna() {
   const { searchDonatur } = useSelector((state) => state.auth);
   const { searchOperator } = useSelector((state) => state.auth);
   const { donatur } = useSelector((state) => state.auth);
+  const { adminKeuangan } = useSelector((state) => state.auth);
   const { operator } = useSelector((state) => state.auth);
   const { modalCreateOperator } = useSelector((state) => state.auth);
+  const { modalCreateAdmin } = useSelector((state) => state.auth);
   const [isLoading, setLoading] = useState(false);
   const [isLoading2, setLoading2] = useState(false);
   const [typeButton, setTypeButton] = useState("operator");
@@ -48,10 +51,16 @@ export default function Pengguna() {
   const [email, setEmail] = useState("");
 
   useEffect(() => {
+    if (
+      !searchOperator &&
+      (modalCreateAdmin == false || isLoading == false)
+    ) {
+      dispatch(getAdminKeuangan());
+    }
+
     if (searchOperator) {
       dispatch(getSearchOperator(searchOperator, pNOperator - 1));
     }
-
     if (
       !searchOperator &&
       (modalCreateOperator == false || isLoading == false)
@@ -110,7 +119,7 @@ export default function Pengguna() {
                 <input
                   type="text"
                   className="outline-none border border-gray-200 bg-gray-100 rounded-lg w-1/2 p-2 text-sm shadow-sm"
-                  placeholder="search donatur"
+                  placeholder="search operator"
                   value={searchOperator}
                   onChange={(e) => {
                     dispatch(setSearchOperator(e.target.value));
@@ -353,12 +362,119 @@ export default function Pengguna() {
       )}
       {typeButton == "administrasi" && (
         <div>
-          <button
-            onClick={() => dispatch(setModalCreateAdmin(true))}
-            className="text-lg shadow active:scale-105 duration-200 flex items-center justify-center bg-primary bg-primary px-6 py-1 rounded-lg text-white font-semibold"
-          >
-            Buat Admin
-          </button>
+          <h1 className="text-start text-3xl font-bold mb-5">
+            Daftar Admin Keuangan
+          </h1>
+          <div className="flex items-end justify-between">
+            <button
+              onClick={() => dispatch(setModalCreateAdmin(true))}
+              className="text-lg shadow active:scale-105 duration-200 flex items-center justify-center bg-primary bg-primary px-6 py-1 rounded-lg text-white font-semibold"
+            >
+              Buat Admin Keuangan
+            </button>
+          </div>
+          <div className="w-full shadow-md rounded-md mt-2 overflow-auto">
+            <div className="relative overflow-x-auto overflow-y-auto sm:rounded-lg">
+              <table className="w-full justify-between text-sm rtl:text-right text-gray-500 table-auto">
+                <thead className="justif text-left text-xs text-gray-700 uppercase bg-slate-200 shadow-lg sticky top-0">
+                  <tr>
+                    <th
+                      scope="col"
+                      className="px-6 py-3 rounded-tl-lg rounded-bl-lg"
+                    >
+                      No
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-6 py-3 rounded-tl-lg rounded-bl-lg"
+                    >
+                      Nama
+                    </th>
+                    <th scope="col" className="px-6 py-3">
+                      Handphone
+                    </th>
+                    <th scope="col" className="px-6 py-3">
+                      Email
+                    </th>
+                    <th scope="col" className="px-6 py-3">
+                      Tanggal Pembuatan
+                    </th>
+                    <th scope="col" className="px-6 py-3">
+                      Alamat
+                    </th>
+                    <th scope="col" className="px-6 py-3">
+                      Status
+                    </th>
+                    <th scope="col" className="px-6 py-3">
+                      Aksi
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {adminKeuangan?.map((item, isId) => (
+                    <tr
+                      key={isId}
+                      className="odd:bg-white text-left even:bg-gray-50 border-b  odd:hover:bg-slate-500 even:hover:bg-slate-500 odd:hover:text-white even:hover:text-white "
+                    >
+                      <th
+                        scope="row"
+                        className="px-6 py-4 font-medium whitespace-nowrap"
+                      >
+                        {isId + 1}
+                      </th>
+                      <th
+                        scope="row"
+                        className="px-6 py-4 font-medium whitespace-nowrap"
+                      >
+                        {item?.username}
+                      </th>
+                      <td className="px-6 py-4">{item?.phoneNumber}</td>
+                      <td className="px-6 py-4">{item?.email}</td>
+                      <td className="px-6 py-4">{item?.createdAt}</td>
+                      <td className="px-6 py-4">{item?.address}</td>
+                      {item?.status == true ? (
+                        <td className="px-6 py-4 text-nowrap font-semibold text-green-400">
+                          Aktif
+                        </td>
+                      ) : (
+                        <td className="px-6 py-4 text-nowrap font-semibold">
+                          Tidak Aktif
+                        </td>
+                      )}
+                      <td className="px-6 py-4 flex items-center justify-center">
+                        <div className="w-full flex items-center gap-2">
+                          {isLoading2 && email == item.email ? (
+                            <div className="w-full flex justify-center">
+                              <OrbitProgress
+                                variant="dotted"
+                                color="#69c53e"
+                                text=""
+                                style={{ fontSize: "6px" }}
+                                textColor=""
+                              />
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => {
+                                setEmail(item?.email);
+                                setLoading2(true);
+                                dispatch(resetPassword(item?.email)).finally(
+                                  () => setLoading2(false)
+                                );
+                              }}
+                              className="p-1 px-2 rounded-full text-nowrap shadow-md bg-yellow-500 w-full text-white font-semibold"
+                            >
+                              Reset Password
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
       )}
     </>

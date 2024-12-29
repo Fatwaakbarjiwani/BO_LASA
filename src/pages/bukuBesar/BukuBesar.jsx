@@ -161,7 +161,7 @@ export default function BukuBesar() {
             </thead>
             <tbody>
               <tr>
-              <td class="left-align" colspan="4">Saldo Awal Tahun 2024 = </td>
+              <td class="left-align" colspan="4"></td>
                 <td class="left-align" colspan="2">Saldo Bulan ${namaBulan} =</td>
                 <td>${formatNumber(bukuBesar?.saldoAwal1 || 0)}</td>
               </tr>

@@ -5,7 +5,10 @@ import {
   setCreateDokumentasi,
   setDistribution,
   setJurnal,
+  setLaporanAktivitas,
+  setNeracaSaldo,
   setPersentase,
+  setPosisiKeuangan,
   setSummaryDashboard,
   setTransaction,
   setTransactionUser,
@@ -89,6 +92,40 @@ export const getJurnal = (startDate, endDate) => async (dispatch) => {
     );
     const data = response.data;
     dispatch(setJurnal(data));
+  } catch (error) {
+    return;
+  }
+};
+export const getPosisiKeuangan = (m1, m2, y1, y2) => async (dispatch) => {
+  try {
+    const response = await axios.get(
+      `${API_URL}/journal/neraca-report?month1=${m1}&year1=${y1}&month2=${m2}&year2=${y2}`
+    );
+    const data = response.data;
+    dispatch(setPosisiKeuangan(data));
+  } catch (error) {
+    return;
+  }
+};
+export const getLaporanAktivitas =
+  (m1, m2, y1, y2, type) => async (dispatch) => {
+    try {
+      const response = await axios.get(
+        `${API_URL}/journal/${type}-activity-report?month1=${m1}&year1=${y1}&month2=${m2}&year2=${y2}`
+      );
+      const data = response.data;
+      dispatch(setLaporanAktivitas(data));
+    } catch (error) {
+      return;
+    }
+  };
+export const getNeracaSaldo = (m1, y1) => async (dispatch) => {
+  try {
+    const response = await axios.get(
+      `${API_URL}/journal/neraca-saldo-report?month1=${m1}&year1=${y1}`
+    );
+    const data = response.data;
+    dispatch(setNeracaSaldo(data));
   } catch (error) {
     return;
   }
@@ -271,6 +308,82 @@ export const createJurnalUmum =
       });
     }
   };
+export const createLaporanPenyaluran =
+  (date, keterangan, jenis, kategori, rows) => async (dispatch, getState) => {
+    try {
+      const { tokenAdmin } = getState().auth;
+
+      // Validasi data sebelum mengirim request
+      if (!date || !keterangan || !jenis || !kategori || rows.length === 0) {
+        Swal.fire({
+          title: "Proses gagal",
+          text: "Pastikan semua data telah diisi dengan benar.",
+          icon: "error",
+        });
+        return;
+      }
+
+      // Format data debit dan kredit
+      const debitDetails = rows
+        .filter((row) => row.debet > 0)
+        .map((row) => ({
+          coaId: row.rekening,
+          amount: row.debet,
+        }));
+
+      const kreditDetails = rows
+        .filter((row) => row.kredit > 0)
+        .map((row) => ({
+          coaId: row.rekening,
+          amount: row.kredit,
+        }));
+
+      // Validasi debit dan kredit
+      if (debitDetails.length === 0 || kreditDetails.length === 0) {
+        Swal.fire({
+          title: "Proses gagal",
+          text: "Pastikan ada data debit dan kredit yang valid.",
+          icon: "error",
+        });
+        return;
+      }
+
+      // Kirim permintaan API
+      await axios.post(
+        `${API_URL}/transaction/jurnal-umum`,
+        {
+          transactionDate: date,
+          description: keterangan,
+          categoryType: jenis,
+          categoryId: kategori,
+          penyaluran: true,
+          debitDetails,
+          kreditDetails,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${tokenAdmin}`,
+          },
+        }
+      );
+
+      // Jika berhasil
+      Swal.fire({
+        title: "Proses membuat laporan penyaluran berhasil",
+        text: "Pastikan membuat dokumentasi penyaluran",
+        icon: "success",
+      });
+    } catch (error) {
+      // Tangani error
+      Swal.fire({
+        title: "Proses gagal",
+        text:
+          error?.response?.data?.message ||
+          "Terjadi kesalahan. Coba lagi nanti.",
+        icon: "error",
+      });
+    }
+  };
 
 export const getSearchTransaksi = (name, page) => async (dispatch) => {
   try {
@@ -284,11 +397,14 @@ export const getSearchTransaksi = (name, page) => async (dispatch) => {
     return;
   }
 };
-export const createSaldoAwal = (idCoa, nominal) => async (dispatch) => {
+export const createSaldoAwal = (input) => async (dispatch) => {
   try {
-    const response = await axios.post(
-      `${API_URL}/saldo-awal/input?coaId=${idCoa}&saldoAwal=${nominal}`
-    );
+    const hasil = input.map((item) => ({
+      coaId: item.id,
+      debit: item.debet,
+      kredit: item.kredit,
+    }));
+    const response = await axios.post(`${API_URL}/saldo-awal/input`, hasil);
     if (response) {
       Swal.fire({
         title: "Berhasil",

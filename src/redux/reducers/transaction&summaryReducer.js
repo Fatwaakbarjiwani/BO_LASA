@@ -10,6 +10,9 @@ const initialState = {
   distribution: [],
   summaryDashboard: [],
   jurnal: [],
+  posisiKeuangan: [],
+  laporanAktivitas: [],
+  neracaSaldo: [],
   bukuBesar: [],
   createDokumentasi: false,
   id: "",
@@ -18,6 +21,7 @@ const initialState = {
   modalCreateCoa: false,
   modalEditCoa: false,
   detailCoa: [],
+  saldoCoa: [],
   persentase: [],
 };
 function getNmlFromLocalStorage() {
@@ -71,6 +75,15 @@ const authSlice = createSlice({
     setJurnal: (state, action) => {
       state.jurnal = action.payload;
     },
+    setNeracaSaldo: (state, action) => {
+      state.neracaSaldo = action.payload;
+    },
+    setPosisiKeuangan: (state, action) => {
+      state.posisiKeuangan = action.payload;
+    },
+    setLaporanAktivitas: (state, action) => {
+      state.laporanAktivitas = action.payload;
+    },
     setBukuBesar: (state, action) => {
       state.bukuBesar = action.payload;
     },
@@ -95,6 +108,9 @@ const authSlice = createSlice({
     setDetailCoa: (state, action) => {
       state.detailCoa = action.payload;
     },
+    setSaldoCoa: (state, action) => {
+      state.saldoCoa = action.payload;
+    },
     setPersentase: (state, action) => {
       state.persentase = action.payload;
     },
@@ -118,6 +134,10 @@ export const {
   setDetailCoa,
   setSearchTransaksi,
   setPersentase,
+  setSaldoCoa,
+  setPosisiKeuangan,
+  setLaporanAktivitas,
+  setNeracaSaldo,
 } = authSlice.actions;
 
 export default authSlice.reducer;

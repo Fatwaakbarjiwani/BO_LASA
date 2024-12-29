@@ -134,9 +134,7 @@ const DocumentasiBukuBesar = ({
                   textAlign: "left",
                   fontWeight: "bold",
                 }}
-              >
-                Saldo Awal Tahun 2024 =
-              </td>
+              ></td>
               <td
                 colSpan="2"
                 style={{
@@ -378,9 +376,7 @@ const DocumentasiBukuBesar = ({
                     textAlign: "left",
                     fontWeight: "bold",
                   }}
-                >
-                  Saldo Awal Tahun 2024 =
-                </td>
+                ></td>
                 <td
                   colSpan="2"
                   style={{

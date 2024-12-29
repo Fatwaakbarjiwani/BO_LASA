@@ -14,6 +14,7 @@ export default function JurnalUmum() {
   const { zakat, infak, wakaf, dskl, coaCategory } = useSelector(
     (state) => state.ziswaf
   );
+  const { campaign } = useSelector((state) => state.campaign);
 
   const [date, setDate] = useState("");
   const [jenis, setJenis] = useState("");
@@ -29,6 +30,7 @@ export default function JurnalUmum() {
     dispatch(getCategoryZiswaf("infak"));
     dispatch(getCategoryZiswaf("wakaf"));
     dispatch(getCategoryZiswaf("dskl"));
+    dispatch(getCategoryZiswaf("campaign"));
     dispatch(getCategoryCoa());
   }, [dispatch]);
 
@@ -122,12 +124,20 @@ export default function JurnalUmum() {
               ? infak
               : jenis === "wakaf"
               ? wakaf
+              : jenis === "campaign"
+              ? campaign
               : dskl
-            ).map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.categoryName}
-              </option>
-            ))}
+            ).map((item) =>
+              jenis !== "campaign" ? (
+                <option key={item.id} value={item.id}>
+                  {item.categoryName}
+                </option>
+              ) : (
+                <option key={item.id} value={item.campaignId}>
+                  {item.campaignId}. {item.campaignName}
+                </option>
+              )
+            )}
           </select>
         </div>
       </div>

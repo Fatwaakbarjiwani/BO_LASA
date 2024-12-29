@@ -27,6 +27,7 @@ const initialState = {
   searchDonatur: "",
   operator: [],
   donatur: [],
+  adminKeuangan: [],
   modalCreateOperator: false,
   modalCreateAdmin: false,
   ps: getPsFromLocalStorage(),
@@ -70,6 +71,9 @@ const authSlice = createSlice({
     setDonatur: (state, action) => {
       state.donatur = action.payload;
     },
+    setAdminKeuangan: (state, action) => {
+      state.adminKeuangan = action.payload;
+    },
     setModalCreateOperator: (state, action) => {
       state.modalCreateOperator = action.payload;
     },
@@ -105,6 +109,7 @@ export const {
   setDonatur,
   setModalCreateOperator,
   setModalCreateAdmin,
+  setAdminKeuangan
 } = authSlice.actions;
 
 export default authSlice.reducer;

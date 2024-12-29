@@ -27,12 +27,13 @@ export default function Ziswaf() {
   const handleCategoryChange = (event) => {
     setSelectedCategory(event.target.value);
   };
-
   useEffect(() => {
     dispatch(getCategoryZiswaf("zakat"));
     dispatch(getCategoryZiswaf("infak"));
     dispatch(getCategoryZiswaf("wakaf"));
     dispatch(getCategoryZiswaf("dskl"));
+  }, []);
+  useEffect(() => {
     setSelectedState(categories[selectedCategory] || []);
   }, [dispatch, selectedCategory, categories]);
   useEffect(() => {
@@ -53,9 +54,9 @@ export default function Ziswaf() {
       <CreateZiswaf type={selectedCategory} />
       <EditZiswaf type={selectedCategory} />
       <h1 className="text-3xl font-extrabold text-gray-800">Ziswaf</h1>
-      <div className="w-full shadow-md rounded-2xl mt-5 border border-gray-100 p-4 space-y-2">
+      <div className="w-full shadow-md rounded-lg mt-5 border border-gray-100 p-4 space-y-2">
         <select
-          className="text-lg shadow active:scale-105 duration-200 flex items-center justify-center bg-gray-500 w-2/12 px-6 py-1 rounded-full text-white font-semibold"
+          className="text-lg shadow active:scale-105 duration-200 flex items-center justify-center bg-gray-500 w-2/12 px-6 py-1 rounded-lg text-white font-semibold"
           value={selectedCategory}
           onChange={handleCategoryChange}
         >
@@ -67,7 +68,7 @@ export default function Ziswaf() {
 
         <button
           onClick={() => dispatch(setModalCreateZiswaf(true))}
-          className="text-lg  shadow active:scale-105 duration-200 flex items-center justify-center bg-primary w-2/12 px-6 py-1 rounded-full text-white font-semibold"
+          className="text-lg  shadow active:scale-105 duration-200 flex items-center justify-center bg-primary w-2/12 px-6 py-1 rounded-lg text-white font-semibold"
         >
           Buat {selectedCategory}
         </button>

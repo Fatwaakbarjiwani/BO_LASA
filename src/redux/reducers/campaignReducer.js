@@ -1,6 +1,7 @@
 import { createSlice } from "@reduxjs/toolkit";
 const initialState = {
   totalPageNumberMessage: 0,
+  campaign: [],
   allCampaign: [],
   campaignBySearch: [],
   allCampaignEmergency: [],
@@ -29,6 +30,9 @@ const authSlice = createSlice({
   reducers: {
     setTotalPageNumberMessage: (state, action) => {
       state.totalPageNumberMessage = action.payload;
+    },
+    setCampaign: (state, action) => {
+      state.campaign = action.payload;
     },
     setAllCampaign: (state, action) => {
       state.allCampaign = action.payload;
@@ -92,6 +96,7 @@ const authSlice = createSlice({
 
 export const {
   setTotalPageNumberMessage,
+  setCampaign,
   setAllCampaign,
   setCampaignBySearch,
   setAllCampaignEmergency,

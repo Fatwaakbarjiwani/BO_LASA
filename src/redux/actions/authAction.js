@@ -1,7 +1,9 @@
 import axios from "axios";
 import toast from "react-hot-toast";
 import {
+  setAdminKeuangan,
   setDonatur,
+  setModalCreateAdmin,
   setModalCreateOperator,
   setOperator,
   setTokenAdmin,
@@ -56,7 +58,7 @@ export const registerAdmin =
           text: "Admin berhasil dibuat",
           icon: "success",
         });
-        dispatch(setModalCreateOperator(false));
+        dispatch(setModalCreateAdmin(false));
       }
     } catch (error) {
       Swal.fire({
@@ -336,6 +338,17 @@ export const getAllOperator = (pageNumber) => async (dispatch) => {
     console.error("Error fetching Donatur", error);
   }
 };
+export const getAdminKeuangan = (pageNumber) => async (dispatch) => {
+  try {
+    const response = await axios.get(
+      `${API_URL}/admin/get-all-keuangan`
+    );
+    const data = response.data;
+    dispatch(setAdminKeuangan(data.content));
+  } catch (error) {
+    console.error("Error fetching Donatur", error);
+  }
+};
 
 export const getSearchDonatur = (name, page) => async (dispatch) => {
   try {
@@ -371,8 +384,9 @@ export const getPageImage = () => async (dispatch) => {
     return;
   }
 };
-export const uploadPageImage = (images) => async (dispatch) => {
+export const uploadPageImage = (images) => async (dispatch, getState) => {
   try {
+    const { tokenAdmin } = getState().auth;
     const formData = new FormData();
     {
       images.image1 != null && formData.append("image_1", images.image1);
@@ -385,7 +399,13 @@ export const uploadPageImage = (images) => async (dispatch) => {
     }
     const response = await axios.post(
       `${API_URL}/dashboardImage/create`,
-      formData
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${tokenAdmin}`,
+        },
+      }
     );
     if (response) {
       Swal.fire({
@@ -397,6 +417,44 @@ export const uploadPageImage = (images) => async (dispatch) => {
   } catch (error) {
     Swal.fire({
       title: "Proses upload gambar gagal",
+      text: error.response.data.message,
+      icon: "error",
+    });
+  }
+};
+export const editPageImage = (images) => async (dispatch, getState) => {
+  try {
+    const { tokenAdmin } = getState().auth;
+    const formData = new FormData();
+    {
+      images.image1 != null && formData.append("image_1", images.image1);
+    }
+    {
+      images.image2 != null && formData.append("image_2", images.image2);
+    }
+    {
+      images.image3 != null && formData.append("image_3", images.image3);
+    }
+    const response = await axios.put(
+      `${API_URL}/dashboardImage/edit/1`,
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${tokenAdmin}`,
+        },
+      }
+    );
+    if (response) {
+      Swal.fire({
+        title: `Berhasil`,
+        text: "Proses merubah gambar berhasil",
+        icon: "success",
+      });
+    }
+  } catch (error) {
+    Swal.fire({
+      title: "Proses merubah gambar gagal",
       text: error.response.data.message,
       icon: "error",
     });

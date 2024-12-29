@@ -4,7 +4,7 @@ const initialState = {
   pageImage: [],
 };
 const authSlice = createSlice({
-  name: "nav&side",
+  name: "page",
   initialState,
   reducers: {
     setIsSidebarOpen: (state, action) => {

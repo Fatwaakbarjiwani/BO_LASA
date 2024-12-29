@@ -1,6 +1,4 @@
 import { useEffect } from "react";
-import ImportPengguna from "../../../assets/Icon.svg";
-import Donatur from "../../../assets/donatur.svg";
 import { useDispatch, useSelector } from "react-redux";
 import {
   getSearchTransaksi,
@@ -31,31 +29,7 @@ export default function Transaksi() {
         <h1 className="text-3xl font-extrabold text-gray-800 mb-4">
           Transaksi
         </h1>
-        <div className="grid grid-cols-4 gap-4">
-          <div className="shadow-md rounded-md border border-gray-100">
-            <div className="flex justify-between items-center p-2 gap-5">
-              <div>
-                <h1 className="text-slate-500 text-start font-semibold ">
-                  Total Pengguna
-                </h1>
-                <p className="font-bold text-3xl text-start">40, 689</p>
-              </div>
-              <img src={ImportPengguna} alt="" />
-            </div>
-          </div>
-          <div className="shadow-md rounded-md border border-gray-100 ">
-            <div className="flex justify-between items-center p-2 gap-5">
-              <div>
-                <h1 className="text-slate-500 text-start font-semibold ">
-                  Jumlah Transaksi
-                </h1>
-                <p className="font-bold text-3xl text-start">10293</p>
-              </div>
-              <img src={Donatur} alt="" />
-            </div>
-          </div>
-        </div>
-        <div className="w-full rounded-md mt-10">
+        <div className="w-full rounded-md mt-4">
           <div className="flex justify-between w-full items-end ">
             <h1 className="text-start text-3xl font-bold">Transaksi Donatur</h1>
             <div className="flex w-2/4 flex-wrap justify-end gap-2">
