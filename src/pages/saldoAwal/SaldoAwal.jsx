@@ -18,7 +18,7 @@ export default function SaldoAwal() {
     {
       !loading && dispatch(getSaldoCoa());
     }
-  }, [dispatch]);
+  }, [dispatch, loading]);
 
   useEffect(() => {
     // Initialize rows with data from coaCategory

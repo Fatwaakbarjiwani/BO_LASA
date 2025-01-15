@@ -604,7 +604,7 @@ export default function LaporanPosisiKeuangan() {
               onClick={handleSubmit}
               className="w-full bg-green-500 text-white p-3 rounded-lg"
             >
-              Download Neraca Saldo
+              Download Posisi Keuangan
             </button>
           )}
         </div>

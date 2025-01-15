@@ -24,6 +24,10 @@ export default function JurnalUmum() {
     { id: 1, rekening: "", debet: 0, kredit: 0 },
   ]);
   // console.log(rows);
+  const deleteRow = (id) => {
+    const updatedRows = rows.filter((row) => row.id !== id);
+    setRows(updatedRows);
+  };
 
   useEffect(() => {
     dispatch(getCategoryZiswaf("zakat"));
@@ -40,6 +44,7 @@ export default function JurnalUmum() {
     { id: 3, name: "Wakaf", category: "wakaf" },
     { id: 4, name: "DSKL", category: "dskl" },
     { id: 5, name: "Campaign", category: "campaign" },
+    { id: 6, name: "Pengelola", category: "pengelola" },
   ];
 
   const addRow = () => {
@@ -169,6 +174,9 @@ export default function JurnalUmum() {
             <th className="px-4 py-2 text-left text-sm font-medium text-gray-600">
               Kredit
             </th>
+            <th className="px-4 py-2 text-left text-sm font-medium text-gray-600">
+              Aksi
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -210,6 +218,14 @@ export default function JurnalUmum() {
                   }
                   className="w-full p-2 border border-gray-300 rounded-lg"
                 />
+              </td>
+              <td className="px-4 py-2">
+                <button
+                  onClick={() => deleteRow(row.id)}
+                  className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600"
+                >
+                  Hapus
+                </button>
               </td>
             </tr>
           ))}

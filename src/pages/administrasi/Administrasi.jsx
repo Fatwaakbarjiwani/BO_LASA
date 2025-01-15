@@ -89,16 +89,6 @@ export default function Administrasi() {
           Buku Besar
         </button>
         <button
-          onClick={() => setPage("posisiKeuangan")}
-          className={`px-4 py-2 text-sm font-medium rounded-lg text-nowrap transition ${
-            page === "posisiKeuangan"
-              ? "bg-blue-600 text-white"
-              : "bg-gray-100 text-gray-700 hover:bg-blue-100"
-          }`}
-        >
-          Posisi Keuangan
-        </button>
-        <button
           onClick={() => setPage("neracaSaldo")}
           className={`px-4 py-2 text-sm font-medium rounded-lg text-nowrap transition ${
             page === "neracaSaldo"
@@ -107,6 +97,16 @@ export default function Administrasi() {
           }`}
         >
           Neraca Saldo
+        </button>
+        <button
+          onClick={() => setPage("posisiKeuangan")}
+          className={`px-4 py-2 text-sm font-medium rounded-lg text-nowrap transition ${
+            page === "posisiKeuangan"
+              ? "bg-blue-600 text-white"
+              : "bg-gray-100 text-gray-700 hover:bg-blue-100"
+          }`}
+        >
+          Posisi Keuangan
         </button>
         <button
           onClick={() => setPage("laporanAktifitas")}

@@ -167,7 +167,7 @@ export default function NeracaSaldo() {
               onClick={handleSubmit}
               className="w-full bg-green-500 text-white p-3 rounded-lg"
             >
-              Download Laporan Aktivitas
+              Download Neraca Saldo
             </button>
           )}
         </div>

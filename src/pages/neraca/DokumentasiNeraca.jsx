@@ -121,7 +121,7 @@ export default function DokumentasiNeraca({ m1, m2, y1, y2, dateTime }) {
       >
         <thead>
           <tr>
-            <th style={headerStyle}>ASET</th>
+            <th style={headerStyle} className="w-4/6">ASET</th>
             <th style={headerStyle}>
               {months[m1 - 1]?.name} {y1}
             </th>
@@ -167,7 +167,7 @@ export default function DokumentasiNeraca({ m1, m2, y1, y2, dateTime }) {
             ))}
           <tr>
             <td style={cellStyle}>
-              <p className="pl-10 font-bold">Jumlah Aset Lancar</p>
+              <p className="uppercase pl-10 font-bold">Jumlah Aset Lancar</p>
             </td>
             <td style={cellStyle}>
               <p className="font-bold text-center">
@@ -220,7 +220,7 @@ export default function DokumentasiNeraca({ m1, m2, y1, y2, dateTime }) {
             ))}
           <tr>
             <td style={cellStyle}>
-              <p className="pl-10 font-bold">Jumlah Aset Tetap</p>
+              <p className="uppercase pl-10 font-bold">Jumlah Aset Tetap</p>
             </td>
             <td style={cellStyle}>
               <p className="font-bold text-center">
@@ -273,7 +273,7 @@ export default function DokumentasiNeraca({ m1, m2, y1, y2, dateTime }) {
             ))}
           <tr>
             <td style={cellStyle}>
-              <p className="pl-10 font-bold">Jumlah Aset Lain-Lain</p>
+              <p className="uppercase pl-10 font-bold">Jumlah Aset Lain-Lain</p>
             </td>
             <td style={cellStyle}>
               <p className="font-bold text-center">
@@ -323,7 +323,7 @@ export default function DokumentasiNeraca({ m1, m2, y1, y2, dateTime }) {
       >
         <thead>
           <tr>
-            <th style={headerStyle}>KEWAJIBAN DAN DANA-DANA ZIS</th>
+            <th style={headerStyle} className="w-4/6">KEWAJIBAN DAN DANA-DANA ZIS</th>
             <th style={headerStyle}>
               {months[m1 - 1]?.name} {y1}
             </th>
@@ -369,7 +369,7 @@ export default function DokumentasiNeraca({ m1, m2, y1, y2, dateTime }) {
             ))}
           <tr>
             <td style={cellStyle}>
-              <p className="pl-10 font-bold">Jumlah Kewajiban Lancar</p>
+              <p className="uppercase pl-10 font-bold">Jumlah Kewajiban Lancar</p>
             </td>
             <td style={cellStyle}>
               <p className="font-bold text-center">
@@ -422,7 +422,7 @@ export default function DokumentasiNeraca({ m1, m2, y1, y2, dateTime }) {
             ))}
           <tr>
             <td style={cellStyle}>
-              <p className="pl-10 font-bold">Jumlah Dana-Dana Zis</p>
+              <p className="uppercase pl-10 font-bold">Jumlah Dana-Dana Zis</p>
             </td>
             <td style={cellStyle}>
               <p className="font-bold text-center">

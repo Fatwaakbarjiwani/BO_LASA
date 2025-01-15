@@ -120,10 +120,25 @@ export default function Transaksi() {
                     </td>
 
                     <td className="px-6 py-4">{item?.transactionDate}</td>
-                    <td className="text-[#69C53E] font-semibold px-6 py-4">
+                    <td
+                      className={`${
+                        item?.channel === "ONLINE"
+                          ? "text-[#69C53E]"
+                          : "text-gray-600"
+                      } px-6 py-4`}
+                    >
                       {item?.channel}
                     </td>
-                    <td className="text-[#69C53E] font-semibold px-6 py-4">
+                    {/* <td className={`${item?method == "ONLINE"?"text-blue-600":"text-orange-600"} font-semibold px-6 py-4`}>
+                      {item?.method}
+                    </td> */}
+                    <td
+                      className={`${
+                        item?.method === "ONLINE"
+                          ? "text-blue-600"
+                          : "text-orange-600"
+                      } `}
+                    >
                       {item?.method}
                     </td>
                   </tr>
