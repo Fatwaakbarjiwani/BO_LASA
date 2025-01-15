@@ -81,7 +81,11 @@ export const login = (acount, password, navigate) => async (dispatch) => {
         icon: "success",
       });
       dispatch(setTokenAdmin(data.token));
-      navigate("/dashboard");
+      if (data.username === "admin keuangan") {
+        navigate("/transaksi");
+      } else {
+        navigate("/dashboard");
+      }
     }
   } catch (error) {
     Swal.fire({
@@ -340,9 +344,7 @@ export const getAllOperator = (pageNumber) => async (dispatch) => {
 };
 export const getAdminKeuangan = (pageNumber) => async (dispatch) => {
   try {
-    const response = await axios.get(
-      `${API_URL}/admin/get-all-keuangan`
-    );
+    const response = await axios.get(`${API_URL}/admin/get-all-keuangan`);
     const data = response.data;
     dispatch(setAdminKeuangan(data.content));
   } catch (error) {
