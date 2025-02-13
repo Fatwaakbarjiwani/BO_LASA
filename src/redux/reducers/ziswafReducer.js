@@ -8,6 +8,7 @@ const initialState = {
   wakaf: [],
   amilWakaf: [],
   dskl: [],
+  pengelola: [],
   amilDskl: [],
   coaCategory: [],
   allCoa: [],
@@ -41,6 +42,9 @@ const authSlice = createSlice({
     setAmilWakaf: (state, action) => {
       state.amilWakaf = action.payload;
     },
+    setPengelola: (state, action) => {
+      state.pengelola = action.payload;
+    },
     setDskl: (state, action) => {
       state.dskl = action.payload;
     },
@@ -72,6 +76,7 @@ export const {
   setCategoryZiswaf,
   setZakat,
   setDskl,
+  setPengelola,
   setInfak,
   setWakaf,
   setModalCreateZiswaf,
@@ -83,7 +88,7 @@ export const {
   setAmilWakaf,
   setAmilZakat,
   setAllCoaCategory,
-  setAllCoa
+  setAllCoa,
 } = authSlice.actions;
 
 export default authSlice.reducer;

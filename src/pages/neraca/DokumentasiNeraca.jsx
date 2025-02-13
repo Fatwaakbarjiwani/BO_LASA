@@ -2,7 +2,7 @@ import { useSelector } from "react-redux";
 import logo from "../../assets/logo2.png";
 import PropTypes from "prop-types";
 
-export default function DokumentasiNeraca({ m1, m2, y1, y2, dateTime }) {
+export default function DokumentasiNeraca({ m1, m2, y1, y2, dateTime, lv }) {
   const { posisiKeuangan } = useSelector((state) => state.summary);
   const months = [
     { id: 1, name: "Januari", name2: "JANUARY" },
@@ -18,19 +18,6 @@ export default function DokumentasiNeraca({ m1, m2, y1, y2, dateTime }) {
     { id: 11, name: "November", name2: "NOVEMBER" },
     { id: 12, name: "Desember", name2: "DECEMBER" },
   ];
-
-  // Menghitung total
-  // const hitungTotal = (name, m, y) => {
-  //   const hasil = Object.keys(posisiKeuangan[name] || {})
-  //     .filter((key) => key.toLowerCase() !== "total") // Menghindari key "total"
-  //     .reduce((acc, key) => {
-  //       const value =
-  //         posisiKeuangan[name]?.[key]?.[`${months[m - 1]?.name} ${y}`];
-  //       // Pastikan value adalah angka, jika bukan angka maka abaikan
-  //       return acc + (typeof value === "number" ? value : 0);
-  //     }, 0);
-  //   return hasil.toLocaleString("id-ID");
-  // };
 
   return (
     <div
@@ -121,7 +108,9 @@ export default function DokumentasiNeraca({ m1, m2, y1, y2, dateTime }) {
       >
         <thead>
           <tr>
-            <th style={headerStyle} className="w-4/6">ASET</th>
+            <th style={headerStyle} className="w-4/6">
+              ASET
+            </th>
             <th style={headerStyle}>
               {months[m1 - 1]?.name} {y1}
             </th>
@@ -145,25 +134,55 @@ export default function DokumentasiNeraca({ m1, m2, y1, y2, dateTime }) {
                 key !== `Total ${months[m2 - 1]?.name} ${y2}`
             )
             .map((key, index) => (
-              <tr key={index}>
-                <td style={cellStyle}>
-                  <p className="pl-4">{key}</p>
-                </td>
-                <td style={cellStyle}>
-                  <p className=" text-center">
-                    {posisiKeuangan["Aset Lancar"]?.[`${key}`]?.[
-                      `${months[m1 - 1]?.name} ${y1}`
-                    ]?.toLocaleString("id-ID")}
-                  </p>
-                </td>
-                <td style={cellStyle}>
-                  <p className="text-center">
-                    {posisiKeuangan["Aset Lancar"]?.[`${key}`]?.[
-                      `${months[m2 - 1]?.name} ${y2}`
-                    ]?.toLocaleString("id-ID")}
-                  </p>
-                </td>
-              </tr>
+              <>
+                <tr key={index}>
+                  <td style={cellStyle}>
+                    <p className="pl-4">{key}</p>
+                  </td>
+                  <td style={cellStyle}>
+                    <p className=" text-center">
+                      {posisiKeuangan["Aset Lancar"]?.[`${key}`]?.[
+                        `${months[m1 - 1]?.name} ${y1}`
+                      ]?.toLocaleString("id-ID")}
+                    </p>
+                  </td>
+                  <td style={cellStyle}>
+                    <p className="text-center">
+                      {posisiKeuangan["Aset Lancar"]?.[`${key}`]?.[
+                        `${months[m2 - 1]?.name} ${y2}`
+                      ]?.toLocaleString("id-ID")}
+                    </p>
+                  </td>
+                </tr>
+                {lv == "level3" &&
+                  Object.keys(posisiKeuangan["Aset Lancar"]?.[key] || {}).map(
+                    (keys, index) => (
+                      <tr key={index}>
+                        <td style={cellStyle}>
+                          <p className="pl-8">{keys}</p>
+                        </td>
+                        <td style={cellStyle}>
+                          <p className=" text-center">
+                            {posisiKeuangan["Aset Lancar"]?.[`${key}`]?.[
+                              keys
+                            ]?.[
+                              `${months[m1 - 1]?.name} ${y1}`
+                            ]?.toLocaleString("id-ID")}
+                          </p>
+                        </td>
+                        <td style={cellStyle}>
+                          <p className="text-center">
+                            {posisiKeuangan["Aset Lancar"]?.[`${key}`]?.[
+                              keys
+                            ]?.[
+                              `${months[m2 - 1]?.name} ${y2}`
+                            ]?.toLocaleString("id-ID")}
+                          </p>
+                        </td>
+                      </tr>
+                    )
+                  )}
+              </>
             ))}
           <tr>
             <td style={cellStyle}>
@@ -198,25 +217,51 @@ export default function DokumentasiNeraca({ m1, m2, y1, y2, dateTime }) {
                 key !== `Total ${months[m2 - 1]?.name} ${y2}`
             ) // Menghilangkan 'total'
             .map((key, index) => (
-              <tr key={index}>
-                <td style={cellStyle}>
-                  <p className="pl-4">{key}</p>
-                </td>
-                <td style={cellStyle}>
-                  <p className="text-center">
-                    {posisiKeuangan["Aset Tetap"]?.[`${key}`]?.[
-                      `${months[m1 - 1]?.name} ${y1}`
-                    ]?.toLocaleString("id-ID")}
-                  </p>
-                </td>
-                <td style={cellStyle}>
-                  <p className="text-center">
-                    {posisiKeuangan["Aset Tetap"]?.[`${key}`]?.[
-                      `${months[m2 - 1]?.name} ${y2}`
-                    ]?.toLocaleString("id-ID")}
-                  </p>
-                </td>
-              </tr>
+              <>
+                <tr key={index}>
+                  <td style={cellStyle}>
+                    <p className="pl-4">{key}</p>
+                  </td>
+                  <td style={cellStyle}>
+                    <p className="text-center">
+                      {posisiKeuangan["Aset Tetap"]?.[`${key}`]?.[
+                        `${months[m1 - 1]?.name} ${y1}`
+                      ]?.toLocaleString("id-ID")}
+                    </p>
+                  </td>
+                  <td style={cellStyle}>
+                    <p className="text-center">
+                      {posisiKeuangan["Aset Tetap"]?.[`${key}`]?.[
+                        `${months[m2 - 1]?.name} ${y2}`
+                      ]?.toLocaleString("id-ID")}
+                    </p>
+                  </td>
+                </tr>
+                {lv == "level3" &&
+                  Object.keys(posisiKeuangan["Aset Tetap"]?.[key] || {}).map(
+                    (keys, index) => (
+                      <tr key={index}>
+                        <td style={cellStyle}>
+                          <p className="pl-8">{keys}</p>
+                        </td>
+                        <td style={cellStyle}>
+                          <p className=" text-center">
+                            {posisiKeuangan["Aset Tetap"]?.[`${key}`]?.[keys]?.[
+                              `${months[m1 - 1]?.name} ${y1}`
+                            ]?.toLocaleString("id-ID")}
+                          </p>
+                        </td>
+                        <td style={cellStyle}>
+                          <p className="text-center">
+                            {posisiKeuangan["Aset Tetap"]?.[`${key}`]?.[keys]?.[
+                              `${months[m2 - 1]?.name} ${y2}`
+                            ]?.toLocaleString("id-ID")}
+                          </p>
+                        </td>
+                      </tr>
+                    )
+                  )}
+              </>
             ))}
           <tr>
             <td style={cellStyle}>
@@ -251,25 +296,55 @@ export default function DokumentasiNeraca({ m1, m2, y1, y2, dateTime }) {
                 key !== `Total ${months[m2 - 1]?.name} ${y2}`
             ) // Menghilangkan 'total'
             .map((key, index) => (
-              <tr key={index}>
-                <td style={cellStyle}>
-                  <p className="pl-4">{key}</p>
-                </td>
-                <td style={cellStyle}>
-                  <p className="text-center">
-                    {posisiKeuangan["Aset Lain-Lain"]?.[`${key}`]?.[
-                      `${months[m1 - 1]?.name} ${y1}`
-                    ]?.toLocaleString("id-ID")}
-                  </p>
-                </td>
-                <td style={cellStyle}>
-                  <p className="text-center">
-                    {posisiKeuangan["Aset Lain-Lain"]?.[`${key}`]?.[
-                      `${months[m2 - 1]?.name} ${y2}`
-                    ]?.toLocaleString("id-ID")}
-                  </p>
-                </td>
-              </tr>
+              <>
+                <tr key={index}>
+                  <td style={cellStyle}>
+                    <p className="pl-4">{key}</p>
+                  </td>
+                  <td style={cellStyle}>
+                    <p className="text-center">
+                      {posisiKeuangan["Aset Lain-Lain"]?.[`${key}`]?.[
+                        `${months[m1 - 1]?.name} ${y1}`
+                      ]?.toLocaleString("id-ID")}
+                    </p>
+                  </td>
+                  <td style={cellStyle}>
+                    <p className="text-center">
+                      {posisiKeuangan["Aset Lain-Lain"]?.[`${key}`]?.[
+                        `${months[m2 - 1]?.name} ${y2}`
+                      ]?.toLocaleString("id-ID")}
+                    </p>
+                  </td>
+                </tr>
+                {lv == "level3" &&
+                  Object.keys(
+                    posisiKeuangan["Aset Lain-Lain"]?.[key] || {}
+                  ).map((keys, index) => (
+                    <tr key={index}>
+                      <td style={cellStyle}>
+                        <p className="pl-8">{keys}</p>
+                      </td>
+                      <td style={cellStyle}>
+                        <p className=" text-center">
+                          {posisiKeuangan["Aset Lain-Lain"]?.[`${key}`]?.[
+                            keys
+                          ]?.[`${months[m1 - 1]?.name} ${y1}`]?.toLocaleString(
+                            "id-ID"
+                          )}
+                        </p>
+                      </td>
+                      <td style={cellStyle}>
+                        <p className="text-center">
+                          {posisiKeuangan["Aset Lain-Lain"]?.[`${key}`]?.[
+                            keys
+                          ]?.[`${months[m2 - 1]?.name} ${y2}`]?.toLocaleString(
+                            "id-ID"
+                          )}
+                        </p>
+                      </td>
+                    </tr>
+                  ))}
+              </>
             ))}
           <tr>
             <td style={cellStyle}>
@@ -323,7 +398,9 @@ export default function DokumentasiNeraca({ m1, m2, y1, y2, dateTime }) {
       >
         <thead>
           <tr>
-            <th style={headerStyle} className="w-4/6">KEWAJIBAN DAN DANA-DANA ZIS</th>
+            <th style={headerStyle} className="w-4/6">
+              KEWAJIBAN DAN DANA-DANA ZIS
+            </th>
             <th style={headerStyle}>
               {months[m1 - 1]?.name} {y1}
             </th>
@@ -347,29 +424,61 @@ export default function DokumentasiNeraca({ m1, m2, y1, y2, dateTime }) {
                 key !== `Total ${months[m2 - 1]?.name} ${y2}`
             ) // Menghilangkan 'total'
             .map((key, index) => (
-              <tr key={index}>
-                <td style={cellStyle}>
-                  <p className="pl-4">{key}</p>
-                </td>
-                <td style={cellStyle}>
-                  <p className=" text-center">
-                    {posisiKeuangan["Kewajiban Lancar"]?.[`${key}`]?.[
-                      `${months[m1 - 1]?.name} ${y1}`
-                    ]?.toLocaleString("id-ID")}
-                  </p>
-                </td>
-                <td style={cellStyle}>
-                  <p className="text-center">
-                    {posisiKeuangan["Kewajiban Lancar"]?.[`${key}`]?.[
-                      `${months[m2 - 1]?.name} ${y2}`
-                    ]?.toLocaleString("id-ID")}
-                  </p>
-                </td>
-              </tr>
+              <>
+                <tr key={index}>
+                  <td style={cellStyle}>
+                    <p className="pl-4">{key}</p>
+                  </td>
+                  <td style={cellStyle}>
+                    <p className=" text-center">
+                      {posisiKeuangan["Kewajiban Lancar"]?.[`${key}`]?.[
+                        `${months[m1 - 1]?.name} ${y1}`
+                      ]?.toLocaleString("id-ID")}
+                    </p>
+                  </td>
+                  <td style={cellStyle}>
+                    <p className="text-center">
+                      {posisiKeuangan["Kewajiban Lancar"]?.[`${key}`]?.[
+                        `${months[m2 - 1]?.name} ${y2}`
+                      ]?.toLocaleString("id-ID")}
+                    </p>
+                  </td>
+                </tr>
+                {lv == "level3" &&
+                  Object.keys(
+                    posisiKeuangan["Kewajiban Lancar"]?.[key] || {}
+                  ).map((keys, index) => (
+                    <tr key={index}>
+                      <td style={cellStyle}>
+                        <p className="pl-8">{keys}</p>
+                      </td>
+                      <td style={cellStyle}>
+                        <p className=" text-center">
+                          {posisiKeuangan["Kewajiban Lancar"]?.[`${key}`]?.[
+                            keys
+                          ]?.[`${months[m1 - 1]?.name} ${y1}`]?.toLocaleString(
+                            "id-ID"
+                          )}
+                        </p>
+                      </td>
+                      <td style={cellStyle}>
+                        <p className="text-center">
+                          {posisiKeuangan["Kewajiban Lancar"]?.[`${key}`]?.[
+                            keys
+                          ]?.[`${months[m2 - 1]?.name} ${y2}`]?.toLocaleString(
+                            "id-ID"
+                          )}
+                        </p>
+                      </td>
+                    </tr>
+                  ))}
+              </>
             ))}
           <tr>
             <td style={cellStyle}>
-              <p className="uppercase pl-10 font-bold">Jumlah Kewajiban Lancar</p>
+              <p className="uppercase pl-10 font-bold">
+                Jumlah Kewajiban Lancar
+              </p>
             </td>
             <td style={cellStyle}>
               <p className="font-bold text-center">
@@ -400,25 +509,51 @@ export default function DokumentasiNeraca({ m1, m2, y1, y2, dateTime }) {
                 key !== `Total ${months[m2 - 1]?.name} ${y2}`
             ) // Menghilangkan 'total'
             .map((key, index) => (
-              <tr key={index}>
-                <td style={cellStyle}>
-                  <p className="pl-4">{key}</p>
-                </td>
-                <td style={cellStyle}>
-                  <p className="text-center">
-                    {posisiKeuangan["Dana ZIS"]?.[`${key}`]?.[
-                      `${months[m1 - 1]?.name} ${y1}`
-                    ]?.toLocaleString("id-ID")}
-                  </p>
-                </td>
-                <td style={cellStyle}>
-                  <p className="text-center">
-                    {posisiKeuangan["Dana ZIS"]?.[`${key}`]?.[
-                      `${months[m2 - 1]?.name} ${y2}`
-                    ]?.toLocaleString("id-ID")}
-                  </p>
-                </td>
-              </tr>
+              <>
+                <tr key={index}>
+                  <td style={cellStyle}>
+                    <p className="pl-4">{key}</p>
+                  </td>
+                  <td style={cellStyle}>
+                    <p className="text-center">
+                      {posisiKeuangan["Dana ZIS"]?.[`${key}`]?.[
+                        `${months[m1 - 1]?.name} ${y1}`
+                      ]?.toLocaleString("id-ID")}
+                    </p>
+                  </td>
+                  <td style={cellStyle}>
+                    <p className="text-center">
+                      {posisiKeuangan["Dana ZIS"]?.[`${key}`]?.[
+                        `${months[m2 - 1]?.name} ${y2}`
+                      ]?.toLocaleString("id-ID")}
+                    </p>
+                  </td>
+                </tr>
+                {lv == "level3" &&
+                  Object.keys(posisiKeuangan["Dana ZIS"]?.[key] || {}).map(
+                    (keys, index) => (
+                      <tr key={index}>
+                        <td style={cellStyle}>
+                          <p className="pl-8">{keys}</p>
+                        </td>
+                        <td style={cellStyle}>
+                          <p className=" text-center">
+                            {posisiKeuangan["Dana ZIS"]?.[`${key}`]?.[keys]?.[
+                              `${months[m1 - 1]?.name} ${y1}`
+                            ]?.toLocaleString("id-ID")}
+                          </p>
+                        </td>
+                        <td style={cellStyle}>
+                          <p className="text-center">
+                            {posisiKeuangan["Dana ZIS "]?.[`${key}`]?.[keys]?.[
+                              `${months[m2 - 1]?.name} ${y2}`
+                            ]?.toLocaleString("id-ID")}
+                          </p>
+                        </td>
+                      </tr>
+                    )
+                  )}
+              </>
             ))}
           <tr>
             <td style={cellStyle}>
@@ -487,4 +622,5 @@ DokumentasiNeraca.propTypes = {
   y1: PropTypes.number.isRequired,
   y2: PropTypes.number.isRequired,
   dateTime: PropTypes.string.isRequired,
+  lv: PropTypes.string.isRequired,
 };

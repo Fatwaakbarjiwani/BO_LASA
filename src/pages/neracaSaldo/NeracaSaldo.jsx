@@ -10,8 +10,8 @@ import DokumentasiNeracaSaldo from "./DokumentasiNeracaSaldo";
 
 export default function NeracaSaldo() {
   const [format, setFormat] = useState("");
-  const [startMonth, setStartMonth] = useState("");
-  const [year1, setYear1] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   // const { posisiKeuangan } = useSelector((state) => state.summary);
   const dispatch = useDispatch();
   const [isLoading, setLoading] = useState(false);
@@ -20,33 +20,17 @@ export default function NeracaSaldo() {
   // const [loading2, setLoading2] = useState(false);
 
   useEffect(() => {
-    if (startMonth && year1) {
-      // setLoading2(true);
-      dispatch(getNeracaSaldo(startMonth, year1));
+    if (startDate && endDate) {
+      dispatch(getNeracaSaldo(startDate, endDate));
     }
-  }, [dispatch, startMonth, year1]);
-
-  const months = [
-    { id: 1, name: "Januari", name2: "JANUARY" },
-    { id: 2, name: "Februari", name2: "FEBRUARY" },
-    { id: 3, name: "Maret", name2: "MARCH" },
-    { id: 4, name: "April", name2: "APRIL" },
-    { id: 5, name: "Mei", name2: "MAY" },
-    { id: 6, name: "Juni", name2: "JUNE" },
-    { id: 7, name: "Juli", name2: "JULY" },
-    { id: 8, name: "Agustus", name2: "AUGUST" },
-    { id: 9, name: "September", name2: "SEPTEMBER" },
-    { id: 10, name: "Oktober", name2: "OCTOBER" },
-    { id: 11, name: "November", name2: "NOVEMBER" },
-    { id: 12, name: "Desember", name2: "DECEMBER" },
-  ];
+  }, [dispatch, startDate, endDate]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
     const currentDateTime = new Date().toLocaleString();
     setDateTime(currentDateTime);
 
-    if (!startMonth || !format || !year1) {
+    if (!startDate || !format || !endDate) {
       Swal.fire({
         icon: "warning",
         title: "Input Tidak Lengkap",
@@ -70,10 +54,6 @@ export default function NeracaSaldo() {
   };
 
   const openHtmlReport = () => {
-    // const formatNumber = (value) => {
-    //   return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-    // };
-
     const newWindow = window.open("", "_blank");
     if (newWindow) {
       newWindow.document.write(``);
@@ -112,30 +92,24 @@ export default function NeracaSaldo() {
         <div className="mb-4 grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-600">
-              Bulan
+              Tanggal Mulai
             </label>
-            <select
-              value={startMonth}
-              onChange={(e) => setStartMonth(e.target.value)}
+            <input
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
               className="w-full p-3 border border-gray-300 rounded-lg"
-            >
-              <option value="">Pilih Bulan</option>
-              {months.map((month) => (
-                <option key={month.id} value={month.id}>
-                  {month.name}
-                </option>
-              ))}
-            </select>
+            />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-600">
-              Tahun
+              Tanggal Selesai
             </label>
             <input
-              type="text"
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
               className="w-full p-3 border border-gray-300 rounded-lg"
-              value={year1}
-              onChange={(e) => setYear1(e.target.value)}
             />
           </div>
         </div>
@@ -177,8 +151,8 @@ export default function NeracaSaldo() {
           <h1>Loading</h1>
         ) : ( */}
         <DokumentasiNeracaSaldo
-          m1={startMonth}
-          y1={year1}
+          m1={startDate}
+          y1={endDate}
           dateTime={dateTime}
         />
         {/* )} */}

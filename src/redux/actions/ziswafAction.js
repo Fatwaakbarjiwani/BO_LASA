@@ -8,6 +8,7 @@ import {
   setInfak,
   setModalCreateZiswaf,
   setModalEditZiswaf,
+  setPengelola,
   setWakaf,
   setZakat,
 } from "../reducers/ziswafReducer";
@@ -40,6 +41,15 @@ export const getCategoryZiswaf = (type) => async (dispatch) => {
     console.error("Error fetching all yiswaf category", error);
   }
 };
+export const getCategoryZiswaf2 = (type) => async (dispatch) => {
+  try {
+    const response = await axios.get(`${API_URL}/coa/${type}`);
+    const data = response.data;
+    dispatch(setPengelola(data));
+  } catch (error) {
+    console.error("Error fetching all yiswaf category", error);
+  }
+};
 export const getCategoryCoa = () => async (dispatch) => {
   try {
     const response = await axios.get(`${API_URL}/coa`);
@@ -54,7 +64,7 @@ export const getAllCoa = () => async (dispatch) => {
     const response = await axios.get(`${API_URL}/coa/all`);
     const data = response.data;
     dispatch(setAllCoaCategory(data));
-    dispatch(setAllCoa(data))
+    dispatch(setAllCoa(data));
   } catch (error) {
     console.error("Error fetching coa category", error);
   }
@@ -63,7 +73,7 @@ export const getSaldoCoa = () => async (dispatch) => {
   try {
     const response = await axios.get(`${API_URL}/saldo-awal/get-saldo-coa`);
     const data = response.data;
-    
+
     dispatch(setSaldoCoa(data));
   } catch (error) {
     console.error("Error fetching saldoCoa", error);
@@ -264,7 +274,7 @@ export const deleteZiswaf = (type, id) => async (dispatch, getState) => {
 };
 
 export const createZiswaf = (type, category) => async (dispatch, getState) => {
-  try {    
+  try {
     const { tokenAdmin } = getState().auth;
     const response = await axios.post(
       `${API_URL}/${type}/create`,

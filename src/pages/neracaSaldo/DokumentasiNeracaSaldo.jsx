@@ -4,22 +4,7 @@ import PropTypes from "prop-types";
 
 export default function DokumentasiNeraca({ m1, y1, dateTime }) {
   const { neracaSaldo } = useSelector((state) => state.summary);
-  const months = [
-    { id: 1, name: "Januari", name2: "JANUARY" },
-    { id: 2, name: "Februari", name2: "FEBRUARY" },
-    { id: 3, name: "Maret", name2: "MARCH" },
-    { id: 4, name: "April", name2: "APRIL" },
-    { id: 5, name: "Mei", name2: "MAY" },
-    { id: 6, name: "Juni", name2: "JUNE" },
-    { id: 7, name: "Juli", name2: "JULY" },
-    { id: 8, name: "Agustus", name2: "AUGUST" },
-    { id: 9, name: "September", name2: "SEPTEMBER" },
-    { id: 10, name: "Oktober", name2: "OCTOBER" },
-    { id: 11, name: "November", name2: "NOVEMBER" },
-    { id: 12, name: "Desember", name2: "DECEMBER" },
-  ];
 
-  // Menghitung total
   const hitungTotal = (name, cari) => {
     const hasil = Object.keys(neracaSaldo[name] || {}).reduce((acc, key) => {
       const value = neracaSaldo[name]?.[key]?.[cari];
@@ -87,7 +72,7 @@ export default function DokumentasiNeraca({ m1, y1, dateTime }) {
           fontWeight: "bold",
         }}
       >
-        PER AKHIR BULAN {months[m1 - 1]?.name} {y1}
+        PER AKHIR BULAN {m1} sampai {y1}
       </div>
       <div
         style={{
@@ -129,7 +114,6 @@ export default function DokumentasiNeraca({ m1, y1, dateTime }) {
             <td style={cellStyle}></td>
           </tr>
           {Object.keys(neracaSaldo["Aset Lancar"] || {})
-            .filter((key) => key !== `Total ${months[m1 - 1]?.name} ${y1}`)
             .map((key, index) => (
               <tr key={index}>
                 <td style={cellStyle}>
@@ -200,7 +184,6 @@ export default function DokumentasiNeraca({ m1, y1, dateTime }) {
             <td style={cellStyle}></td>
           </tr>
           {Object.keys(neracaSaldo["Aset Tetap"] || {})
-            .filter((key) => key !== `Total ${months[m1 - 1]?.name} ${y1}`) // Menghilangkan 'total'
             .map((key, index) => (
               <tr key={index}>
                 <td style={cellStyle}>
@@ -271,7 +254,6 @@ export default function DokumentasiNeraca({ m1, y1, dateTime }) {
             <td style={cellStyle}></td>
           </tr>
           {Object.keys(neracaSaldo["Aset Lain-Lain"] || {})
-            .filter((key) => key !== `Total ${months[m1 - 1]?.name} ${y1}`) // Menghilangkan 'total'
             .map((key, index) => (
               <tr key={index}>
                 <td style={cellStyle}>
@@ -542,9 +524,7 @@ const cellStyle = {
 };
 
 DokumentasiNeraca.propTypes = {
-  m1: PropTypes.number.isRequired,
-  m2: PropTypes.number.isRequired,
-  y1: PropTypes.number.isRequired,
-  y2: PropTypes.number.isRequired,
+  m1: PropTypes.string.isRequired,
+  y1: PropTypes.string.isRequired,
   dateTime: PropTypes.string.isRequired,
 };

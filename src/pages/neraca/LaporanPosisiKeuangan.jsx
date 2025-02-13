@@ -11,6 +11,7 @@ import DokumentasiNeraca from "./DokumentasiNeraca";
 export default function LaporanPosisiKeuangan() {
   const [format, setFormat] = useState("");
   const [startMonth, setStartMonth] = useState("");
+  const [level, setLevel] = useState("");
   const [endMonth, setEndMonth] = useState("");
   const [year1, setYear1] = useState("");
   const [year2, setYear2] = useState("");
@@ -21,10 +22,10 @@ export default function LaporanPosisiKeuangan() {
   const [dateTime, setDateTime] = useState("");
 
   useEffect(() => {
-    if (startMonth && endMonth && year1 && year2) {
-      dispatch(getPosisiKeuangan(startMonth, endMonth, year1, year2));
+    if (startMonth && endMonth && year1 && year2 && level) {
+      dispatch(getPosisiKeuangan(startMonth, endMonth, year1, year2, level));
     }
-  }, [dispatch, startMonth, endMonth, year1, year2]);
+  }, [dispatch, startMonth, endMonth, year1, year2, level]);
 
   const months = [
     { id: 1, name: "Januari", name2: "JANUARY" },
@@ -179,6 +180,41 @@ export default function LaporanPosisiKeuangan() {
       </tr>`
               )
               .join("")}
+             ${Object.keys(posisiKeuangan["Aset Lancar"] || {})
+               .filter((key) => key.toLowerCase() !== "total")
+               .map((key) => {
+                 return Object.keys(posisiKeuangan["Aset Lancar"]?.[key] || {})
+                   .map(
+                     (subKey, index) =>
+                       `<tr key="${index}">
+          <td style="border: 1px solid black; padding: 8px; text-align: left; padding-left: 20px;">
+            ${subKey}
+          </td>
+          <td style="border: 1px solid black; padding: 8px;">
+            <p>
+              ${formatNumber(
+                posisiKeuangan["Aset Lancar"]?.[key]?.[
+                  `${months[startMonth - 1]?.name} ${year1}`
+                ] || 0
+              )}
+            </p>
+          </td>
+          <td style="border: 1px solid black; padding: 8px;">
+            <p>
+              ${formatNumber(
+                posisiKeuangan["Aset Lancar"]?.[key]?.[
+                  `${months[endMonth - 1]?.name} ${year2}`
+                ] || 0
+              )}
+            </p>
+          </td>
+        </tr>`
+                   )
+                   .join("");
+               })
+               .join("")}
+
+           
               <tr>
                   <td style="border: 1px solid black; padding: 8px; font-weight: bold; text-align: left; padding-left: 42px;">
                     Jumlah Aset Lancar
@@ -576,6 +612,22 @@ export default function LaporanPosisiKeuangan() {
             />
           </div>
         </div>
+        <div className="mb-4 grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-600">
+              Pilih Level COA 1
+            </label>
+            <select
+              value={level}
+              onChange={(e) => setLevel(e.target.value)}
+              className="w-full p-3 border border-gray-300 rounded-lg"
+            >
+              <option value="">Pilih Level</option>
+              <option value={"level2"}>Level 2</option>
+              <option value={"level3"}>Level 3</option>
+            </select>
+          </div>
+        </div>
         <div className="grid grid-cols-2 gap-4 items-end">
           <div>
             <label className="block text-sm font-medium text-gray-600">
@@ -616,6 +668,7 @@ export default function LaporanPosisiKeuangan() {
           y1={year1}
           y2={year2}
           dateTime={dateTime}
+          lv={level}
         />
       </div>
     </>

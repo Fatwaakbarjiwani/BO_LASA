@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import {
   getCategoryCoa,
   getCategoryZiswaf,
+  getCategoryZiswaf2,
 } from "../../../redux/actions/ziswafAction";
 import { createJurnalUmum } from "../../../redux/actions/transaksiAction";
 import { OrbitProgress } from "react-loading-indicators";
@@ -11,7 +12,7 @@ import Swal from "sweetalert2";
 export default function JurnalUmum() {
   const dispatch = useDispatch();
   const [isLoading, setLoading] = useState(false);
-  const { zakat, infak, wakaf, dskl, coaCategory } = useSelector(
+  const { zakat, infak, wakaf, dskl, coaCategory, pengelola } = useSelector(
     (state) => state.ziswaf
   );
   const { campaign } = useSelector((state) => state.campaign);
@@ -35,6 +36,7 @@ export default function JurnalUmum() {
     dispatch(getCategoryZiswaf("wakaf"));
     dispatch(getCategoryZiswaf("dskl"));
     dispatch(getCategoryZiswaf("campaign"));
+    dispatch(getCategoryZiswaf2("pengelola"));
     dispatch(getCategoryCoa());
   }, [dispatch]);
 
@@ -127,6 +129,8 @@ export default function JurnalUmum() {
               ? zakat
               : jenis === "infak"
               ? infak
+              : jenis === "pengelola"
+              ? pengelola
               : jenis === "wakaf"
               ? wakaf
               : jenis === "campaign"

@@ -96,10 +96,10 @@ export const getJurnal = (startDate, endDate) => async (dispatch) => {
     dispatch(setJurnal([]));
   }
 };
-export const getPosisiKeuangan = (m1, m2, y1, y2) => async (dispatch) => {
+export const getPosisiKeuangan = (m1, m2, y1, y2, lv) => async (dispatch) => {
   try {
     const response = await axios.get(
-      `${API_URL}/journal/neraca-report?month1=${m1}&year1=${y1}&month2=${m2}&year2=${y2}`
+      `${API_URL}/journal/neraca-report?month1=${m1}&year1=${y1}&month2=${m2}&year2=${y2}&level=${lv}`
     );
     const data = response.data;
     dispatch(setPosisiKeuangan(data));
@@ -110,21 +110,19 @@ export const getPosisiKeuangan = (m1, m2, y1, y2) => async (dispatch) => {
 export const getLaporanAktivitas =
   (m1, m2, y1, y2, type) => async (dispatch) => {
     try {
-
       const response = await axios.get(
         `${API_URL}/journal/${type}-activity-report?month1=${m1}&year1=${y1}&month2=${m2}&year2=${y2}`
       );
       const data = response.data;
       dispatch(setLaporanAktivitas(data));
-
     } catch (error) {
       console.log(error);
     }
   };
-export const getNeracaSaldo = (m1, y1) => async (dispatch) => {
+export const getNeracaSaldo = (m1, m2) => async (dispatch) => {
   try {
     const response = await axios.get(
-      `${API_URL}/journal/neraca-saldo-report?month1=${m1}&year1=${y1}`
+      `${API_URL}/journal/neraca-saldo-report?startDate=${m1}&endDate=${m2}`
     );
     const data = response.data;
     dispatch(setNeracaSaldo(data));
