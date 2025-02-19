@@ -318,10 +318,10 @@ const cellStyle = {
 };
 
 DokumentasiLaporanAktifitas.propTypes = {
-  m1: PropTypes.number.isRequired,
-  m2: PropTypes.number.isRequired,
-  y1: PropTypes.number.isRequired,
-  y2: PropTypes.number.isRequired,
+  m1: PropTypes.string,
+  m2: PropTypes.string,
+  y1: PropTypes.string,
+  y2: PropTypes.string,
   dateTime: PropTypes.string.isRequired,
   jenis: PropTypes.string.isRequired,
 };

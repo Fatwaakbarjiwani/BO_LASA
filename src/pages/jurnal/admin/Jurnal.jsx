@@ -20,7 +20,8 @@ export default function Jurnal() {
 
   useEffect(() => {
     if (startDate && endDate) {
-      dispatch(getJurnal(startDate, endDate));
+      setLoading(true);
+      dispatch(getJurnal(startDate, endDate)).finally(() => setLoading(false));
     }
   }, [dispatch, startDate, endDate]);
 

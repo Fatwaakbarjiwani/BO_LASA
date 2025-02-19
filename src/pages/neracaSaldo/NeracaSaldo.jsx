@@ -21,7 +21,10 @@ export default function NeracaSaldo() {
 
   useEffect(() => {
     if (startDate && endDate) {
-      dispatch(getNeracaSaldo(startDate, endDate));
+      setLoading(true);
+      dispatch(getNeracaSaldo(startDate, endDate)).finally(() =>
+        setLoading(false)
+      );
     }
   }, [dispatch, startDate, endDate]);
 

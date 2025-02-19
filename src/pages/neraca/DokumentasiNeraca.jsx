@@ -545,7 +545,7 @@ export default function DokumentasiNeraca({ m1, m2, y1, y2, dateTime, lv }) {
                         </td>
                         <td style={cellStyle}>
                           <p className="text-center">
-                            {posisiKeuangan["Dana ZIS "]?.[`${key}`]?.[keys]?.[
+                            {posisiKeuangan["Dana ZIS"]?.[`${key}`]?.[keys]?.[
                               `${months[m2 - 1]?.name} ${y2}`
                             ]?.toLocaleString("id-ID")}
                           </p>
@@ -617,10 +617,10 @@ const cellStyle = {
 };
 
 DokumentasiNeraca.propTypes = {
-  m1: PropTypes.number.isRequired,
-  m2: PropTypes.number.isRequired,
-  y1: PropTypes.number.isRequired,
-  y2: PropTypes.number.isRequired,
+  m1: PropTypes.string,
+  m2: PropTypes.string,
+  y1: PropTypes.string,
+  y2: PropTypes.string,
   dateTime: PropTypes.string.isRequired,
   lv: PropTypes.string.isRequired,
 };

@@ -20,12 +20,14 @@ export default function LaporanAktifitas() {
   const reportTemplateRef = useRef(null);
   const [dateTime, setDateTime] = useState("");
   const [jenis, setJenis] = useState("");
-  // const [loading2, setLoading2] = useState(false); 
+  // const [loading2, setLoading2] = useState(false);
 
   useEffect(() => {
     if (startMonth && endMonth && year1 && year2 && jenis) {
-      // setLoading2(true);
-      dispatch(getLaporanAktivitas(startMonth, endMonth, year1, year2, jenis));
+      setLoading(true);
+      dispatch(
+        getLaporanAktivitas(startMonth, endMonth, year1, year2, jenis)
+      ).finally(() => setLoading(false));
     }
   }, [dispatch, startMonth, endMonth, year1, year2, jenis]);
 

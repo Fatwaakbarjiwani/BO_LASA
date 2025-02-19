@@ -29,7 +29,8 @@ export default function BukuBesar() {
 
   useEffect(() => {
     if (coaId && startDate && endDate) {
-      dispatch(getBukuBesar(coaId, coaId2, startDate, endDate));
+      setLoading(true)
+      dispatch(getBukuBesar(coaId, coaId2, startDate, endDate)).finally(()=>setLoading(false));
     }
   }, [dispatch, coaId, coaId2, startDate, endDate]);
 

@@ -108,8 +108,8 @@ export default function JurnalUmum() {
             className="w-full p-3 border border-gray-300 rounded-lg"
           >
             <option value="">Pilih Jenis</option>
-            {data.map((item) => (
-              <option key={item.id} value={item.category}>
+            {data.map((item,no) => (
+              <option key={no} value={item.category}>
                 {item.name}
               </option>
             ))}
@@ -136,13 +136,13 @@ export default function JurnalUmum() {
               : jenis === "campaign"
               ? campaign
               : dskl
-            ).map((item) =>
+            ).map((item,no) =>
               jenis !== "campaign" ? (
-                <option key={item.id} value={item.id}>
+                <option key={no} value={item.id}>
                   {item.categoryName}
                 </option>
               ) : (
-                <option key={item.id} value={item.campaignId}>
+                <option key={no} value={item.campaignId}>
                   {item.campaignId}. {item.campaignName}
                 </option>
               )
@@ -185,7 +185,7 @@ export default function JurnalUmum() {
         </thead>
         <tbody>
           {rows.map((row, index) => (
-            <tr key={row.id}>
+            <tr key={index}>
               <td className="px-4 py-2 text-gray-700">{index + 1}</td>
               <td className="px-4 py-2">
                 <select
@@ -196,8 +196,8 @@ export default function JurnalUmum() {
                   className="w-full p-3 border border-gray-300 rounded-lg"
                 >
                   <option value="">Pilih Rekening</option>
-                  {coaCategory.map((item) => (
-                    <option key={item.id} value={item.id}>
+                  {coaCategory.map((item,no) => (
+                    <option key={no} value={item.id}>
                       {`${item.accountCode} ${item.accountName}`}
                     </option>
                   ))}

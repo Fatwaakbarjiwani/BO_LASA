@@ -23,7 +23,10 @@ export default function LaporanPosisiKeuangan() {
 
   useEffect(() => {
     if (startMonth && endMonth && year1 && year2 && level) {
-      dispatch(getPosisiKeuangan(startMonth, endMonth, year1, year2, level));
+      setLoading(true);
+      dispatch(
+        getPosisiKeuangan(startMonth, endMonth, year1, year2, level)
+      ).finally(() => setLoading(false));
     }
   }, [dispatch, startMonth, endMonth, year1, year2, level]);
 
@@ -639,7 +642,7 @@ export default function LaporanPosisiKeuangan() {
               className="w-full p-3 border border-gray-300 rounded-lg"
             >
               <option value="">Select Format</option>
-              <option value="html">HTML</option>
+              {/* <option value="html">HTML</option> */}
               <option value="pdf">PDF</option>
             </select>
           </div>
