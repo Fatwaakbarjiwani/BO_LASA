@@ -1,7 +1,3 @@
-// import Search from "../assets/search.svg";
-// import Notif from "../assets/Notif.svg";
-import FotoProfile from "../assets/FotoProfile.png";
-// import More from "../assets/More.svg";
 import { useDispatch, useSelector } from "react-redux";
 import { setIsSidebarOpen } from "../redux/reducers/pageReducer";
 import DsToggle from "../assets/ds-toggle.svg";
@@ -54,7 +50,11 @@ export default function Navbar() {
           </div>
         </div> */}
         <div className="flex items-center space-x-6">
-          <img className="w-10 h-10 rounded-full" src={FotoProfile} alt="" />
+          <img
+            className="w-10 h-10 rounded-full"
+            src="https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png"
+            alt=""
+          />
           <div>
             <h1 className="mr-2">{user?.username}</h1>
             <p className="font-semibold text-start">{user?.role}</p>

@@ -23,6 +23,8 @@ export const menuItems = [
     title: "Campaign",
     route: "/campaign",
   },
+  { src: Ziswaf, srcActive: ZiswafWhite, title: "Ziswaf", route: "/ziswaf" },
+  { src: Berita, srcActive: BeritaWhite, title: "Berita", route: "/berita" },
   {
     src: Pengguna,
     srcActive: PenggunaWhite,
@@ -36,20 +38,17 @@ export const menuItems = [
     route: "/transaksi",
   },
   {
-    src: Transaksi,
-    srcActive: TransaksiWhite,
-    title: "Administrasi",
-    route: "/administrasi",
-  },
-
-  { src: Amil, srcActive: AmilWhite, title: "Amil", route: "/amil" },
-  { src: Ziswaf, srcActive: ZiswafWhite, title: "Ziswaf", route: "/ziswaf" },
-  {
     src: Distribusi,
     srcActive: DistribusiWhite,
     title: "Distribusi",
     route: "/distribusi",
   },
-  { src: Berita, srcActive: BeritaWhite, title: "Berita", route: "/berita" },
+  {
+    src: Transaksi,
+    srcActive: TransaksiWhite,
+    title: "Administrasi",
+    route: "/administrasi",
+  },
+  { src: Amil, srcActive: AmilWhite, title: "Amil", route: "/amil" },
   { src: Berita, srcActive: BeritaWhite, title: "Tampilan", route: "/tampilan" },
 ];

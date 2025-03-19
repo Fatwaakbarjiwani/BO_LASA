@@ -81,7 +81,9 @@ function EditCampaign() {
         campaignImage,
         description,
         location,
-        detailCampaign?.targetAmount,
+        targetAmount
+          ? parseInt(formatNumber(targetAmount || 0).replace(/\./g, ""), 10)
+          : detailCampaign?.targetAmount,
         startDate,
         endDate,
         detailCampaign?.active,
@@ -169,7 +171,7 @@ function EditCampaign() {
                 <button
                   onClick={() => {
                     setChangeTarget(true);
-                    setTargetAmount("");  
+                    setTargetAmount("");
                   }}
                   className="text-primary"
                 >

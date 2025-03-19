@@ -62,7 +62,7 @@ export default function Ziswaf() {
         >
           <option value="zakat">Zakat</option>
           <option value="infak">Infak</option>
-          <option value="wakaf">Wakaf</option>
+          {/* <option value="wakaf">Wakaf</option> */}
           <option value="dskl">DSKL</option>
         </select>
 
@@ -81,7 +81,6 @@ export default function Ziswaf() {
                 <th className="px-6 py-3">Kategori</th>
                 <th className="px-6 py-3">Terkumpul</th>
                 <th className="px-6 py-3">Distribusi</th>
-                <th className="px-6 py-3">Status</th>
                 <th className="px-6 py-3 text-center">Aksi</th>
               </tr>
             </thead>
@@ -99,14 +98,7 @@ export default function Ziswaf() {
                   <td className="px-6 py-4 whitespace-nowrap">
                     Rp {formatNumber(item?.distribution || 0)}
                   </td>
-                  <td className="px-6 py-4 font-semibold">
-                    {item?.active ? (
-                      <span className="text-primary">AKTIF</span>
-                    ) : (
-                      <span className="text-gray-300">TIDAK AKTIF</span>
-                    )}
-                  </td>
-                  <td className="flex px-6 py-4 text-center">
+                  <td className="flex px-6 py-4 text-center justify-center">
                     <button
                       onClick={() => {
                         dispatch(setModalEditZiswaf(true));
@@ -137,7 +129,7 @@ export default function Ziswaf() {
                         }}
                         className="px-4 py-1 rounded-full bg-red-500 text-white font-semibold shadow-md"
                       >
-                        Tutup
+                        Hapus
                       </button>
                     )}
                   </td>

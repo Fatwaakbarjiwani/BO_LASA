@@ -45,6 +45,9 @@ export default function TableBerita() {
         <thead className="text-xs text-gray-700 uppercase bg-slate-200 shadow sticky top-0">
           <tr>
             <th scope="col" className="px-6 py-3">
+              No
+            </th>
+            <th scope="col" className="px-6 py-3">
               Pembuat
             </th>
             <th scope="col" className="px-6 py-3 w-60">
@@ -56,20 +59,18 @@ export default function TableBerita() {
             <th scope="col" className="px-6 py-3">
               Tanggal
             </th>
-            <th
-              scope="col"
-              className="text-center px-6 py-3"
-            >
+            <th scope="col" className="text-center px-6 py-3">
               Aksi
             </th>
           </tr>
         </thead>
         <tbody>
-          {allBerita.map((item) => (
+          {allBerita.map((item, num) => (
             <tr
               key={item?.id}
               className="odd:bg-white even:bg-gray-50 border-b odd:hover:bg-slate-500 even:hover:bg-slate-500 odd:hover:text-white even:hover:text-white "
             >
+              <td className="px-6 py-4 font-medium">{num + 1}</td>
               <td className="px-6 py-4 font-medium">{item?.creator}</td>
               <td className="px-6 py-4">{item?.title}</td>
               <td className="px-6 py-4">{item?.newsTopic}</td>

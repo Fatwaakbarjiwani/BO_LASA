@@ -244,7 +244,7 @@ export const deleteZiswaf = (type, id) => async (dispatch, getState) => {
       showCancelButton: true,
       confirmButtonColor: "#3085d6",
       cancelButtonColor: "#d33",
-      confirmButtonText: "Yakin Tutup",
+      confirmButtonText: "Yakin Hapus",
       cancelButtonText: "Batal",
     });
 

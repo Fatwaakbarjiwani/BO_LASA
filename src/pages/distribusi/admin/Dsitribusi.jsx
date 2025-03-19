@@ -9,7 +9,7 @@ import TableOperasional from "../../../components/distribusi/TableOperasional";
 const data = [
   { id: 1, nama: "Distribusi", value: "distribusi" },
   { id: 2, nama: "Dokumentasi", value: "documentasi" },
-  { id: 2, nama: "Prosentase Biaya Admin", value: "penyaluran" },
+  { id: 2, nama: "Persentase Biaya Admin", value: "penyaluran" },
 ];
 export default function Distribusi() {
   const { pN } = useSelector((state) => state.pn);

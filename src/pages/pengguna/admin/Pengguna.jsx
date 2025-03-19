@@ -27,8 +27,8 @@ import ModalAdmin from "../../../components/modalPengguna/CreateAdmin";
 
 const data = [
   { id: 1, nama: "Operator", value: "operator" },
-  { id: 2, nama: "Donatur", value: "donatur" },
   { id: 3, nama: "ADMIN Administrasi", value: "administrasi" },
+  { id: 2, nama: "Donatur", value: "donatur" },
 ];
 
 export default function Pengguna() {

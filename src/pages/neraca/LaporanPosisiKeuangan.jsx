@@ -618,7 +618,7 @@ export default function LaporanPosisiKeuangan() {
         <div className="mb-4 grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-600">
-              Pilih Level COA 1
+              Pilih Level COA
             </label>
             <select
               value={level}

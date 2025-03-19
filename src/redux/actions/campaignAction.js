@@ -187,6 +187,39 @@ export const deleteCategoryCampaign = (id) => async (dispatch) => {
     });
   }
 };
+export const deleteNewsTopic = (id) => async (dispatch) => {
+  try {
+    const result = await Swal.fire({
+      title: "Yakin ingin menghapus topik berita ini?",
+      text: "Topik berita ini akan dihapus permanen.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Yakin Hapus",
+      cancelButtonText: "Batal",
+    });
+
+    if (result.isConfirmed) {
+      const response = await axios.delete(
+        `${API_URL}/newsTopic/delete/${id}`
+      );
+      if (response) {
+        Swal.fire({
+          title: "Berhasil",
+          text: "Topik berita berhasil dihapus",
+          icon: "success",
+        });
+      }
+    }
+  } catch (error) {
+    Swal.fire({
+      title: "Proses menghapus topik berita gagal / topik sedang digunakan",
+      text: error.response.data.message,
+      icon: "error",
+    });
+  }
+};
 
 // ==================================================================
 export const getAllCampaign = () => async (dispatch) => {
@@ -510,7 +543,7 @@ export const editCampaign =
     id
   ) =>
   async (dispatch, getState) => {
-    try {
+    try {       
       const { tokenAdmin } = getState().auth;
       const formData = new FormData();
       formData.append("categoryId", category);
