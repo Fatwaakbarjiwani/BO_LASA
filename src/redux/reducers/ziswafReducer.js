@@ -14,7 +14,10 @@ const initialState = {
   allCoa: [],
   allCoaCategory: [],
   detailZiswaf: [],
+  detailFitrah: [],
+  nominalFitrah: [],
   modalCreateZiswaf: false,
+  modalCreateFitrah: false,
   modalEditZiswaf: false,
 };
 const authSlice = createSlice({
@@ -66,8 +69,17 @@ const authSlice = createSlice({
     setModalCreateZiswaf: (state, action) => {
       state.modalCreateZiswaf = action.payload;
     },
+    setModalCreateFitrah: (state, action) => {
+      state.modalCreateFitrah = action.payload;
+    },
     setModalEditZiswaf: (state, action) => {
       state.modalEditZiswaf = action.payload;
+    },
+    setDetailFitrah: (state, action) => {
+      state.detailFitrah = action.payload;
+    },
+    setNominalFitrah: (state, action) => {
+      state.nominalFitrah = action.payload;
     },
   },
 });
@@ -89,6 +101,9 @@ export const {
   setAmilZakat,
   setAllCoaCategory,
   setAllCoa,
+  setModalCreateFitrah,
+  setDetailFitrah,
+  setNominalFitrah,
 } = authSlice.actions;
 
 export default authSlice.reducer;

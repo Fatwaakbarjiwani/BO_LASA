@@ -7,11 +7,13 @@ import {
 } from "../../../redux/actions/ziswafAction";
 import CreateZiswaf from "../../../components/modalZiswaf/CreateZiswaf";
 import {
+  setModalCreateFitrah,
   setModalCreateZiswaf,
   setModalEditZiswaf,
 } from "../../../redux/reducers/ziswafReducer";
 import EditZiswaf from "../../../components/modalZiswaf/EditZiswaf";
 import { OrbitProgress } from "react-loading-indicators";
+import NominalFitrah from "../../../components/modalZiswaf/NominalFitrah";
 
 export default function Ziswaf() {
   const [selectedCategory, setSelectedCategory] = useState("zakat");
@@ -53,6 +55,7 @@ export default function Ziswaf() {
     <div className="mb-4 w-full">
       <CreateZiswaf type={selectedCategory} />
       <EditZiswaf type={selectedCategory} />
+      <NominalFitrah />
       <h1 className="text-3xl font-extrabold text-gray-800">Ziswaf</h1>
       <div className="w-full shadow-md rounded-lg mt-5 border border-gray-100 p-4 space-y-2">
         <select
@@ -65,13 +68,22 @@ export default function Ziswaf() {
           {/* <option value="wakaf">Wakaf</option> */}
           <option value="dskl">DSKL</option>
         </select>
-
-        <button
-          onClick={() => dispatch(setModalCreateZiswaf(true))}
-          className="text-lg  shadow active:scale-105 duration-200 flex items-center justify-center bg-primary w-2/12 px-6 py-1 rounded-lg text-white font-semibold"
-        >
-          Buat {selectedCategory}
-        </button>
+        <div className="flex justify-between">
+          <button
+            onClick={() => dispatch(setModalCreateZiswaf(true))}
+            className="text-lg  shadow active:scale-105 duration-200 flex items-center justify-center bg-primary w-2/12 px-6 py-1 rounded-lg text-white font-semibold"
+          >
+            Buat {selectedCategory}
+          </button>
+          {selectedCategory == "zakat" && (
+            <button
+              onClick={() => dispatch(setModalCreateFitrah(true))}
+              className="text-lg shadow active:scale-105 duration-200 flex items-center justify-center bg-primary px-6 py-1 rounded-lg text-white font-semibold"
+            >
+              Detail Zakat Fitrah
+            </button>
+          )}
+        </div>
 
         <div className="relative overflow-x-auto shadow-md sm:rounded-lg">
           <table className="w-full text-sm text-left text-gray-500">

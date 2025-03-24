@@ -3,11 +3,13 @@ import {
   setAllCoa,
   setAllCoaCategory,
   setCoaCategory,
+  setDetailFitrah,
   setDetailZiswaf,
   setDskl,
   setInfak,
   setModalCreateZiswaf,
   setModalEditZiswaf,
+  setNominalFitrah,
   setPengelola,
   setWakaf,
   setZakat,
@@ -342,3 +344,42 @@ export const editZiswaf =
       });
     }
   };
+
+export const getDetailFitrah = (id) => async (dispatch) => {
+  try {
+    const response = await axios.get(`${API_URL}/zakat/data/${id}`);
+    const data = response.data;
+    dispatch(setDetailFitrah(data));
+  } catch (error) {
+    return;
+  }
+};
+export const getNominalFitrah = () => async (dispatch) => {
+  try {
+    const response = await axios.get(`${API_URL}/nomZakat/get/one`);
+    const data = response.data;
+    dispatch(setNominalFitrah(data));
+  } catch (error) {
+    return;
+  }
+};
+export const createFitrah = (nominal) => async (dispatch) => {
+  try {
+    const response = await axios.put(`${API_URL}/nomZakat/edit/1`, {
+      nomZakat: nominal,
+    });
+    if (response) {
+      Swal.fire({
+        title: `Berhasil`,
+        text: `Proses membuat nominal berhasil`,
+        icon: "success",
+      });
+    }
+  } catch (error) {
+    Swal.fire({
+      title: `Proses membuat nominal gagal`,
+      text: error.response?.data?.message || "Terjadi kesalahan.",
+      icon: "error",
+    });
+  }
+};
