@@ -37,35 +37,14 @@ export default function SaldoAwal() {
 
   const handleRowChange = (index, field, value) => {
     const updatedRows = [...rows];
-
-    // Izinkan hanya angka, titik (untuk ribuan), dan koma (untuk desimal)
-    const cleanValue = value.replace(/[^0-9.,]/g, "");
-
-    // Normalize input:
-    // - Hapus titik ribuan
-    // - Ganti koma dengan titik desimal
-    const sanitized = cleanValue.replace(/\./g, "").replace(",", ".");
-
-    // Simpan sebagai angka float (dengan format titik desimal)
-    updatedRows[index][field] = parseFloat(sanitized) || 0;
+    updatedRows[index][field] = parseFloat(value.replace(/[^\d]/g, "")) || 0;
     setRows(updatedRows);
   };
 
   // Format number as currency (Rupiah)
   const formatCurrency = (value) => {
-    if (value === null || value === undefined) return "";
-
-    // Ubah menjadi string, hapus titik ribuan, dan pastikan koma digunakan sebagai pemisah desimal
-    const sanitized = value.toString().replace(/\./g, "").replace(",", ".");
-
-    // Pisahkan bagian ribuan dan desimal
-    const parts = sanitized.split(",");
-
-    // Format bagian integer dengan titik sebagai pemisah ribuan
-    const integerPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-
-    // Gabungkan integer dan desimal dengan koma sebagai pemisah desimal
-    return parts[1] !== undefined ? `${integerPart},${parts[1]}` : integerPart;
+    const numberValue = value.replace(/[^\d]/g, ""); // Remove non-numeric characters
+    return numberValue.replace(/\B(?=(\d{3})+(?!\d))/g, "."); // Format with periods
   };
 
   const getTotal = (field) =>
