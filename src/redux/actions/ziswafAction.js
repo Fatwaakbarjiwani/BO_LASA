@@ -3,6 +3,7 @@ import {
   setAllCoa,
   setAllCoaCategory,
   setCoaCategory,
+  setCoaParent,
   setDetailFitrah,
   setDetailZiswaf,
   setDskl,
@@ -59,6 +60,15 @@ export const getCategoryCoa = () => async (dispatch) => {
     dispatch(setCoaCategory(data));
   } catch (error) {
     console.error("Error fetching coa category", error);
+  }
+};
+export const getCoaParent = () => async (dispatch) => {
+  try {
+    const response = await axios.get(`${API_URL}/coa/parent`);
+    const data = response.data;
+    dispatch(setCoaParent(data));
+  } catch (error) {
+    // console.error("Error fetching coa category", error);
   }
 };
 export const getAllCoa = () => async (dispatch) => {

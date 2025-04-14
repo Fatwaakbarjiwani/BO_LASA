@@ -4,14 +4,14 @@ import { OrbitProgress } from "react-loading-indicators";
 import { setModalCreateCoa } from "../../redux/reducers/transaction&summaryReducer";
 import {
   createCategoryCoa,
-  getCategoryCoa,
+  getCoaParent,
 } from "../../redux/actions/ziswafAction";
 
 function CreateCoa() {
   const dispatch = useDispatch();
   const { modalCreateCoa } = useSelector((state) => state.summary);
   const [isLoading, setLoading] = useState(false);
-  const { coaCategory } = useSelector((state) => state.ziswaf);
+  const { coaParent } = useSelector((state) => state.ziswaf);
 
   const typedata = [
     {
@@ -43,7 +43,7 @@ function CreateCoa() {
   const [idParent, setIdParent] = useState("");
 
   useEffect(() => {
-    dispatch(getCategoryCoa());
+    dispatch(getCoaParent());
   }, [dispatch]);
 
   if (!modalCreateCoa) {
@@ -122,7 +122,7 @@ function CreateCoa() {
               className="w-full p-3 border border-gray-300 rounded-lg"
             >
               <option value="">Pilih Rekening</option>
-              {coaCategory.map((item) => (
+              {coaParent.map((item) => (
                 <option key={item.id} value={item.id}>
                   {`${item.accountCode} ${item.accountName}`}
                 </option>

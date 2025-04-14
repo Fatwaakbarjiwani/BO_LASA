@@ -11,6 +11,7 @@ const initialState = {
   pengelola: [],
   amilDskl: [],
   coaCategory: [],
+  coaParent: [],
   allCoa: [],
   allCoaCategory: [],
   detailZiswaf: [],
@@ -56,6 +57,9 @@ const authSlice = createSlice({
     },
     setCoaCategory: (state, action) => {
       state.coaCategory = action.payload;
+    },
+    setCoaParent: (state, action) => {
+      state.coaParent = action.payload;
     },
     setAllCoa: (state, action) => {
       state.allCoa = action.payload;
@@ -104,6 +108,7 @@ export const {
   setModalCreateFitrah,
   setDetailFitrah,
   setNominalFitrah,
+  setCoaParent,
 } = authSlice.actions;
 
 export default authSlice.reducer;
