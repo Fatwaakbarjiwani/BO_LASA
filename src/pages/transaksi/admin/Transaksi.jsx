@@ -108,7 +108,7 @@ export default function Transaksi() {
                       {nomor + 1}
                     </th>
                     <td className="px-6 py-4">{item?.username}</td>
-                    <td className="px-6 py-4">Demak</td>
+                    <td className="px-6 py-4">{item?.nomorBukti}</td>
                     <td className="px-6 py-4">{item?.phoneNumber}</td>
                     <td className="px-6 py-4">{item?.message}</td>
                     <td className="px-6 py-4 whitespace-nowrap">
