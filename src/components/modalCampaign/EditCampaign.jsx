@@ -31,10 +31,19 @@ function EditCampaign() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [isEmergency, setIsEmergency] = useState(false);
+  const [campaignImageDesc1, setCampaignImageDesc1] = useState(null);
+  const [campaignImageDesc2, setCampaignImageDesc2] = useState(null);
+  const [campaignImageDesc3, setCampaignImageDesc3] = useState(null);
+  const [showImageDesc1, setShowImageDesc1] = useState(null);
+  const [showImageDesc2, setShowImageDesc2] = useState(null);
+  const [showImageDesc3, setShowImageDesc3] = useState(null);
 
   useEffect(() => {
     dispatch(getAllCampaignCategory());
-    if (detailCampaign) {
+  }, [dispatch]);
+
+  useEffect(() => {
+    if (detailCampaign && allCampaignCategory.length > 0) {
       setCampaignName(detailCampaign?.campaignName || "");
       setShowImage(detailCampaign?.campaignImage || null);
       setCampaignCode(detailCampaign?.campaignCode || "");
@@ -44,8 +53,53 @@ function EditCampaign() {
       setStartDate(detailCampaign?.startDate || "");
       setEndDate(detailCampaign?.endDate || "");
       setIsEmergency(detailCampaign?.emergency || false);
+
+      let selectedCategoryId = "";
+
+      if (detailCampaign?.category) {
+        // If category is an object, try different possible structures
+        if (detailCampaign.category.campaignCategory) {
+          // Structure: { campaignCategory: "Dakwah" }
+          const matchingCategory = allCampaignCategory.find(
+            (cat) =>
+              cat.campaignCategory === detailCampaign.category.campaignCategory
+          );
+          selectedCategoryId = matchingCategory ? matchingCategory.id : "";
+        } else if (detailCampaign.category.id) {
+          // Structure: { id: 1, campaignCategory: "Dakwah" }
+          selectedCategoryId = detailCampaign.category.id;
+        } else if (typeof detailCampaign.category === "string") {
+          // Structure: category is just a string name
+          const matchingCategory = allCampaignCategory.find(
+            (cat) => cat.campaignCategory === detailCampaign.category
+          );
+          selectedCategoryId = matchingCategory ? matchingCategory.id : "";
+        }
+      } else if (detailCampaign?.categoryId) {
+        // If categoryId is provided directly
+        selectedCategoryId = detailCampaign.categoryId;
+      }
+
+      setCategory(selectedCategoryId);
+      // Handle campaignImageDesc - they come as filename only, need to add base URL
+      const baseUrl = "https://skyconnect.lazis-sa.org/api/images/";
+      setShowImageDesc1(
+        detailCampaign?.campaignImageDesc1
+          ? `${baseUrl}${detailCampaign.campaignImageDesc1}`
+          : null
+      );
+      setShowImageDesc2(
+        detailCampaign?.campaignImageDesc2
+          ? `${baseUrl}${detailCampaign.campaignImageDesc2}`
+          : null
+      );
+      setShowImageDesc3(
+        detailCampaign?.campaignImageDesc3
+          ? `${baseUrl}${detailCampaign.campaignImageDesc3}`
+          : null
+      );
     }
-  }, [dispatch, detailCampaign]);
+  }, [detailCampaign, allCampaignCategory]);
 
   useEffect(() => {
     if (modalEditActive == false) {
@@ -70,6 +124,52 @@ function EditCampaign() {
     setShowImage(imageUrl);
   };
 
+  const handleImageDescUpload = (e, imageNumber) => {
+    const file = e.target.files[0];
+    if (file) {
+      const imageUrl = URL.createObjectURL(file);
+      switch (imageNumber) {
+        case 1:
+          setCampaignImageDesc1(file);
+          setShowImageDesc1(imageUrl);
+          break;
+        case 2:
+          setCampaignImageDesc2(file);
+          setShowImageDesc2(imageUrl);
+          break;
+        case 3:
+          setCampaignImageDesc3(file);
+          setShowImageDesc3(imageUrl);
+          break;
+        default:
+          break;
+      }
+    }
+  };
+
+  const handleRemoveImage = (imageType) => {
+    switch (imageType) {
+      case "main":
+        setCampaignImage(null);
+        setShowImage(null);
+        break;
+      case "desc1":
+        setCampaignImageDesc1(null);
+        setShowImageDesc1(null);
+        break;
+      case "desc2":
+        setCampaignImageDesc2(null);
+        setShowImageDesc2(null);
+        break;
+      case "desc3":
+        setCampaignImageDesc3(null);
+        setShowImageDesc3(null);
+        break;
+      default:
+        break;
+    }
+  };
+
   const handleEditCampaign = (e) => {
     e.preventDefault();
     setLoading(true);
@@ -88,7 +188,10 @@ function EditCampaign() {
         endDate,
         detailCampaign?.active,
         isEmergency,
-        detailCampaign?.campaignId
+        detailCampaign?.campaignId,
+        campaignImageDesc1,
+        campaignImageDesc2,
+        campaignImageDesc3
       )
     ).finally(() => setLoading(false));
   };
@@ -245,49 +348,240 @@ function EditCampaign() {
               <span className="ml-2 text-sm text-gray-600">Darurat</span>
             </div>
           </div>
-          <div className="flex w-full items-center justify-center">
-            <Label
-              htmlFor="dropzone-file"
-              className="flex h-64 w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 hover:bg-gray-100"
-            >
-              {showImage != null ? (
-                <img
-                  src={showImage}
-                  alt="Campaign Image"
-                  className="h-full w-full object-contain"
-                />
-              ) : (
-                <div className="flex flex-col items-center justify-center pb-6 pt-5">
-                  <svg
-                    className="mb-4 h-8 w-8 text-gray-500"
-                    aria-hidden="true"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 20 16"
-                  >
-                    <path
-                      stroke="currentColor"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"
-                    />
-                  </svg>
-                  <p className="mb-2 text-sm text-gray-500">
-                    <span className="font-semibold">Click to upload</span> or
-                    drag and drop
-                  </p>
-                  <p className="text-xs text-gray-500">
-                    SVG, PNG, JPG or GIF (MAX. 800x600px / 1Mb)
-                  </p>
-                </div>
+
+          <div>
+            <div className="flex justify-between items-center mb-1">
+              <label className="block text-sm font-medium text-gray-600">
+                Gambar Deskripsi 1
+              </label>
+              {showImageDesc1 && (
+                <button
+                  type="button"
+                  onClick={() => handleRemoveImage("desc1")}
+                  className="text-red-500 hover:text-red-700 text-sm"
+                >
+                  Hapus
+                </button>
               )}
-              <FileInput
-                id="dropzone-file"
-                className="hidden"
-                onChange={handleImageUpload}
-              />
-            </Label>
+            </div>
+            <div className="flex w-full items-center justify-center">
+              <Label
+                htmlFor="dropzone-file-desc1"
+                className="flex h-32 w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 hover:bg-gray-100"
+              >
+                {showImageDesc1 ? (
+                  <img
+                    src={showImageDesc1}
+                    alt="Description Image 1"
+                    className="h-full w-full object-contain"
+                  />
+                ) : (
+                  <div className="flex flex-col items-center justify-center pb-6 pt-5">
+                    <svg
+                      className="mb-4 h-6 w-6 text-gray-500"
+                      aria-hidden="true"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 20 16"
+                    >
+                      <path
+                        stroke="currentColor"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"
+                      />
+                    </svg>
+                    <p className="mb-2 text-xs text-gray-500">
+                      <span className="font-semibold">Click to upload</span>{" "}
+                      gambar 1
+                    </p>
+                  </div>
+                )}
+                <FileInput
+                  id="dropzone-file-desc1"
+                  className="hidden"
+                  onChange={(e) => handleImageDescUpload(e, 1)}
+                />
+              </Label>
+            </div>
+          </div>
+
+          <div>
+            <div className="flex justify-between items-center mb-1">
+              <label className="block text-sm font-medium text-gray-600">
+                Gambar Deskripsi 2
+              </label>
+              {showImageDesc2 && (
+                <button
+                  type="button"
+                  onClick={() => handleRemoveImage("desc2")}
+                  className="text-red-500 hover:text-red-700 text-sm"
+                >
+                  Hapus
+                </button>
+              )}
+            </div>
+            <div className="flex w-full items-center justify-center">
+              <Label
+                htmlFor="dropzone-file-desc2"
+                className="flex h-32 w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 hover:bg-gray-100"
+              >
+                {showImageDesc2 ? (
+                  <img
+                    src={showImageDesc2}
+                    alt="Description Image 2"
+                    className="h-full w-full object-contain"
+                  />
+                ) : (
+                  <div className="flex flex-col items-center justify-center pb-6 pt-5">
+                    <svg
+                      className="mb-4 h-6 w-6 text-gray-500"
+                      aria-hidden="true"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 20 16"
+                    >
+                      <path
+                        stroke="currentColor"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"
+                      />
+                    </svg>
+                    <p className="mb-2 text-xs text-gray-500">
+                      <span className="font-semibold">Click to upload</span>{" "}
+                      gambar 2
+                    </p>
+                  </div>
+                )}
+                <FileInput
+                  id="dropzone-file-desc2"
+                  className="hidden"
+                  onChange={(e) => handleImageDescUpload(e, 2)}
+                />
+              </Label>
+            </div>
+          </div>
+
+          <div>
+            <div className="flex justify-between items-center mb-1">
+              <label className="block text-sm font-medium text-gray-600">
+                Gambar Deskripsi 3
+              </label>
+              {showImageDesc3 && (
+                <button
+                  type="button"
+                  onClick={() => handleRemoveImage("desc3")}
+                  className="text-red-500 hover:text-red-700 text-sm"
+                >
+                  Hapus
+                </button>
+              )}
+            </div>
+            <div className="flex w-full items-center justify-center">
+              <Label
+                htmlFor="dropzone-file-desc3"
+                className="flex h-32 w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 hover:bg-gray-100"
+              >
+                {showImageDesc3 ? (
+                  <img
+                    src={showImageDesc3}
+                    alt="Description Image 3"
+                    className="h-full w-full object-contain"
+                  />
+                ) : (
+                  <div className="flex flex-col items-center justify-center pb-6 pt-5">
+                    <svg
+                      className="mb-4 h-6 w-6 text-gray-500"
+                      aria-hidden="true"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 20 16"
+                    >
+                      <path
+                        stroke="currentColor"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"
+                      />
+                    </svg>
+                    <p className="mb-2 text-xs text-gray-500">
+                      <span className="font-semibold">Click to upload</span>{" "}
+                      gambar 3
+                    </p>
+                  </div>
+                )}
+                <FileInput
+                  id="dropzone-file-desc3"
+                  className="hidden"
+                  onChange={(e) => handleImageDescUpload(e, 3)}
+                />
+              </Label>
+            </div>
+          </div>
+
+          <div>
+            <div className="flex justify-between items-center mb-1">
+              <label className="block text-sm font-medium text-gray-600">
+                Gambar Utama Campaign
+              </label>
+              {showImage && (
+                <button
+                  type="button"
+                  onClick={() => handleRemoveImage("main")}
+                  className="text-red-500 hover:text-red-700 text-sm"
+                >
+                  Hapus
+                </button>
+              )}
+            </div>
+            <div className="flex w-full items-center justify-center">
+              <Label
+                htmlFor="dropzone-file"
+                className="flex h-64 w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 hover:bg-gray-100"
+              >
+                {showImage != null ? (
+                  <img
+                    src={showImage}
+                    alt="Campaign Image"
+                    className="h-full w-full object-contain"
+                  />
+                ) : (
+                  <div className="flex flex-col items-center justify-center pb-6 pt-5">
+                    <svg
+                      className="mb-4 h-8 w-8 text-gray-500"
+                      aria-hidden="true"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 20 16"
+                    >
+                      <path
+                        stroke="currentColor"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"
+                      />
+                    </svg>
+                    <p className="mb-2 text-sm text-gray-500">
+                      <span className="font-semibold">Click to upload</span> or
+                      drag and drop
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      SVG, PNG, JPG or GIF (MAX. 800x600px / 1Mb)
+                    </p>
+                  </div>
+                )}
+                <FileInput
+                  id="dropzone-file"
+                  className="hidden"
+                  onChange={handleImageUpload}
+                />
+              </Label>
+            </div>
           </div>
           <div className="space-y-2">
             <button

@@ -201,9 +201,7 @@ export const deleteNewsTopic = (id) => async (dispatch) => {
     });
 
     if (result.isConfirmed) {
-      const response = await axios.delete(
-        `${API_URL}/newsTopic/delete/${id}`
-      );
+      const response = await axios.delete(`${API_URL}/newsTopic/delete/${id}`);
       if (response) {
         Swal.fire({
           title: "Berhasil",
@@ -482,7 +480,10 @@ export const createCampaign =
     start,
     end,
     active,
-    emergency
+    emergency,
+    campaignImageDesc1,
+    campaignImageDesc2,
+    campaignImageDesc3
   ) =>
   async (dispatch, getState) => {
     try {
@@ -501,6 +502,18 @@ export const createCampaign =
       formData.append("endDate", end);
       formData.append("active", active);
       formData.append("emergency", emergency);
+      {
+        campaignImageDesc1 != null &&
+          formData.append("campaignImageDesc1", campaignImageDesc1);
+      }
+      {
+        campaignImageDesc2 != null &&
+          formData.append("campaignImageDesc2", campaignImageDesc2);
+      }
+      {
+        campaignImageDesc3 != null &&
+          formData.append("campaignImageDesc3", campaignImageDesc3);
+      }
       const response = await axios.post(
         `${API_URL}/campaign/create`,
         formData,
@@ -540,10 +553,13 @@ export const editCampaign =
     end,
     active,
     emergency,
-    id
+    id,
+    campaignImageDesc1,
+    campaignImageDesc2,
+    campaignImageDesc3
   ) =>
   async (dispatch, getState) => {
-    try {       
+    try {
       const { tokenAdmin } = getState().auth;
       const formData = new FormData();
       formData.append("categoryId", category);
@@ -559,6 +575,18 @@ export const editCampaign =
       formData.append("endDate", end);
       formData.append("active", active);
       formData.append("emergency", emergency);
+      {
+        campaignImageDesc1 != null &&
+          formData.append("campaignImageDesc1", campaignImageDesc1);
+      }
+      {
+        campaignImageDesc2 != null &&
+          formData.append("campaignImageDesc2", campaignImageDesc2);
+      }
+      {
+        campaignImageDesc3 != null &&
+          formData.append("campaignImageDesc3", campaignImageDesc3);
+      }
       const response = await axios.put(
         `${API_URL}/campaign/edit/${id}`,
         formData,
