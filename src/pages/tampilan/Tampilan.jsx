@@ -1,19 +1,26 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   editPageImage,
   getPageImage,
   uploadPageImage,
 } from "../../redux/actions/authAction";
+import { getActiveAproveCampaign } from "../../redux/actions/campaignAction";
 import { FileInput, Label } from "flowbite-react";
 import { OrbitProgress } from "react-loading-indicators";
-import { IoMdArrowBack } from "react-icons/io";
+// import { IoMdArrowBack } from "react-icons/io";
 import { HiOutlinePencil, HiOutlineTrash, HiOutlinePlus } from "react-icons/hi";
 import { Editor } from "@tinymce/tinymce-react";
 
 export default function Tampilan() {
   const dispatch = useDispatch();
   const { pageImage } = useSelector((state) => state.page);
+  const { allCampaign, totalPNActiveCampaign } = useSelector(
+    (state) => state.campaign
+  );
+
+  // Error boundary state
+  const [hasError, setHasError] = useState(false);
   const [loading, setLoading] = useState(false);
   const [button, setButton] = useState("dashboard");
   const [images, setImages] = useState({
@@ -70,6 +77,17 @@ export default function Tampilan() {
     useState(false);
   const [deletingLiteraturId, setDeletingLiteraturId] = useState(null);
 
+  // Campaign Priority states
+  const [priorityCampaigns, setPriorityCampaigns] = useState([]);
+  const [campaignPriorityLoading, setCampaignPriorityLoading] = useState(false);
+  const [showCampaignPriorityModal, setShowCampaignPriorityModal] =
+    useState(false);
+  const [selectedCampaignId, setSelectedCampaignId] = useState("");
+
+  // Pagination states for active campaigns (0-based)
+  const [activeCampaignsPage, setActiveCampaignsPage] = useState(0);
+  const [activeCampaignsPerPage] = useState(10);
+
   // Base URL for API
   const baseUrl = "https://skyconnect.lazis-sa.org";
 
@@ -115,9 +133,10 @@ export default function Tampilan() {
       setMitraLoading(true);
       const response = await fetch(`${baseUrl}/api/mitra/get-all`);
       const data = await response.json();
-      setMitraData(data);
+      setMitraData(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("Error fetching mitra data:", error);
+      setMitraData([]);
     } finally {
       setMitraLoading(false);
     }
@@ -129,9 +148,10 @@ export default function Tampilan() {
       setZiswafImageLoading(true);
       const response = await fetch(`${baseUrl}/api/ziswaf-image/get-all`);
       const data = await response.json();
-      setZiswafImageData(data);
+      setZiswafImageData(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("Error fetching ziswaf image data:", error);
+      setZiswafImageData([]);
     } finally {
       setZiswafImageLoading(false);
     }
@@ -143,9 +163,10 @@ export default function Tampilan() {
       setLiteraturLoading(true);
       const response = await fetch(`${baseUrl}/api/literatur/get-all`);
       const data = await response.json();
-      setLiteraturData(data);
+      setLiteraturData(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("Error fetching literatur data:", error);
+      setLiteraturData([]);
     } finally {
       setLiteraturLoading(false);
     }
@@ -570,6 +591,108 @@ export default function Tampilan() {
     setShowLiteraturDeleteModal(true);
   };
 
+  // Campaign Priority functions
+  const fetchPriorityCampaigns = async () => {
+    try {
+      setCampaignPriorityLoading(true);
+      const response = await fetch(`${baseUrl}/api/campaign/get-by-priority`);
+      const data = await response.json();
+      // Ensure data is an array
+      setPriorityCampaigns(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error("Error fetching priority campaigns:", error);
+      setPriorityCampaigns([]); // Set empty array on error
+    } finally {
+      setCampaignPriorityLoading(false);
+    }
+  };
+
+  const fetchActiveCampaigns = useCallback(
+    async (page = 0) => {
+      try {
+        await dispatch(getActiveAproveCampaign(page));
+      } catch (error) {
+        console.error("Error fetching active campaigns:", error);
+      }
+    },
+    [dispatch]
+  );
+
+  const setCampaignPriority = async (campaignId, priority) => {
+    try {
+      setCampaignPriorityLoading(true);
+      const response = await fetch(
+        `${baseUrl}/api/campaign/set-priority/${campaignId}?priority=${priority}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (response.ok) {
+        alert(
+          `Campaign priority ${priority ? "enabled" : "disabled"} successfully`
+        );
+        fetchPriorityCampaigns(); // Refresh data
+      } else {
+        alert("Failed to update campaign priority");
+      }
+    } catch (error) {
+      console.error("Error setting campaign priority:", error);
+      alert("Error updating campaign priority");
+    } finally {
+      setCampaignPriorityLoading(false);
+    }
+  };
+
+  const handleAddPriorityCampaign = async () => {
+    if (!selectedCampaignId) {
+      alert("Please select a campaign");
+      return;
+    }
+
+    await setCampaignPriority(selectedCampaignId, true);
+    setSelectedCampaignId("");
+    setShowCampaignPriorityModal(false);
+  };
+
+  const handleRemovePriorityCampaign = async (campaignId) => {
+    if (
+      window.confirm(
+        "Are you sure you want to remove this campaign from priority?"
+      )
+    ) {
+      await setCampaignPriority(campaignId, false);
+    }
+  };
+
+  // Pagination functions for active campaigns (0-based)
+  const handleActiveCampaignsPageChange = (newPage) => {
+    setActiveCampaignsPage(newPage);
+    fetchActiveCampaigns(newPage);
+  };
+
+  const handleActiveCampaignsNextPage = () => {
+    if (activeCampaignsPage < totalPNActiveCampaign - 1) {
+      handleActiveCampaignsPageChange(activeCampaignsPage + 1);
+    }
+  };
+
+  const handleActiveCampaignsPrevPage = () => {
+    if (activeCampaignsPage > 0) {
+      handleActiveCampaignsPageChange(activeCampaignsPage - 1);
+    }
+  };
+
+  const openCampaignPriorityModal = () => {
+    setActiveCampaignsPage(0);
+    setSelectedCampaignId("");
+    setShowCampaignPriorityModal(true);
+    fetchActiveCampaigns(0);
+  };
+
   useEffect(() => {
     {
       !loading && dispatch(getPageImage());
@@ -578,17 +701,49 @@ export default function Tampilan() {
 
   // Load mitra data on component mount
   useEffect(() => {
-    fetchMitraData();
-    fetchZiswafImageData();
-    fetchLiteraturData();
-  }, []);
+    const loadData = async () => {
+      try {
+        await Promise.all([
+          fetchMitraData(),
+          fetchZiswafImageData(),
+          fetchLiteraturData(),
+          fetchPriorityCampaigns(),
+          fetchActiveCampaigns(0),
+        ]);
+      } catch (error) {
+        console.error("Error loading initial data:", error);
+        setHasError(true);
+      }
+    };
+
+    loadData();
+  }, [fetchActiveCampaigns]);
+
+  // Error boundary
+  if (hasError) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-red-600 mb-4">
+            Something went wrong
+          </h2>
+          <button
+            onClick={() => setHasError(false)}
+            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>
       <div>
         <h1 className="text-3xl font-extrabold text-gray-800 mb-4">Tampilan</h1>
-        <div className="flex gap-4 items-center my-5">
-          {pageImage.length > 0 && button == "dashboard" ? (
+        {/* <div className="flex gap-4 items-center my-5"> */}
+        {/* {pageImage.length > 0 && button == "dashboard" ? (
             <button
               className="
                  bg-blue-600 text-white hover:scale-105 duration-200
@@ -615,8 +770,8 @@ export default function Tampilan() {
             >
               <IoMdArrowBack /> Kembali
             </button>
-          )}
-        </div>
+          )} */}
+        {/* </div> */}
         {button == "create" && (
           <div>
             <h1 className="font-semibold text-gray-800 text-lg">
@@ -816,27 +971,100 @@ export default function Tampilan() {
           </div>
         )}
         {button === "dashboard" && (
-          <div className="grid grid-cols-3 gap-4">
-            {Array(3)
-              .fill(null)
-              .map((_, index) => (
-                <div key={index} className="relative">
-                  <label
-                    htmlFor={`image-${index}`}
-                    className="flex h-64 w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 hover:bg-gray-100"
-                  >
-                    {pageImage.length > 0 ? (
-                      <img
-                        src={pageImage[0]?.[`image_${index + 1}`]}
-                        alt={`Preview Image ${index + 1}`}
-                        className="h-full w-full object-contain"
-                      />
-                    ) : (
-                      <Placeholder2 />
-                    )}
-                  </label>
-                </div>
-              ))}
+          <div>
+            <div className="flex justify-between items-center mb-6">
+              <h1 className="text-3xl font-extrabold text-gray-800">
+                Campaign Priority
+              </h1>
+              <button
+                className="bg-green-600 text-white hover:scale-105 duration-200 p-3 rounded-lg shadow text-sm flex items-center gap-2"
+                onClick={openCampaignPriorityModal}
+              >
+                <HiOutlinePlus className="w-4 h-4" />
+                Tambah Campaign Priority
+              </button>
+            </div>
+
+            {campaignPriorityLoading ? (
+              <div className="w-full flex justify-center mt-8">
+                <OrbitProgress
+                  variant="dotted"
+                  color="#69c53e"
+                  text=""
+                  style={{ fontSize: "8px" }}
+                  textColor=""
+                />
+              </div>
+            ) : (
+              <div className="grid grid-cols-3 gap-4">
+                {priorityCampaigns && priorityCampaigns.length > 0 ? (
+                  <>
+                    {priorityCampaigns.slice(0, 3).map((campaign) => (
+                      <div
+                        key={campaign.campaignId}
+                        className="relative bg-white rounded-lg shadow-md overflow-hidden"
+                      >
+                        <div className="relative">
+                          <img
+                            src={campaign.campaignImage}
+                            alt={campaign.campaignName}
+                            className="w-full h-48 object-cover"
+                          />
+                          <button
+                            className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full hover:bg-red-600"
+                            onClick={() =>
+                              handleRemovePriorityCampaign(campaign.campaignId)
+                            }
+                            title="Remove from priority"
+                          >
+                            <HiOutlineTrash className="w-4 h-4" />
+                          </button>
+                        </div>
+                        <div className="p-4">
+                          <h3 className="font-semibold text-lg text-gray-800 mb-2 line-clamp-2">
+                            {campaign.campaignName}
+                          </h3>
+                          <p className="text-sm text-gray-600 mb-2">
+                            {campaign.campaignCategory}
+                          </p>
+                          <div className="flex justify-between items-center text-sm">
+                            <span className="text-gray-500">
+                              Target: Rp{" "}
+                              {campaign.targetAmount.toLocaleString()}
+                            </span>
+                            <span className="text-green-600 font-semibold">
+                              Rp {campaign.currentAmount.toLocaleString()}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+
+                    {/* Placeholder for empty slots */}
+                    {Array(Math.max(0, 3 - (priorityCampaigns?.length || 0)))
+                      .fill(null)
+                      .map((_, index) => (
+                        <div
+                          key={`empty-${index}`}
+                          className="relative bg-gray-100 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center h-80"
+                        >
+                          <div className="text-center text-gray-500">
+                            <div className="text-4xl mb-2">📋</div>
+                            <p>No Priority Campaign</p>
+                          </div>
+                        </div>
+                      ))}
+                  </>
+                ) : (
+                  <div className="col-span-3 flex items-center justify-center h-80">
+                    <div className="text-center text-gray-500">
+                      <div className="text-4xl mb-2">📋</div>
+                      <p>No Priority Campaigns Available</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -1649,6 +1877,159 @@ export default function Tampilan() {
               </div>
             </div>
           )}
+
+          {/* Campaign Priority Modal */}
+          {showCampaignPriorityModal && (
+            <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 font-Madimi">
+              <div className="bg-white rounded-xl p-4 w-full max-w-lg shadow-lg relative m-4 max-h-[95vh] overflow-y-auto">
+                <button
+                  className="absolute top-4 right-4 text-gray-500 hover:text-red-600 text-2xl"
+                  onClick={() => setShowCampaignPriorityModal(false)}
+                >
+                  &times;
+                </button>
+                <h2 className="text-3xl font-semibold mb-6 text-center text-gray-600">
+                  Tambah Campaign Priority
+                </h2>
+                <form
+                  className="space-y-6"
+                  onSubmit={(e) => e.preventDefault()}
+                >
+                  <div>
+                    <label className="block text-sm font-medium text-gray-600 mb-1">
+                      Pilih Campaign
+                    </label>
+                    <select
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                      value={selectedCampaignId}
+                      onChange={(e) => setSelectedCampaignId(e.target.value)}
+                      required
+                    >
+                      <option value="" disabled>
+                        Pilih Campaign
+                      </option>
+                      {allCampaign &&
+                        Array.isArray(allCampaign) &&
+                        allCampaign.map((campaign) => (
+                          <option
+                            key={campaign.campaignId}
+                            value={campaign.campaignId}
+                          >
+                            {campaign.campaignName}
+                          </option>
+                        ))}
+                    </select>
+
+                    {/* Pagination Info */}
+                    {allCampaign && allCampaign.length > 0 && (
+                      <div className="mt-2 text-sm text-gray-500 text-center">
+                        Showing{" "}
+                        {activeCampaignsPage * activeCampaignsPerPage + 1} to{" "}
+                        {Math.min(
+                          (activeCampaignsPage + 1) * activeCampaignsPerPage,
+                          allCampaign.length
+                        )}{" "}
+                        of {allCampaign.length} campaigns (Page{" "}
+                        {activeCampaignsPage + 1} of {totalPNActiveCampaign})
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Pagination Controls */}
+                  {totalPNActiveCampaign > 1 && (
+                    <div className="flex justify-between items-center">
+                      <button
+                        type="button"
+                        onClick={handleActiveCampaignsPrevPage}
+                        disabled={activeCampaignsPage === 0}
+                        className="px-3 py-1 bg-gray-200 text-gray-700 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-300"
+                      >
+                        Previous
+                      </button>
+
+                      <div className="flex space-x-1">
+                        {Array.from(
+                          { length: Math.min(5, totalPNActiveCampaign) },
+                          (_, i) => {
+                            let pageNum;
+                            if (totalPNActiveCampaign <= 5) {
+                              pageNum = i;
+                            } else if (activeCampaignsPage <= 2) {
+                              pageNum = i;
+                            } else if (
+                              activeCampaignsPage >=
+                              totalPNActiveCampaign - 3
+                            ) {
+                              pageNum = totalPNActiveCampaign - 5 + i;
+                            } else {
+                              pageNum = activeCampaignsPage - 2 + i;
+                            }
+
+                            return (
+                              <button
+                                key={pageNum}
+                                type="button"
+                                onClick={() =>
+                                  handleActiveCampaignsPageChange(pageNum)
+                                }
+                                className={`px-3 py-1 rounded text-sm ${
+                                  activeCampaignsPage === pageNum
+                                    ? "bg-green-500 text-white"
+                                    : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                                }`}
+                              >
+                                {pageNum + 1}
+                              </button>
+                            );
+                          }
+                        )}
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={handleActiveCampaignsNextPage}
+                        disabled={
+                          activeCampaignsPage === totalPNActiveCampaign - 1
+                        }
+                        className="px-3 py-1 bg-gray-200 text-gray-700 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-300"
+                      >
+                        Next
+                      </button>
+                    </div>
+                  )}
+
+                  <div className="space-y-2">
+                    <button
+                      type="button"
+                      className="px-6 py-2 w-full bg-gray-300 text-gray-700 rounded-lg active:scale-105 transition duration-200"
+                      onClick={() => setShowCampaignPriorityModal(false)}
+                    >
+                      Cancel
+                    </button>
+                    {campaignPriorityLoading ? (
+                      <div className="w-full flex justify-center mt-8">
+                        <OrbitProgress
+                          variant="dotted"
+                          color="#69c53e"
+                          text=""
+                          style={{ fontSize: "8px" }}
+                          textColor=""
+                        />
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={handleAddPriorityCampaign}
+                        className="px-6 py-2 w-full bg-primary text-white rounded-lg active:scale-105 transition duration-200"
+                      >
+                        Tambah Campaign Priority
+                      </button>
+                    )}
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -1677,30 +2058,6 @@ function Placeholder() {
       <p className="mb-2 text-sm text-gray-500">
         <span className="font-semibold">Click to upload</span> or drag and drop
       </p>
-      <p className="text-xs text-gray-500">
-        SVG, PNG, JPG, or GIF (MAX. 800x600px / 5Mb)
-      </p>
-    </div>
-  );
-}
-function Placeholder2() {
-  return (
-    <div className="flex flex-col items-center justify-center pb-6 pt-5">
-      <svg
-        className="mb-4 h-8 w-8 text-gray-500"
-        aria-hidden="true"
-        xmlns="http://www.w3.org/2000/svg"
-        fill="none"
-        viewBox="0 0 20 16"
-      >
-        <path
-          stroke="currentColor"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth="2"
-          d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"
-        />
-      </svg>
       <p className="text-xs text-gray-500">
         SVG, PNG, JPG, or GIF (MAX. 800x600px / 5Mb)
       </p>
