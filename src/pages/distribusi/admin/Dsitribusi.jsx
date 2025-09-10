@@ -5,11 +5,13 @@ import TableDistribusi from "../../../components/distribusi/TableDistribusi";
 import TableDokumentasi from "../../../components/distribusi/TableDokumentasi";
 import { useState } from "react";
 import TableOperasional from "../../../components/distribusi/TableOperasional";
+import TableLaporanPenyaluran from "../../../components/distribusi/TableLaporanPenyaluran";
 
 const data = [
   { id: 1, nama: "Distribusi", value: "distribusi" },
-  { id: 2, nama: "Dokumentasi", value: "documentasi" },
-  { id: 2, nama: "Persentase Biaya Admin", value: "penyaluran" },
+  { id: 2, nama: "Laporan Penyaluran", value: "laporan-penyaluran" },
+  { id: 3, nama: "Dokumentasi", value: "documentasi" },
+  { id: 4, nama: "Persentase Biaya Admin", value: "penyaluran" },
 ];
 export default function Distribusi() {
   const { pN } = useSelector((state) => state.pn);
@@ -44,6 +46,16 @@ export default function Distribusi() {
               <div className="relative overflow-x-auto overflow-y-auto shadow-md sm:rounded-lg">
                 <TableDistribusi />
               </div>
+            </div>
+          </div>
+        )}
+        {typeButton == "laporan-penyaluran" && (
+          <div>
+            <h1 className="text-start text-3xl font-bold mb-4">
+              Laporan Penyaluran
+            </h1>
+            <div className="relative overflow-x-auto overflow-y-auto shadow-md sm:rounded-lg">
+              <TableLaporanPenyaluran />
             </div>
           </div>
         )}

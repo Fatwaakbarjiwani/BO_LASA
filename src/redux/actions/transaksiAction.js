@@ -197,7 +197,6 @@ export const getDistribution = (pageNumber) => async (dispatch) => {
 export const createDistribusiDokumentasi =
   (image, description, receiver, amount, date, type, id) =>
   async (dispatch, getState) => {
-    console.log(image);
     
     try {
       const { tokenAdmin } = getState().auth;
