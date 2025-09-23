@@ -6,12 +6,14 @@ import TableDokumentasi from "../../../components/distribusi/TableDokumentasi";
 import { useState } from "react";
 import TableOperasional from "../../../components/distribusi/TableOperasional";
 import TableLaporanPenyaluran from "../../../components/distribusi/TableLaporanPenyaluran";
+import TableSettingPenerima from "../../../components/distribusi/TableSettingPenerima";
 
 const data = [
   { id: 1, nama: "Distribusi", value: "distribusi" },
   { id: 2, nama: "Laporan Penyaluran", value: "laporan-penyaluran" },
   { id: 3, nama: "Dokumentasi", value: "documentasi" },
   { id: 4, nama: "Persentase Biaya Admin", value: "penyaluran" },
+  { id: 5, nama: "Setting Penerima Manfaat", value: "setting-penerima" },
 ];
 export default function Distribusi() {
   const { pN } = useSelector((state) => state.pn);
@@ -69,6 +71,7 @@ export default function Distribusi() {
           </>
         )}
         {typeButton == "penyaluran" && <TableOperasional />}
+        {typeButton == "setting-penerima" && <TableSettingPenerima />}
       </div>
     </>
   );
