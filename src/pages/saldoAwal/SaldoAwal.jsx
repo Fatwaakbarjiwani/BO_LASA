@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { getCategoryCoa, getSaldoCoa } from "../../redux/actions/ziswafAction";
 import { createSaldoAwal } from "../../redux/actions/transaksiAction";
-import Swal from "sweetalert2"; // Import SweetAlert2
+// import Swal from "sweetalert2"; // Import SweetAlert2
 import { IoMdArrowBack } from "react-icons/io";
 
 export default function SaldoAwal() {
@@ -51,22 +51,11 @@ export default function SaldoAwal() {
     rows.reduce((sum, row) => sum + (parseFloat(row[field]) || 0), 0);
 
   const handleSubmit = () => {
-    if (
-      formatCurrency(getTotal("debet").toString()) ==
-      formatCurrency(getTotal("kredit").toString())
-    ) {
       setLoading(true);
       dispatch(createSaldoAwal(rows)).finally(() => {
         setLoading(false);
         setButton(false);
       });
-    } else {
-      Swal.fire({
-        title: "Peringatan",
-        text: "Pastikan jumlah debet dan kredit sama",
-        icon: "info",
-      });
-    }
   };
 
   return (
