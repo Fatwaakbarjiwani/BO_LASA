@@ -5,7 +5,7 @@ import { createSaldoAwal } from "../../redux/actions/transaksiAction";
 // import Swal from "sweetalert2"; // Import SweetAlert2
 import { IoMdArrowBack } from "react-icons/io";
 
-export default function SaldoAwal() {
+export default function   SaldoAwal() {
   const { coaCategory } = useSelector((state) => state.ziswaf);
   const { saldoCoa } = useSelector((state) => state.summary);
   const dispatch = useDispatch();
