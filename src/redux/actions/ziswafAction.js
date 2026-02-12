@@ -285,52 +285,59 @@ export const deleteZiswaf = (type, id) => async (dispatch, getState) => {
   }
 };
 
-export const createZiswaf = (type, category) => async (dispatch, getState) => {
-  try {
-    const { tokenAdmin } = getState().auth;
-    const response = await axios.post(
-      `${API_URL}/${type}/create`,
-      {
-        categoryName: category,
-        amount: "0",
-        distribution: "0",
-        emergency: false,
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${tokenAdmin}`,
-        },
-      }
-    );
-
-    if (response) {
-      Swal.fire({
-        title: `Berhasil`,
-        text: `Proses membuat ${type} berhasil`,
-        icon: "success",
-      });
-      dispatch(setModalCreateZiswaf(false));
-    }
-  } catch (error) {
-    Swal.fire({
-      title: `Proses membuat ${type} gagal`,
-      text: error.response?.data?.message || "Terjadi kesalahan.",
-      icon: "error",
-    });
-  }
-};
-export const editZiswaf =
-  (type, category, amount, distribution, id) => async (dispatch, getState) => {
+export const createZiswaf =
+  (type, { categoryName, amount, distribution, coaDebitId, coaKreditId }) =>
+  async (dispatch, getState) => {
     try {
       const { tokenAdmin } = getState().auth;
+      const payload = {
+        categoryName,
+        amount: amount ?? 0,
+        distribution: distribution ?? 0,
+        ...(coaDebitId && { coaDebit: { id: coaDebitId } }),
+        ...(coaKreditId && { coaKredit: { id: coaKreditId } }),
+      };
+      const response = await axios.post(
+        `${API_URL}/${type}/create`,
+        payload,
+        {
+          headers: {
+            Authorization: `Bearer ${tokenAdmin}`,
+          },
+        }
+      );
+
+      if (response) {
+        Swal.fire({
+          title: `Berhasil`,
+          text: `Proses membuat ${type} berhasil`,
+          icon: "success",
+        });
+        dispatch(setModalCreateZiswaf(false));
+      }
+    } catch (error) {
+      Swal.fire({
+        title: `Proses membuat ${type} gagal`,
+        text: error.response?.data?.message || "Terjadi kesalahan.",
+        icon: "error",
+      });
+    }
+  };
+export const editZiswaf =
+  (type, id, { categoryName, amount, distribution, coaDebitId, coaKreditId }) =>
+  async (dispatch, getState) => {
+    try {
+      const { tokenAdmin } = getState().auth;
+      const payload = {
+        categoryName,
+        amount: amount ?? 0,
+        distribution: distribution ?? 0,
+        ...(coaDebitId && { coaDebit: { id: coaDebitId } }),
+        ...(coaKreditId && { coaKredit: { id: coaKreditId } }),
+      };
       const response = await axios.put(
         `${API_URL}/${type}/update/${id}`,
-        {
-          categoryName: category,
-          amount: amount,
-          distribution: distribution,
-          emergency: false,
-        },
+        payload,
         {
           headers: {
             Authorization: `Bearer ${tokenAdmin}`,

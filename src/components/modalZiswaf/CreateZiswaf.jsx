@@ -7,11 +7,12 @@ import PropTypes from "prop-types";
 
 function CreateZiswaf({ type }) {
   const dispatch = useDispatch();
-  const { modalCreateZiswaf } = useSelector((state) => state.ziswaf);
+  const { modalCreateZiswaf, coaCategory } = useSelector((state) => state.ziswaf);
   const [isLoading, setLoading] = useState(false);
 
-  // State for form inputs
-  const [name, setName] = useState("");
+  const [categoryName, setCategoryName] = useState("");
+  const [coaDebitId, setCoaDebitId] = useState("");
+  const [coaKreditId, setCoaKreditId] = useState("");
 
   useEffect(() => {
     dispatch(getCategoryCoa());
@@ -24,9 +25,15 @@ function CreateZiswaf({ type }) {
   const handleCreateZiswaf = (e) => {
     e.preventDefault();
     setLoading(true);
-    dispatch(createZiswaf(type, name)).finally(() =>
-      setLoading(false)
-    );
+    dispatch(
+      createZiswaf(type, {
+        categoryName,
+        amount: 0,
+        distribution: 0,
+        coaDebitId: coaDebitId ? Number(coaDebitId) : null,
+        coaKreditId: coaKreditId ? Number(coaKreditId) : null,
+      })
+    ).finally(() => setLoading(false));
   };
 
   return (
@@ -51,9 +58,45 @@ function CreateZiswaf({ type }) {
               type="text"
               className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
               placeholder={`Enter ${type} title`}
-              value={name}
-              onChange={(e) => setName(e.target.value)}
+              value={categoryName}
+              onChange={(e) => setCategoryName(e.target.value)}
             />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-600 mb-1">
+              COA Debit
+            </label>
+            <select
+              value={coaDebitId}
+              onChange={(e) => setCoaDebitId(e.target.value)}
+              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+            >
+              <option value="">Pilih COA Debit</option>
+              {coaCategory.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item?.accountCode} - {item?.accountName}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-600 mb-1">
+              COA Kredit
+            </label>
+            <select
+              value={coaKreditId}
+              onChange={(e) => setCoaKreditId(e.target.value)}
+              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+            >
+              <option value="">Pilih COA Kredit</option>
+              {coaCategory.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item?.accountCode} - {item?.accountName}
+                </option>
+              ))}
+            </select>
           </div>
           <div className="space-y-2">
             <button
@@ -76,7 +119,6 @@ function CreateZiswaf({ type }) {
             ) : (
               <button
                 type="submit"
-                onClick={handleCreateZiswaf}
                 className="px-6 py-2 w-full bg-primary text-white rounded-lg active:scale-105 transition duration-200 capitalize"
               >
                 Buat {type}

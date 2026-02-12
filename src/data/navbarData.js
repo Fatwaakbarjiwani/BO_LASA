@@ -50,5 +50,11 @@ export const menuItems = [
     route: "/administrasi",
   },
   { src: Amil, srcActive: AmilWhite, title: "Amil", route: "/amil" },
+  {
+    src: Transaksi,
+    srcActive: TransaksiWhite,
+    title: "Agen POS",
+    route: "/agen-pos",
+  },
   { src: Berita, srcActive: BeritaWhite, title: "Tampilan", route: "/tampilan" },
 ];
