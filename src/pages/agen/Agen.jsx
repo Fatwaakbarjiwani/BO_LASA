@@ -22,11 +22,13 @@ import CreateAgen from "../../components/modalAgen/CreateAgen";
 import EditAgen from "../../components/modalAgen/EditAgen";
 import CreateEvent from "../../components/modalEvent/CreateEvent";
 import EditEvent from "../../components/modalEvent/EditEvent";
+import ImportDonatur from "./ImportDonatur";
 import { OrbitProgress } from "react-loading-indicators";
 
 const tabData = [
   { id: "agen", label: "Agen POS" },
   { id: "event", label: "Event" },
+  { id: "donatur", label: "Donatur" },
 ];
 
 export default function Agen() {
@@ -182,6 +184,13 @@ export default function Agen() {
               </tbody>
             </table>
           </div>
+        </div>
+      )}
+
+      {/* Tab Donatur */}
+      {activeTab === "donatur" && (
+        <div className="w-full">
+          <ImportDonatur />
         </div>
       )}
 
