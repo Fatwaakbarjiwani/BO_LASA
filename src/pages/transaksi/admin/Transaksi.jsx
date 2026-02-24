@@ -29,7 +29,7 @@ const METODE_OPTIONS = [
   { value: "", label: "Semua" },
   { value: "tunai", label: "Tunai" },
   { value: "transfer", label: "Transfer" },
-  { value: "qris agen", label: "QRIS AGEN" },
+  { value: "qris agen", label: "QRIS Agen" },
 ];
 
 export default function Transaksi() {
