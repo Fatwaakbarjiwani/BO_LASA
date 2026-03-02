@@ -6,6 +6,7 @@ import {
   setDistribution,
   setJurnal,
   setLaporanAktivitas,
+  setLaporanPengelola,
   setNeracaSaldo,
   setPersentase,
   setPosisiKeuangan,
@@ -119,6 +120,18 @@ export const getLaporanAktivitas =
       console.log(error);
     }
   };
+export const getLaporanPengelola = (m1, m2, y1, y2) => async (dispatch) => {
+  try {
+    const response = await axios.get(
+      `${API_URL}/journal/pengelola-activity-report?month1=${m1}&year1=${y1}&month2=${m2}&year2=${y2}`
+    );
+    const data = response.data;
+    dispatch(setLaporanPengelola(data));
+  } catch (error) {
+    console.log(error);
+    dispatch(setLaporanPengelola({}));
+  }
+};
 export const getNeracaSaldo = (m1, m2) => async (dispatch) => {
   try {
     const response = await axios.get(
@@ -281,7 +294,7 @@ export const createJurnalUmum =
           transactionDate: date,
           description: keterangan,
           categoryType: jenis,
-          categoryId: kategori,
+          categoryId: jenis === "hasil bagi bank" ? null : kategori,
           debitDetails,
           kreditDetails,
         },

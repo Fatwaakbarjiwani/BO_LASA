@@ -38,6 +38,12 @@ export default function LaporanAktifitas() {
     { id: 4, name: "DSKL", category: "dskl" },
   ];
 
+  const currentYear = new Date().getFullYear();
+  const years = Array.from(
+    { length: currentYear - 2021 + 1 },
+    (_, i) => 2021 + i
+  );
+
   const months = [
     { id: 1, name: "Januari", name2: "JANUARY" },
     { id: 2, name: "Februari", name2: "FEBRUARY" },
@@ -569,23 +575,35 @@ export default function LaporanAktifitas() {
             <label className="block text-sm font-medium text-gray-600">
               Tahun Pertama
             </label>
-            <input
-              type="text"
-              className="w-full p-3 border border-gray-300 rounded-lg"
+            <select
               value={year1}
               onChange={(e) => setYear1(e.target.value)}
-            />
+              className="w-full p-3 border border-gray-300 rounded-lg"
+            >
+              <option value="">Pilih Tahun</option>
+              {years.map((y) => (
+                <option key={y} value={y}>
+                  {y}
+                </option>
+              ))}
+            </select>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-600">
               Tahun Kedua
             </label>
-            <input
-              type="text"
-              className="w-full p-3 border border-gray-300 rounded-lg"
+            <select
               value={year2}
               onChange={(e) => setYear2(e.target.value)}
-            />
+              className="w-full p-3 border border-gray-300 rounded-lg"
+            >
+              <option value="">Pilih Tahun</option>
+              {years.map((y) => (
+                <option key={y} value={y}>
+                  {y}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
         <div className="grid grid-cols-3 gap-4 items-end">

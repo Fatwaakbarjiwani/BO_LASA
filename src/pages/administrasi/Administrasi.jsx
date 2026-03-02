@@ -6,6 +6,7 @@ import BukuBesar from "../bukuBesar/BukuBesar";
 import SaldoAwal from "../saldoAwal/SaldoAwal";
 import LaporanPosisiKeuangan from "../neraca/LaporanPosisiKeuangan";
 import LaporanAktifitas from "../laporanAktifitas/LaporanAktifitas";
+import LaporanPengelola from "../laporanPengelola/LaporanPengelola";
 import NeracaSaldo from "../neracaSaldo/NeracaSaldo";
 
 export default function Administrasi() {
@@ -29,6 +30,8 @@ export default function Administrasi() {
         return <NeracaSaldo />;
       case "laporanAktifitas":
         return <LaporanAktifitas />;
+      case "laporanPengelola":
+        return <LaporanPengelola />;
       default:
         return null;
     }
@@ -117,6 +120,16 @@ export default function Administrasi() {
           }`}
         >
           Laporan Aktivitas
+        </button>
+        <button
+          onClick={() => setPage("laporanPengelola")}
+          className={`px-4 py-2 text-sm font-medium rounded-lg text-nowrap transition ${
+            page === "laporanPengelola"
+              ? "bg-blue-600 text-white"
+              : "bg-gray-100 text-gray-700 hover:bg-blue-100"
+          }`}
+        >
+          Laporan Pengelola
         </button>
       </div>
       <div className="p-4 bg-gray-50 rounded-lg shadow-lg">{renderPage()}</div>

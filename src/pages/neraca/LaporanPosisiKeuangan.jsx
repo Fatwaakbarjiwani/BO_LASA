@@ -13,6 +13,7 @@ export default function LaporanPosisiKeuangan() {
   const [startMonth, setStartMonth] = useState("");
   const [level, setLevel] = useState("");
   const [endMonth, setEndMonth] = useState("");
+  const currentYear = new Date().getFullYear();
   const [year1, setYear1] = useState("");
   const [year2, setYear2] = useState("");
   const { posisiKeuangan } = useSelector((state) => state.summary);
@@ -29,6 +30,11 @@ export default function LaporanPosisiKeuangan() {
       ).finally(() => setLoading(false));
     }
   }, [dispatch, startMonth, endMonth, year1, year2, level]);
+
+  const years = Array.from(
+    { length: currentYear - 2021 + 1 },
+    (_, i) => 2021 + i
+  );
 
   const months = [
     { id: 1, name: "Januari", name2: "JANUARY" },
@@ -596,23 +602,35 @@ export default function LaporanPosisiKeuangan() {
             <label className="block text-sm font-medium text-gray-600">
               Tahun Pertama
             </label>
-            <input
-              type="text"
-              className="w-full p-3 border border-gray-300 rounded-lg"
+            <select
               value={year1}
               onChange={(e) => setYear1(e.target.value)}
-            />
+              className="w-full p-3 border border-gray-300 rounded-lg"
+            >
+              <option value="">Pilih Tahun</option>
+              {years.map((y) => (
+                <option key={y} value={y}>
+                  {y}
+                </option>
+              ))}
+            </select>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-600">
               Tahun Kedua
             </label>
-            <input
-              type="text"
-              className="w-full p-3 border border-gray-300 rounded-lg"
+            <select
               value={year2}
               onChange={(e) => setYear2(e.target.value)}
-            />
+              className="w-full p-3 border border-gray-300 rounded-lg"
+            >
+              <option value="">Pilih Tahun</option>
+              {years.map((y) => (
+                <option key={y} value={y}>
+                  {y}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
         <div className="mb-4 grid grid-cols-2 gap-4">

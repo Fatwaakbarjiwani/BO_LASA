@@ -41,6 +41,7 @@ export default function JurnalUmum() {
   }, [dispatch]);
 
   const data = [
+    { id: 1, name: "Hasil Bagi Bank", category: "hasil bagi bank" },
     { id: 1, name: "Zakat", category: "zakat" },
     { id: 2, name: "Infak", category: "infak" },
     { id: 3, name: "Wakaf", category: "wakaf" },
@@ -115,6 +116,7 @@ export default function JurnalUmum() {
             ))}
           </select>
         </div>
+          {jenis !== "hasil bagi bank" && 
         <div>
           <label className="block text-sm font-medium text-gray-600">
             Kategori
@@ -135,7 +137,9 @@ export default function JurnalUmum() {
               ? wakaf
               : jenis === "campaign"
               ? campaign
-              : dskl
+              : jenis === "dskl" 
+              ? dskl 
+              : []
             ).map((item,no) =>
               jenis !== "campaign" ? (
                 <option key={no} value={item.id}>
@@ -149,6 +153,7 @@ export default function JurnalUmum() {
             )}
           </select>
         </div>
+          }
       </div>
 
       <div className="mb-6">

@@ -12,6 +12,7 @@ const initialState = {
   jurnal: [],
   posisiKeuangan: [],
   laporanAktivitas: [],
+  laporanPengelola: [],
   neracaSaldo: [],
   bukuBesar: [],
   createDokumentasi: false,
@@ -84,6 +85,9 @@ const authSlice = createSlice({
     setLaporanAktivitas: (state, action) => {
       state.laporanAktivitas = action.payload;
     },
+    setLaporanPengelola: (state, action) => {
+      state.laporanPengelola = action.payload;
+    },
     setBukuBesar: (state, action) => {
       state.bukuBesar = action.payload;
     },
@@ -137,6 +141,7 @@ export const {
   setSaldoCoa,
   setPosisiKeuangan,
   setLaporanAktivitas,
+  setLaporanPengelola,
   setNeracaSaldo,
 } = authSlice.actions;
 
