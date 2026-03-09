@@ -61,7 +61,7 @@ export const getHistoryByAgent =
         page = 0,
       } = params;
       const query = new URLSearchParams();
-      if (agentId != null && agentId !== "") query.append("agentId", agentId);
+      if (agentId != null && agentId !== "") query.append("agenId", agentId);
       if (startDate) query.append("startDate", startDate);
       if (endDate) query.append("endDate", endDate);
       if (category) query.append("category", category);
