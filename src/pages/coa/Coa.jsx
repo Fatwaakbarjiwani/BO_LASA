@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import {
   setModalCreateCoa,
   setModalEditCoa,
@@ -22,6 +23,7 @@ export default function Coa() {
   const [id, setId] = useState("");
   const [type, setType] = useState("");
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   useEffect(() => {
     {
@@ -80,6 +82,12 @@ export default function Coa() {
               ))}
             </select>
           </div>
+          <button
+            onClick={() => navigate("/coa-log")}
+            className="px-4 py-2 bg-slate-700 text-white rounded shadow hover:bg-slate-800"
+          >
+            Log COA
+          </button>
           <button
             onClick={() => {
               dispatch(setModalCreateCoa(true));

@@ -24,6 +24,7 @@ import Dashboard2 from "./pages/dashboard/subAdmin/Dashboard2";
 import Administrasi from "./pages/administrasi/Administrasi";
 import Tampilan from "./pages/tampilan/Tampilan";
 import Agen from "./pages/agen/Agen";
+import LogCoa from "./pages/coa/LogCoa";
 
 function AppContent() {
   const { isSidebarOpen } = useSelector((state) => state.page);
@@ -98,6 +99,14 @@ function AppContent() {
                     }
                   />
                   <Route
+                    path="/coa-log"
+                    element={
+                      <Protected>
+                        <LogCoa />
+                      </Protected>
+                    }
+                  />
+                  <Route
                     path="/berita"
                     element={
                       <Protected>
@@ -162,6 +171,14 @@ function AppContent() {
                     element={
                       <Protected>
                         <Administrasi />
+                      </Protected>
+                    }
+                  />
+                  <Route
+                    path="/coa-log"
+                    element={
+                      <Protected>
+                        <LogCoa />
                       </Protected>
                     }
                   />
