@@ -5,11 +5,35 @@ import PropTypes from "prop-types";
 export default function DokumentasiNeraca({ m1, y1, dateTime }) {
   const { neracaSaldo } = useSelector((state) => state.summary);
 
+  const parseValue = (value) => {
+    if (typeof value === "number") return value;
+    if (typeof value !== "string") return 0;
+
+    let normalized = value.trim();
+    let negative = false;
+
+    if (/^\(.*\)$/.test(normalized)) {
+      negative = true;
+      normalized = normalized.slice(1, -1).trim();
+    }
+
+    if (/^[+-]/.test(normalized)) {
+      if (normalized[0] === "-") negative = true;
+      normalized = normalized.slice(1).trim();
+    }
+
+    normalized = normalized.replace(/\./g, "");
+    normalized = normalized.replace(/,/g, ".");
+
+    const parsed = parseFloat(normalized);
+    if (Number.isNaN(parsed)) return 0;
+    return negative ? -parsed : parsed;
+  };
+
   const hitungTotal = (name, cari) => {
     const hasil = Object.keys(neracaSaldo[name] || {}).reduce((acc, key) => {
       const value = neracaSaldo[name]?.[key]?.[cari];
-      // Pastikan value adalah angka, jika bukan angka maka abaikan
-      return acc + (typeof value === "number" ? value : 0);
+      return acc + parseValue(value);
     }, 0);
     return hasil.toLocaleString("id-ID");
   };
