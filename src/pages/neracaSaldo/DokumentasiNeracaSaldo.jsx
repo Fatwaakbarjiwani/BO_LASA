@@ -137,42 +137,41 @@ export default function DokumentasiNeraca({ m1, y1, dateTime }) {
             <td style={cellStyle}></td>
             <td style={cellStyle}></td>
           </tr>
-          {Object.keys(neracaSaldo["Aset Lancar"] || {})
-            .map((key, index) => (
-              <tr key={index}>
-                <td style={cellStyle}>
-                  <p className="pl-4">{key}</p>
-                </td>
-                <td style={cellStyle}>
-                  <p className=" text-center">
-                    {neracaSaldo["Aset Lancar"]?.[`${key}`]?.[
-                      `Saldo Awal`
-                    ]?.toLocaleString("id-ID")}
-                  </p>
-                </td>
-                <td style={cellStyle}>
-                  <p className=" text-center">
-                    {neracaSaldo["Aset Lancar"]?.[`${key}`]?.[
-                      `Total Debit`
-                    ]?.toLocaleString("id-ID")}
-                  </p>
-                </td>
-                <td style={cellStyle}>
-                  <p className=" text-center">
-                    {neracaSaldo["Aset Lancar"]?.[`${key}`]?.[
-                      `Total Kredit`
-                    ]?.toLocaleString("id-ID")}
-                  </p>
-                </td>
-                <td style={cellStyle}>
-                  <p className=" text-center">
-                    {neracaSaldo["Aset Lancar"]?.[`${key}`]?.[
-                      `Saldo Akhir`
-                    ]?.toLocaleString("id-ID")}
-                  </p>
-                </td>
-              </tr>
-            ))}
+          {Object.keys(neracaSaldo["Aset Lancar"] || {}).map((key, index) => (
+            <tr key={index}>
+              <td style={cellStyle}>
+                <p className="pl-4">{key}</p>
+              </td>
+              <td style={cellStyle}>
+                <p className=" text-center">
+                  {neracaSaldo["Aset Lancar"]?.[`${key}`]?.[
+                    `Saldo Awal`
+                  ]?.toLocaleString("id-ID")}
+                </p>
+              </td>
+              <td style={cellStyle}>
+                <p className=" text-center">
+                  {neracaSaldo["Aset Lancar"]?.[`${key}`]?.[
+                    `Total Debit`
+                  ]?.toLocaleString("id-ID")}
+                </p>
+              </td>
+              <td style={cellStyle}>
+                <p className=" text-center">
+                  {neracaSaldo["Aset Lancar"]?.[`${key}`]?.[
+                    `Total Kredit`
+                  ]?.toLocaleString("id-ID")}
+                </p>
+              </td>
+              <td style={cellStyle}>
+                <p className=" text-center">
+                  {neracaSaldo["Aset Lancar"]?.[`${key}`]?.[
+                    `Saldo Akhir`
+                  ]?.toLocaleString("id-ID")}
+                </p>
+              </td>
+            </tr>
+          ))}
           <tr>
             <td style={cellStyle}>
               <p className="uppercase pl-10 font-bold">Jumlah Aset Lancar</p>
@@ -207,42 +206,41 @@ export default function DokumentasiNeraca({ m1, y1, dateTime }) {
             <td style={cellStyle}></td>
             <td style={cellStyle}></td>
           </tr>
-          {Object.keys(neracaSaldo["Aset Tetap"] || {})
-            .map((key, index) => (
-              <tr key={index}>
-                <td style={cellStyle}>
-                  <p className="pl-4">{key}</p>
-                </td>
-                <td style={cellStyle}>
-                  <p className="text-center">
-                    {neracaSaldo["Aset Tetap"]?.[`${key}`]?.[
-                      `Saldo Awal`
-                    ]?.toLocaleString("id-ID")}
-                  </p>
-                </td>
-                <td style={cellStyle}>
-                  <p className="text-center">
-                    {neracaSaldo["Aset Tetap"]?.[`${key}`]?.[
-                      `Total Debit`
-                    ]?.toLocaleString("id-ID")}
-                  </p>
-                </td>
-                <td style={cellStyle}>
-                  <p className="text-center">
-                    {neracaSaldo["Aset Tetap"]?.[`${key}`]?.[
-                      `Total Kredit`
-                    ]?.toLocaleString("id-ID")}
-                  </p>
-                </td>
-                <td style={cellStyle}>
-                  <p className="text-center">
-                    {neracaSaldo["Aset Tetap"]?.[`${key}`]?.[
-                      `Saldo Akhir`
-                    ]?.toLocaleString("id-ID")}
-                  </p>
-                </td>
-              </tr>
-            ))}
+          {Object.keys(neracaSaldo["Aset Tetap"] || {}).map((key, index) => (
+            <tr key={index}>
+              <td style={cellStyle}>
+                <p className="pl-4">{key}</p>
+              </td>
+              <td style={cellStyle}>
+                <p className="text-center">
+                  {neracaSaldo["Aset Tetap"]?.[`${key}`]?.[
+                    `Saldo Awal`
+                  ]?.toLocaleString("id-ID")}
+                </p>
+              </td>
+              <td style={cellStyle}>
+                <p className="text-center">
+                  {neracaSaldo["Aset Tetap"]?.[`${key}`]?.[
+                    `Total Debit`
+                  ]?.toLocaleString("id-ID")}
+                </p>
+              </td>
+              <td style={cellStyle}>
+                <p className="text-center">
+                  {neracaSaldo["Aset Tetap"]?.[`${key}`]?.[
+                    `Total Kredit`
+                  ]?.toLocaleString("id-ID")}
+                </p>
+              </td>
+              <td style={cellStyle}>
+                <p className="text-center">
+                  {neracaSaldo["Aset Tetap"]?.[`${key}`]?.[
+                    `Saldo Akhir`
+                  ]?.toLocaleString("id-ID")}
+                </p>
+              </td>
+            </tr>
+          ))}
           <tr>
             <td style={cellStyle}>
               <p className="uppercase pl-10 font-bold">Jumlah Aset Tetap</p>
@@ -277,8 +275,8 @@ export default function DokumentasiNeraca({ m1, y1, dateTime }) {
             <td style={cellStyle}></td>
             <td style={cellStyle}></td>
           </tr>
-          {Object.keys(neracaSaldo["Aset Lain-Lain"] || {})
-            .map((key, index) => (
+          {Object.keys(neracaSaldo["Aset Lain-Lain"] || {}).map(
+            (key, index) => (
               <tr key={index}>
                 <td style={cellStyle}>
                   <p className="pl-4">{key}</p>
@@ -312,7 +310,8 @@ export default function DokumentasiNeraca({ m1, y1, dateTime }) {
                   </p>
                 </td>
               </tr>
-            ))}
+            ),
+          )}
           <tr>
             <td style={cellStyle}>
               <p className="uppercase pl-10 font-bold">Jumlah Aset Lain-Lain</p>
@@ -414,7 +413,7 @@ export default function DokumentasiNeraca({ m1, y1, dateTime }) {
                   </p>
                 </td>
               </tr>
-            )
+            ),
           )}
           <tr>
             <td style={cellStyle}>
@@ -521,7 +520,7 @@ export default function DokumentasiNeraca({ m1, y1, dateTime }) {
             <td style={cellStyle} colSpan={4} className="bg-gray-100">
               <p className="text-center font-bold">
                 {neracaSaldo[`JUMLAH KEWAJIBAN DAN DANA ZIS`]?.toLocaleString(
-                  "id-ID"
+                  "id-ID",
                 )}
               </p>
             </td>
