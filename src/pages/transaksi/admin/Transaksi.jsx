@@ -343,6 +343,46 @@ export default function Transaksi() {
     }
   };
 
+  const refreshDonatur = () => {
+    if (searchTransaksi) {
+      return dispatch(getSearchTransaksi(searchTransaksi, pNTransaksi - 1));
+    }
+    return dispatch(getTransaction(pNTransaksi - 1));
+  };
+
+  const softDeleteDonaturByNomorBukti = async (nomorBukti) => {
+    if (!nomorBukti) return;
+    const confirm = await Swal.fire({
+      icon: "warning",
+      title: "Hapus transaksi donatur?",
+      text: `Nomor bukti: ${nomorBukti}`,
+      showCancelButton: true,
+      confirmButtonText: "Ya, hapus",
+      cancelButtonText: "Batal",
+    });
+    if (!confirm.isConfirmed) return;
+    try {
+      await axios.delete(
+        `${API_URL}/transaction/soft-delete?nomorBukti=${encodeURIComponent(nomorBukti)}`,
+        { headers: { Authorization: `Bearer ${tokenAdmin}` } }
+      );
+      Swal.fire({
+        icon: "success",
+        title: "Berhasil",
+        text: "Transaksi donatur berhasil dihapus (soft delete).",
+      });
+      await refreshDonatur();
+    } catch (e) {
+      Swal.fire({
+        icon: "error",
+        title: "Gagal",
+        text:
+          e?.response?.data?.message ||
+          "Gagal menghapus transaksi donatur. Coba lagi nanti.",
+      });
+    }
+  };
+
   const CSV_SEP = ";";
   const escapeCsvCell = (val) => {
     if (val == null) return "";
@@ -523,11 +563,14 @@ export default function Transaksi() {
                     <th scope="col" className="px-6 py-3">
                       Channel
                     </th>
+                    <th scope="col" className="px-6 py-3">
+                      Metode
+                    </th>
                     <th
                       scope="col"
                       className="text-center px-6 py-3 rounded-tr-lg rounded-br-lg"
                     >
-                      Metode
+                      Aksi
                     </th>
                   </tr>
                 </thead>
@@ -570,9 +613,20 @@ export default function Transaksi() {
                           item?.method === "ONLINE"
                             ? "text-blue-600"
                             : "text-orange-600"
-                        } `}
+                        } px-6 py-4`}
                       >
                         {item?.method}
+                      </td>
+                      <td className="px-6 py-4 text-center whitespace-nowrap">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            softDeleteDonaturByNomorBukti(item?.nomorBukti)
+                          }
+                          className="px-3 py-1 bg-red-600 text-white text-xs font-semibold rounded hover:bg-red-700"
+                        >
+                          Delete
+                        </button>
                       </td>
                     </tr>
                   ))}
