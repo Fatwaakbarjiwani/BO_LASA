@@ -276,6 +276,7 @@ export default function JurnalUmum() {
         ) : (
           <button
             onClick={() => {
+              // console.log("hello")
               if (
                 formatCurrency(getTotal("debet")) ==
                 formatCurrency(getTotal("kredit"))

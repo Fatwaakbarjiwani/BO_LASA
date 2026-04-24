@@ -253,7 +253,7 @@ export const createJurnalUmum =
       const { tokenAdmin } = getState().auth;
 
       // Validasi data sebelum mengirim request
-      if (!date || !keterangan || !jenis || !kategori || rows.length === 0) {
+      if (!date || !keterangan || !jenis || rows.length === 0) {
         Swal.fire({
           title: "Proses gagal",
           text: "Pastikan semua data telah diisi dengan benar.",
