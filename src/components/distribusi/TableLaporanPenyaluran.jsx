@@ -440,6 +440,7 @@ export default function TableLaporanPenyaluran() {
                       <option value="zakat">Zakat</option>
                       <option value="infak">Infak</option>
                       <option value="wakaf">Wakaf</option>
+                      <option value="pengelola">Pengelola</option>
                     </select>
                   </div>
                 </div>
