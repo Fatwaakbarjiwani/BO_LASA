@@ -36,7 +36,6 @@ function CreateDokumentasiPage() {
   const [showImage, setShowImage] = useState(null);
   const [isLoading, setLoading] = useState(false);
 
-  // State for form inputs
   const [receiver, setReceiver] = useState("");
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");

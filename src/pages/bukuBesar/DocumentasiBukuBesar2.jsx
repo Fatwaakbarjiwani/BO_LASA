@@ -35,7 +35,6 @@ const DocumentasiBukuBesar = ({
         padding: "20px",
       }}
     >
-      {/* Header Section */}
       <div
         style={{
           display: "flex",
@@ -75,7 +74,6 @@ const DocumentasiBukuBesar = ({
         </div>
       </div>
       <hr style={{ border: "1px solid black" }} />
-      {/* Report Title */}
       <div
         style={{
           textAlign: "center",
@@ -95,7 +93,6 @@ const DocumentasiBukuBesar = ({
       <p style={{ margin: "5px 0", fontSize: "14px", color: "red" }}>
         COA: {coaCategory[coaId - 1]?.accountName}
       </p>
-      {/* Table Section */}
       <table
         style={{
           width: "100%",
@@ -236,7 +233,6 @@ const DocumentasiBukuBesar = ({
   );
 };
 
-// PropTypes validation
 DocumentasiBukuBesar.propTypes = {
   startDate: PropTypes.string.isRequired,
   endDate: PropTypes.string.isRequired,

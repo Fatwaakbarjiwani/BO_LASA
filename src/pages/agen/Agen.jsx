@@ -92,7 +92,6 @@ export default function Agen() {
         ))}
       </div>
 
-      {/* Tab Agen POS */}
       {activeTab === "agen" && (
         <div className="w-full shadow-md rounded-lg border border-gray-100 p-4">
           <div className="flex justify-between items-center mb-4">
@@ -187,14 +186,12 @@ export default function Agen() {
         </div>
       )}
 
-      {/* Tab Donatur */}
       {activeTab === "donatur" && (
         <div className="w-full">
           <ImportDonatur />
         </div>
       )}
 
-      {/* Tab Event */}
       {activeTab === "event" && (
         <div className="w-full shadow-md rounded-lg border border-gray-100 p-4">
           <div className="flex justify-between items-center mb-4">

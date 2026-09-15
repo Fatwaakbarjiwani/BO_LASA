@@ -11,12 +11,10 @@ const initialState = {
   searchCampaignPending: "",
   searchCampaignHistory: "",
   amilCampaign: [],
-  // modal
   modalCreateActive: false,
   modalEditActive: false,
   modalCreateCategory: false,
   modalEditCategory: false,
-  // operator
   campaignPending: [],
   campaignHistory: [],
   kategoricampaign: [],

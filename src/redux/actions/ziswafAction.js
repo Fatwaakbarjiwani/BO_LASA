@@ -68,7 +68,6 @@ export const getCoaParent = () => async (dispatch) => {
     const data = response.data;
     dispatch(setCoaParent(data));
   } catch (error) {
-    // console.error("Error fetching coa category", error);
   }
 };
 export const getAllCoa = () => async (dispatch) => {
@@ -114,7 +113,6 @@ export const getDetailCoa = (id) => async (dispatch) => {
 export const createCategoryCoa =
   (code, name, type, idParent) => async (dispatch) => {
     try {
-      // Validasi input
       if (!code || !name || !type) {
         Swal.fire({
           title: "Data Tidak Lengkap",
@@ -124,7 +122,6 @@ export const createCategoryCoa =
         return;
       }
 
-      // Buat payload untuk permintaan API
       const payload = {
         accountCode: code,
         accountName: name,
@@ -132,20 +129,17 @@ export const createCategoryCoa =
         ...(idParent && { parentAccount: { id: idParent } }),
       };
 
-      // Kirim permintaan ke API
       const response = await axios.post(`${API_URL}/coa/create`, payload);
 
-      // Tampilkan pesan sukses jika berhasil
       if (response) {
         Swal.fire({
           title: "Berhasil",
           text: "Proses membuat COA berhasil.",
           icon: "success",
         });
-        dispatch(setModalCreateCoa(false)); // Tutup modal
+        dispatch(setModalCreateCoa(false));
       }
     } catch (error) {
-      // Tangani kesalahan
       Swal.fire({
         title: "Proses membuat COA gagal",
         text: error.response?.data?.message || "Terjadi kesalahan.",
@@ -156,7 +150,6 @@ export const createCategoryCoa =
 export const editCategoryCoa =
   (code, name, type, idParent, id) => async (dispatch) => {
     try {
-      // Validasi input
       if (!code || !name || !type) {
         Swal.fire({
           title: "Data Tidak Lengkap",
@@ -166,7 +159,6 @@ export const editCategoryCoa =
         return;
       }
 
-      // Buat payload untuk permintaan API
       const payload = {
         accountCode: code,
         accountName: name,
@@ -174,20 +166,17 @@ export const editCategoryCoa =
         ...(idParent && { parentAccount: { id: idParent } }),
       };
 
-      // Kirim permintaan ke API
       const response = await axios.put(`${API_URL}/coa/edit/${id}`, payload);
 
-      // Tampilkan pesan sukses jika berhasil
       if (response) {
         Swal.fire({
           title: "Berhasil",
           text: "Proses mengedit COA berhasil.",
           icon: "success",
         });
-        dispatch(setModalEditCoa(false)); // Tutup modal
+        dispatch(setModalEditCoa(false));
       }
     } catch (error) {
-      // Tangani kesalahan
       Swal.fire({
         title: "Proses mengedit COA gagal",
         text: error.response?.data?.message || "Terjadi kesalahan.",
@@ -219,16 +208,7 @@ export const deleteCoa = (id) => async (dispatch) => {
     });
 
     if (result.isConfirmed) {
-      // const { tokenAdmin } = getState().auth;
-      const response = await axios.delete(
-        `${API_URL}/coa/delete/${id}`
-        //   ,
-        //   {
-        //   headers: {
-        //     Authorization: `Bearer ${tokenAdmin}`,
-        //   },
-        // }
-      );
+      const response = await axios.delete(`${API_URL}/coa/delete/${id}`);
 
       if (response) {
         Swal.fire({

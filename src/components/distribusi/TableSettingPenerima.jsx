@@ -24,7 +24,6 @@ export default function TableSettingPenerima() {
 
   const baseUrl = import.meta.env.VITE_API_URL;
 
-  // Fetch data from API
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
@@ -43,7 +42,6 @@ export default function TableSettingPenerima() {
     }
   }, [baseUrl]);
 
-  // Edit data via API
   const editData = async () => {
     setLoading(true);
     try {
@@ -95,7 +93,6 @@ export default function TableSettingPenerima() {
           Setting Penerima Manfaat
         </h1>
 
-        {/* Tombol Ubah */}
         <div className="flex justify-center mb-4">
           <button
             onClick={() => setEdit(!edit)}
@@ -106,7 +103,6 @@ export default function TableSettingPenerima() {
           </button>
         </div>
 
-        {/* Konten */}
         <div className="bg-gray-100 p-4 rounded-lg shadow-sm">
           {loading ? (
             <div className="flex justify-center py-8">

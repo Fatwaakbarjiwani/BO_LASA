@@ -61,7 +61,6 @@ export default function BukuBesar() {
       return;
     }
 
-    // Proses lebih lanjut jika validasi berhasil
     dispatch(getBukuBesar(coaId, startDate, endDate));
 
     if (format === "html") {
@@ -99,7 +98,6 @@ export default function BukuBesar() {
       const formatNumber = (value) => {
         return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
       };
-      // Extract the month name from startDate
       const startMonth = new Date(startDate).getMonth();
       const namaBulan = monthNames[startMonth];
 
@@ -253,12 +251,10 @@ export default function BukuBesar() {
 
     const content = reportTemplateRef.current; // Reference to the content you want to render.
 
-    // Get the content's computed dimensions.
     const contentWidth = content.offsetWidth;
     const pdfWidth = doc.internal.pageSize.getWidth();
     const scaleFactor = pdfWidth / contentWidth; // Scale content to fit within PDF.
 
-    // Add the HTML content with scaling.
     doc.html(content, {
       x: 4, // Add margin.
       y: 4, // Add margin.
@@ -278,7 +274,6 @@ export default function BukuBesar() {
           Filter Buku Besar
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          {/* Tanggal Mulai */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Tanggal Mulai
@@ -291,7 +286,6 @@ export default function BukuBesar() {
             />
           </div>
 
-          {/* Tanggal Selesai */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Tanggal Selesai
@@ -304,7 +298,6 @@ export default function BukuBesar() {
             />
           </div>
 
-          {/* Kategori COA */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Kategori COA Pertama
@@ -363,7 +356,6 @@ export default function BukuBesar() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-          {/* Format */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Format
@@ -379,7 +371,6 @@ export default function BukuBesar() {
             </select>
           </div>
 
-          {/* Tombol Submit */}
           <div className="flex items-end">
             <button
               onClick={handleSubmit}

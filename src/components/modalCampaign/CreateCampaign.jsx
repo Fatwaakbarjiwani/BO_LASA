@@ -16,7 +16,6 @@ function CreateCampaign() {
   const [showImage, setShowImage] = useState(null);
   const [isLoading, setLoading] = useState(false);
 
-  // State for form inputs
   const [category, setCategory] = useState("");
   const [campaignName, setCampaignName] = useState("");
   const [campaignCode, setCampaignCode] = useState("");

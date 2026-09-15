@@ -276,7 +276,6 @@ export default function Pengguna() {
           </div>
         )}
       </div>
-      {/* ======================================================= */}
       {typeButton == "donatur" && (
         <div className={`w-full`}>
           <div className="w-full rounded-md mt-5 overflow-auto">

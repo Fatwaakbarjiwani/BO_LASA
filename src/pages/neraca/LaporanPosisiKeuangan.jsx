@@ -660,7 +660,6 @@ export default function LaporanPosisiKeuangan() {
               className="w-full p-3 border border-gray-300 rounded-lg"
             >
               <option value="">Select Format</option>
-              {/* <option value="html">HTML</option> */}
               <option value="pdf">PDF</option>
             </select>
           </div>

@@ -33,8 +33,6 @@ export default function Coa() {
           : (!modalCreateCoa || !modalEditCoa || !isLoading || type) &&
             dispatch(getAllCategoryCoa(type));
       }
-      // (!modalCreateCoa || !modalEditCoa || !isLoading || type) &&
-      //   dispatch(getAllCategoryCoa(type));
     }
   }, [dispatch, modalCreateCoa, isLoading, modalEditCoa, type]);
   const typedata = [
@@ -64,7 +62,6 @@ export default function Coa() {
     <div>
       <CreateCoa />
       <EditCoa id={id} />
-      {/* Header */}
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold">Daftar COA</h1>
         <div className="flex gap-2 items-center w-1/2 justify-end">
@@ -99,7 +96,6 @@ export default function Coa() {
         </div>
       </div>
 
-      {/* Table */}
       <div className="overflow-x-auto bg-white shadow-md rounded-lg">
         <table className="min-w-full table-auto border-collapse">
           <thead className="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">

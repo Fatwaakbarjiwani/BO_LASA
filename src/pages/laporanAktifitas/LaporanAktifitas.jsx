@@ -20,7 +20,6 @@ export default function LaporanAktifitas() {
   const reportTemplateRef = useRef(null);
   const [dateTime, setDateTime] = useState("");
   const [jenis, setJenis] = useState("");
-  // const [loading2, setLoading2] = useState(false);
 
   useEffect(() => {
     if (startMonth && endMonth && year1 && year2 && jenis) {
@@ -634,7 +633,6 @@ export default function LaporanAktifitas() {
               className="w-full p-3 border border-gray-300 rounded-lg"
             >
               <option value="">Select Format</option>
-              {/* <option value="html">HTML</option> */}
               <option value="pdf">PDF</option>
             </select>
           </div>
@@ -657,9 +655,6 @@ export default function LaporanAktifitas() {
         </div>
       </div>
       <div ref={reportTemplateRef}>
-        {/* {loading2 ? (
-          <h1>Loading</h1>
-        ) : ( */}
         <DokumentasiLaporanAktifitas
           m1={startMonth}
           m2={endMonth}
@@ -668,7 +663,6 @@ export default function LaporanAktifitas() {
           jenis={jenis}
           dateTime={dateTime}
         />
-        {/* )} */}
       </div>
     </>
   );

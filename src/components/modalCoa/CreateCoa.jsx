@@ -36,7 +36,6 @@ function CreateCoa() {
     },
   ];
 
-  // State for form inputs
   const [name, setName] = useState("");
   const [code, setCode] = useState("");
   const [type, setType] = useState("");
@@ -162,6 +161,5 @@ function CreateCoa() {
     </div>
   );
 }
-
 
 export default CreateCoa;

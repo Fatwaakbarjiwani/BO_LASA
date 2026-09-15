@@ -28,13 +28,11 @@ const initialState = {
 function getNmlFromLocalStorage() {
   const encryptedNml = localStorage.getItem("nml");
   if (encryptedNml) {
-    // Decrypt nilai nml sebelum mengembalikannya
     try {
       const bytes = CryptoJS.AES.decrypt(encryptedNml, key);
       const originalNml = bytes.toString(CryptoJS.enc.Utf8);
       return originalNml;
     } catch (error) {
-      // Handle kesalahan dekripsi
       console.error("Error decrypting nml:", error);
       return null;
     }
@@ -47,7 +45,6 @@ const authSlice = createSlice({
   reducers: {
     setNml: (state, action) => {
       if (action.payload) {
-        // Enkripsi nilai nml sebelum menyimpannya
         const encryptedNml = CryptoJS.AES.encrypt(
           action.payload,
           key

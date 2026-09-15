@@ -13,7 +13,6 @@ function EditCategoryCampaign() {
   const { idCategoryCampaign } = useSelector((state) => state.campaign);
   const { allCampaignCategory } = useSelector((state) => state.campaign);
   const [isLoading, setLoading] = useState(false);
-  // State for form inputs
   const [campaignCategoryName, setCampaignCategoryName] = useState("");
   useEffect(() => {
     const adjustedCategoryIndex = parseInt(idCategoryCampaign) - 1;

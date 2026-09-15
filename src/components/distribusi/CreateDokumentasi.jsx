@@ -15,7 +15,6 @@ function CreateDokumentasi() {
   const [showImage, setShowImage] = useState(null);
   const [isLoading, setLoading] = useState(false);
 
-  // State for form inputs
   const [receiver, setReceiver] = useState("");
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
@@ -100,7 +99,6 @@ function CreateDokumentasi() {
               init={{
                 branding: false,
                 plugins: [
-                  // Core editing features
                   "anchor",
                   "autolink",
                   "charmap",
@@ -129,14 +127,7 @@ function CreateDokumentasi() {
                   ),
               }}
             />
-            {/* <textarea
-              className="w-full p-3 border h-[50vh] border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-              rows="4"
-              placeholder="Enter description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-            ></textarea> */}
-          </div>
+            </div>
           <div>
             <label className="block text-sm font-medium text-gray-600 mb-1">
               Tanggal Dokumentasi

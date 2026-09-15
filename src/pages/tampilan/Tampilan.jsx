@@ -8,7 +8,6 @@ import {
 import { getActiveAproveCampaign } from "../../redux/actions/campaignAction";
 import { FileInput, Label } from "flowbite-react";
 import { OrbitProgress } from "react-loading-indicators";
-// import { IoMdArrowBack } from "react-icons/io";
 import { HiOutlinePencil, HiOutlineTrash, HiOutlinePlus } from "react-icons/hi";
 import { Editor } from "@tinymce/tinymce-react";
 
@@ -19,7 +18,6 @@ export default function Tampilan() {
     (state) => state.campaign
   );
 
-  // Error boundary state
   const [hasError, setHasError] = useState(false);
   const [loading, setLoading] = useState(false);
   const [button, setButton] = useState("dashboard");
@@ -34,7 +32,6 @@ export default function Tampilan() {
     preview3: null,
   });
 
-  // Mitra states
   const [mitraData, setMitraData] = useState([]);
   const [mitraLoading, setMitraLoading] = useState(false);
   const [showMitraModal, setShowMitraModal] = useState(false);
@@ -48,7 +45,6 @@ export default function Tampilan() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deletingMitraId, setDeletingMitraId] = useState(null);
 
-  // Ziswaf Image states
   const [ziswafImageData, setZiswafImageData] = useState([]);
   const [ziswafImageLoading, setZiswafImageLoading] = useState(false);
   const [showZiswafImageModal, setShowZiswafImageModal] = useState(false);
@@ -63,7 +59,6 @@ export default function Tampilan() {
     useState(false);
   const [deletingZiswafImageId, setDeletingZiswafImageId] = useState(null);
 
-  // Literatur states
   const [literaturData, setLiteraturData] = useState([]);
   const [literaturLoading, setLiteraturLoading] = useState(false);
   const [showLiteraturModal, setShowLiteraturModal] = useState(false);
@@ -77,34 +72,28 @@ export default function Tampilan() {
     useState(false);
   const [deletingLiteraturId, setDeletingLiteraturId] = useState(null);
 
-  // Campaign Priority states
   const [priorityCampaigns, setPriorityCampaigns] = useState([]);
   const [campaignPriorityLoading, setCampaignPriorityLoading] = useState(false);
   const [showCampaignPriorityModal, setShowCampaignPriorityModal] =
     useState(false);
   const [selectedCampaignId, setSelectedCampaignId] = useState("");
 
-  // Pagination states for active campaigns (0-based)
   const [activeCampaignsPage, setActiveCampaignsPage] = useState(0);
   const [activeCampaignsPerPage] = useState(10);
 
-  // Base URL for API
   const baseUrl = "https://skyconnect.lazis-sa.org";
 
   const handleImageUpload = (e, imageKey, previewKey) => {
     const file = e.target.files[0];
     if (file) {
-      // Update image state
       setImages((prev) => ({ ...prev, [imageKey]: file }));
 
-      // Generate preview URL
       const imageUrl = URL.createObjectURL(file);
       setPreviews((prev) => ({ ...prev, [previewKey]: imageUrl }));
     }
   };
   const handleSubmit = () => {
     if (images.image1 || images.image2 || images.image3) {
-      // Dispatch action to upload images
       setLoading(true);
       dispatch(uploadPageImage(images)).finally(() => {
         setLoading(false);
@@ -116,7 +105,6 @@ export default function Tampilan() {
   };
   const handleEdit = () => {
     if (images.image1 || images.image2 || images.image3) {
-      // Dispatch action to upload images
       setLoading(true);
       dispatch(editPageImage(images)).finally(() => {
         setLoading(false);
@@ -127,7 +115,6 @@ export default function Tampilan() {
     }
   };
 
-  // Mitra functions
   const fetchMitraData = async () => {
     try {
       setMitraLoading(true);
@@ -142,7 +129,6 @@ export default function Tampilan() {
     }
   };
 
-  // Ziswaf Image functions
   const fetchZiswafImageData = async () => {
     try {
       setZiswafImageLoading(true);
@@ -157,7 +143,6 @@ export default function Tampilan() {
     }
   };
 
-  // Literatur functions
   const fetchLiteraturData = async () => {
     try {
       setLiteraturLoading(true);
@@ -311,7 +296,6 @@ export default function Tampilan() {
     setShowDeleteModal(true);
   };
 
-  // Ziswaf Image CRUD functions
   const handleZiswafImageUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -453,7 +437,6 @@ export default function Tampilan() {
     setShowZiswafImageDeleteModal(true);
   };
 
-  // Literatur CRUD functions
   const resetLiteraturForm = () => {
     setLiteraturForm({ literaturName: "", text: "" });
     setIsLiteraturEditMode(false);
@@ -591,13 +574,11 @@ export default function Tampilan() {
     setShowLiteraturDeleteModal(true);
   };
 
-  // Campaign Priority functions
   const fetchPriorityCampaigns = async () => {
     try {
       setCampaignPriorityLoading(true);
       const response = await fetch(`${baseUrl}/api/campaign/get-by-priority`);
       const data = await response.json();
-      // Ensure data is an array
       setPriorityCampaigns(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("Error fetching priority campaigns:", error);
@@ -668,7 +649,6 @@ export default function Tampilan() {
     }
   };
 
-  // Pagination functions for active campaigns (0-based)
   const handleActiveCampaignsPageChange = (newPage) => {
     setActiveCampaignsPage(newPage);
     fetchActiveCampaigns(newPage);
@@ -699,7 +679,6 @@ export default function Tampilan() {
     }
   }, [dispatch, loading]);
 
-  // Load mitra data on component mount
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -719,7 +698,6 @@ export default function Tampilan() {
     loadData();
   }, [fetchActiveCampaigns]);
 
-  // Error boundary
   if (hasError) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -742,43 +720,12 @@ export default function Tampilan() {
     <div>
       <div>
         <h1 className="text-3xl font-extrabold text-gray-800 mb-4">Tampilan</h1>
-        {/* <div className="flex gap-4 items-center my-5"> */}
-        {/* {pageImage.length > 0 && button == "dashboard" ? (
-            <button
-              className="
-                 bg-blue-600 text-white hover:scale-105 duration-200
-             p-2 rounded-lg shadow text-sm"
-              onClick={() => setButton("edit")}
-            >
-              Upload Gambar
-            </button>
-          ) : pageImage.length == 0 && button == "dashboard" ? (
-            <button
-              className="
-                 bg-blue-600 text-white hover:scale-105 duration-200
-             p-2 rounded-lg shadow text-sm"
-              onClick={() => setButton("create")}
-            >
-              Upload Gambar
-            </button>
-          ) : (
-            <button
-              className="
-                 bg-blue-600 text-white hover:scale-105 duration-200
-             p-2 rounded-lg shadow text-sm flex items-center gap-2"
-              onClick={() => setButton("dashboard")}
-            >
-              <IoMdArrowBack /> Kembali
-            </button>
-          )} */}
-        {/* </div> */}
         {button == "create" && (
           <div>
             <h1 className="font-semibold text-gray-800 text-lg">
               Form Upload Images
             </h1>
             <div className="grid grid-cols-3 gap-4 items-center justify-center">
-              {/* Image 1 */}
               <Label
                 htmlFor="image1"
                 className="flex h-64 w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 hover:bg-gray-100"
@@ -800,7 +747,6 @@ export default function Tampilan() {
                 />
               </Label>
 
-              {/* Image 2 */}
               <Label
                 htmlFor="image2"
                 className="flex h-64 w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 hover:bg-gray-100"
@@ -822,7 +768,6 @@ export default function Tampilan() {
                 />
               </Label>
 
-              {/* Image 3 */}
               <Label
                 htmlFor="image3"
                 className="flex h-64 w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 hover:bg-gray-100"
@@ -872,7 +817,6 @@ export default function Tampilan() {
               Form Edit Images
             </h1>
             <div className="grid grid-cols-3 gap-4 items-center justify-center">
-              {/* Image 1 */}
               <Label
                 htmlFor="image1"
                 className="flex h-64 w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 hover:bg-gray-100"
@@ -898,7 +842,6 @@ export default function Tampilan() {
                 />
               </Label>
 
-              {/* Image 2 */}
               <Label
                 htmlFor="image2"
                 className="flex h-64 w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 hover:bg-gray-100"
@@ -924,7 +867,6 @@ export default function Tampilan() {
                 />
               </Label>
 
-              {/* Image 3 */}
               <Label
                 htmlFor="image3"
                 className="flex h-64 w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 hover:bg-gray-100"
@@ -1040,7 +982,6 @@ export default function Tampilan() {
                       </div>
                     ))}
 
-                    {/* Placeholder for empty slots */}
                     {Array(Math.max(0, 3 - (priorityCampaigns?.length || 0)))
                       .fill(null)
                       .map((_, index) => (
@@ -1068,7 +1009,6 @@ export default function Tampilan() {
           </div>
         )}
       </div>
-      {/* Mitra Section */}
       <div className="mt-10">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-extrabold text-gray-800">
@@ -1082,7 +1022,6 @@ export default function Tampilan() {
           </button>
         </div>
 
-        {/* Mitra Table */}
         {mitraLoading ? (
           <div className="flex justify-center items-center py-8">
             <OrbitProgress
@@ -1158,7 +1097,6 @@ export default function Tampilan() {
           </div>
         )}
 
-        {/* Create/Edit Modal */}
         {showMitraModal && (
           <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 font-Madimi">
             <div className="bg-white rounded-xl p-4 w-full max-w-lg shadow-lg relative m-4 max-h-[95vh] overflow-y-auto">
@@ -1270,7 +1208,6 @@ export default function Tampilan() {
           </div>
         )}
 
-        {/* Delete Confirmation Modal */}
         {showDeleteModal && (
           <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 font-Madimi">
             <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-lg relative m-4">
@@ -1318,7 +1255,6 @@ export default function Tampilan() {
           </div>
         )}
 
-        {/* Ziswaf Image Section */}
         <div className="mt-10">
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-3xl font-extrabold text-gray-800">
@@ -1332,7 +1268,6 @@ export default function Tampilan() {
             </button>
           </div>
 
-          {/* Ziswaf Image Table */}
           {ziswafImageLoading ? (
             <div className="flex justify-center items-center py-8">
               <OrbitProgress
@@ -1412,7 +1347,6 @@ export default function Tampilan() {
             </div>
           )}
 
-          {/* Create/Edit Ziswaf Image Modal */}
           {showZiswafImageModal && (
             <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 font-Madimi">
               <div className="bg-white rounded-xl p-4 w-full max-w-lg shadow-lg relative m-4 max-h-[95vh] overflow-y-auto">
@@ -1542,7 +1476,6 @@ export default function Tampilan() {
             </div>
           )}
 
-          {/* Delete Ziswaf Image Confirmation Modal */}
           {showZiswafImageDeleteModal && (
             <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 font-Madimi">
               <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-lg relative m-4">
@@ -1591,7 +1524,6 @@ export default function Tampilan() {
           )}
         </div>
 
-        {/* Literatur Section */}
         <div className="mt-10">
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-3xl font-extrabold text-gray-800">
@@ -1605,7 +1537,6 @@ export default function Tampilan() {
             </button>
           </div>
 
-          {/* Literatur Table */}
           {literaturLoading ? (
             <div className="flex justify-center items-center py-8">
               <OrbitProgress
@@ -1688,7 +1619,6 @@ export default function Tampilan() {
             </div>
           )}
 
-          {/* Create/Edit Literatur Modal */}
           {showLiteraturModal && (
             <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 font-Madimi">
               <div className="bg-white rounded-xl p-4 w-full max-w-lg shadow-lg relative m-4 max-h-[95vh] overflow-y-auto">
@@ -1830,7 +1760,6 @@ export default function Tampilan() {
             </div>
           )}
 
-          {/* Delete Literatur Confirmation Modal */}
           {showLiteraturDeleteModal && (
             <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 font-Madimi">
               <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-lg relative m-4">
@@ -1878,7 +1807,6 @@ export default function Tampilan() {
             </div>
           )}
 
-          {/* Campaign Priority Modal */}
           {showCampaignPriorityModal && (
             <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 font-Madimi">
               <div className="bg-white rounded-xl p-4 w-full max-w-lg shadow-lg relative m-4 max-h-[95vh] overflow-y-auto">
@@ -1920,7 +1848,6 @@ export default function Tampilan() {
                         ))}
                     </select>
 
-                    {/* Pagination Info */}
                     {allCampaign && allCampaign.length > 0 && (
                       <div className="mt-2 text-sm text-gray-500 text-center">
                         Showing{" "}
@@ -1935,7 +1862,6 @@ export default function Tampilan() {
                     )}
                   </div>
 
-                  {/* Pagination Controls */}
                   {totalPNActiveCampaign > 1 && (
                     <div className="flex justify-between items-center">
                       <button
@@ -2036,7 +1962,6 @@ export default function Tampilan() {
   );
 }
 
-// Placeholder Component
 function Placeholder() {
   return (
     <div className="flex flex-col items-center justify-center pb-6 pt-5">

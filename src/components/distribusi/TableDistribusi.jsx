@@ -12,7 +12,6 @@ export default function TableDistribusi() {
   const { distribution } = useSelector((state) => state.summary);
   const { createDokumentasi } = useSelector((state) => state.summary);
 
-  // Edit modal states
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingDistribution, setEditingDistribution] = useState(null);
   const [editForm, setEditForm] = useState({
@@ -35,7 +34,6 @@ export default function TableDistribusi() {
     return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
   };
 
-  // Handle edit functions
   const openEditModal = (distributionItem) => {
     setEditingDistribution(distributionItem);
     setEditForm({
@@ -96,7 +94,6 @@ export default function TableDistribusi() {
       formData.append("receiver", editForm.receiver);
       formData.append("description", editForm.description);
 
-      // Only append image if user uploaded a new one
       if (editForm.image) {
         formData.append("image", editForm.image);
       }
@@ -114,7 +111,6 @@ export default function TableDistribusi() {
       if (response.data) {
         alert("Distribusi berhasil diupdate!");
         closeEditModal();
-        // Refresh data
         dispatch(getDistribution(pN - 1));
       }
     } catch (error) {
@@ -229,11 +225,9 @@ export default function TableDistribusi() {
         </table>
       </div>
 
-      {/* Edit Modal */}
       {showEditModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] flex flex-col">
-            {/* Modal Header */}
             <div className="flex justify-between items-center p-6 border-b border-gray-200 flex-shrink-0">
               <h2 className="text-xl font-bold text-gray-800">
                 Edit Distribusi
@@ -246,10 +240,8 @@ export default function TableDistribusi() {
               </button>
             </div>
 
-            {/* Modal Body - Scrollable */}
             <div className="flex-1 overflow-y-auto p-6">
               <form onSubmit={handleEditSubmit} className="space-y-6">
-                {/* Distribution Amount */}
                 <div>
                   <Label
                     htmlFor="distributionAmount"
@@ -266,7 +258,6 @@ export default function TableDistribusi() {
                   />
                 </div>
 
-                {/* Distribution Date */}
                 <div>
                   <Label
                     htmlFor="distributionDate"
@@ -283,7 +274,6 @@ export default function TableDistribusi() {
                   />
                 </div>
 
-                {/* Receiver */}
                 <div>
                   <Label htmlFor="receiver" value="Penerima" />
                   <input
@@ -297,7 +287,6 @@ export default function TableDistribusi() {
                   />
                 </div>
 
-                {/* Description */}
                 <div>
                   <Label htmlFor="description" value="Deskripsi" />
                   <textarea
@@ -311,11 +300,9 @@ export default function TableDistribusi() {
                   />
                 </div>
 
-                {/* Image Upload */}
                 <div>
                   <Label htmlFor="image" value="Gambar (Opsional)" />
 
-                  {/* Show existing image if available */}
                   {existingImage && !imagePreview && (
                     <div className="mb-3">
                       <p className="text-sm text-gray-600 mb-2">
@@ -338,7 +325,6 @@ export default function TableDistribusi() {
                     className="w-full"
                   />
 
-                  {/* Show preview of new image */}
                   {imagePreview && (
                     <div className="mt-3">
                       <p className="text-sm text-gray-600 mb-2">Gambar baru:</p>
@@ -355,7 +341,6 @@ export default function TableDistribusi() {
               </form>
             </div>
 
-            {/* Modal Footer */}
             <div className="flex space-x-3 p-6 border-t border-gray-200 flex-shrink-0">
               <button
                 type="button"

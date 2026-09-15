@@ -104,7 +104,6 @@ export default function ImportDonatur() {
 
   return (
     <div className="w-full space-y-6">
-      {/* Tata Cara */}
       <div className="w-full shadow-md rounded-lg border border-gray-100 p-4 bg-white">
         <h2 className="text-xl font-bold text-gray-800 mb-3 flex items-center gap-2">
           <span className="text-primary">📋</span> Tata Cara Import Donatur
@@ -158,7 +157,6 @@ export default function ImportDonatur() {
         </div>
       </div>
 
-      {/* Data Referensi */}
       <div className="w-full shadow-md rounded-lg border border-gray-100 p-4 bg-white">
         <h2 className="text-xl font-bold text-gray-800 mb-3 flex items-center gap-2">
           <span className="text-primary">📊</span> Data Referensi (ID Sub Kategori & Event)
@@ -207,7 +205,6 @@ export default function ImportDonatur() {
         </div>
       </div>
 
-      {/* Download Template & Form Import */}
       <div className="w-full shadow-md rounded-lg border border-gray-100 p-4 bg-white">
         <h2 className="text-xl font-bold text-gray-800 mb-3 flex items-center gap-2">
           <span className="text-primary">📥</span> Download Template & Import

@@ -24,7 +24,6 @@ export default function JurnalUmum() {
   const [rows, setRows] = useState([
     { id: 1, rekening: "", debet: 0, kredit: 0 },
   ]);
-  // console.log(rows);
   const deleteRow = (id) => {
     const updatedRows = rows.filter((row) => row.id !== id);
     setRows(updatedRows);

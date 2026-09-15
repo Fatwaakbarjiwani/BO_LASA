@@ -10,7 +10,6 @@ import {
 } from "chart.js";
 import { useSelector } from "react-redux";
 
-// Register the components from Chart.js
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -21,10 +20,8 @@ ChartJS.register(
 );
 
 function PinBarChart() {
-  // Fetch chart1 data from Redux store
   const { chart1 } = useSelector((state) => state.campaign);
 
-  // Ensure chart1 exists and has the expected properties before accessing
   const data = chart1
     ? {
         labels: ["Infak", "Zakat", "Campaign", "Wakaf", "DSKL"],
@@ -65,7 +62,6 @@ function PinBarChart() {
         ],
       };
 
-  // Chart options
   const options = {
     responsive: true,
     plugins: {

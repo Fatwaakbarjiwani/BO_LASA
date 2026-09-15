@@ -31,7 +31,6 @@ export default function DokumentasiLaporanAktifitas({
       className="relative"
       style={{ fontFamily: "Arial, sans-serif", margin: "20px" }}
     >
-      {/* Header */}
       <div
         style={{
           display: "flex",
@@ -105,7 +104,6 @@ export default function DokumentasiLaporanAktifitas({
         (Dinyatakan Dalam Rupiah Kecuali Dinyatakan Lain)
       </div>
       {dateTime && <p className="mt-2 text-right mb-[-2vh]">{dateTime}</p>}
-      {/* Table 1: Aset */}
       <table
         style={{
           width: "100%",

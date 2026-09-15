@@ -10,7 +10,6 @@ function EditTopicBerita() {
   const { idTopic } = useSelector((state) => state.berita);
   const { categoryBerita } = useSelector((state) => state.berita);
   const [isLoading, setLoading] = useState(false);
-  // State for form inputs
   const [topicName, setTopicName] = useState("");
   useEffect(() => {
     const adjustedCategoryIndex = parseInt(idTopic) - 1;

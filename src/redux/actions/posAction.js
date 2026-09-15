@@ -3,9 +3,6 @@ import Swal from "sweetalert2";
 
 export const API_URL = import.meta.env.VITE_API_URL;
 
-/**
- * Download template Excel untuk import donatur POS
- */
 export const downloadTemplatePos = () => async (dispatch, getState) => {
   try {
     const { tokenAdmin } = getState().auth;
@@ -43,9 +40,6 @@ export const downloadTemplatePos = () => async (dispatch, getState) => {
   }
 };
 
-/**
- * GET history transaksi by agent (query: agentId, startDate, endDate, category, eventId, paymentMethod, page)
- */
 export const getHistoryByAgent =
   (params = {}) =>
   async (dispatch, getState) => {
@@ -83,10 +77,6 @@ export const getHistoryByAgent =
     }
   };
 
-/**
- * GET history recap admin (rekap transaksi agen) - query: agenId, startDate, endDate, category, eventId, paymentMethod, page
- * Returns array of transaction objects
- */
 export const getHistoryRecapAdmin =
   (params = {}) =>
   async (dispatch, getState) => {
@@ -124,9 +114,6 @@ export const getHistoryRecapAdmin =
     }
   };
 
-/**
- * Import Excel donatur POS (form-data, key: file)
- */
 export const importExcelDonatur = (file) => async (dispatch, getState) => {
   try {
     const { tokenAdmin } = getState().auth;

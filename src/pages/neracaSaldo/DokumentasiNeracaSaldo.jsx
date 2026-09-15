@@ -43,7 +43,6 @@ export default function DokumentasiNeraca({ m1, y1, dateTime }) {
       className="relative"
       style={{ fontFamily: "Arial, sans-serif", margin: "20px" }}
     >
-      {/* Header */}
       <div
         style={{
           display: "flex",
@@ -108,7 +107,6 @@ export default function DokumentasiNeraca({ m1, y1, dateTime }) {
         (Dinyatakan Dalam Rupiah Kecuali Dinyatakan Lain)
       </div>
       {dateTime && <p className="mt-2 text-right mb-[-2vh]">{dateTime}</p>}
-      {/* Table 1: Aset */}
       <table
         style={{
           width: "100%",
@@ -349,7 +347,6 @@ export default function DokumentasiNeraca({ m1, y1, dateTime }) {
           </tr>
         </tbody>
       </table>
-      {/* Table 2: Kewajiban dan Dana */}
       <table
         style={{
           width: "100%",

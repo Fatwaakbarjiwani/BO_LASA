@@ -13,7 +13,6 @@ import {
   setModalCreateCategory,
   setModalEditActive,
   setModalEditCategory,
-  // setDonatur,
   setTotalPageNumberMessage,
 } from "../reducers/campaignReducer";
 import {
@@ -57,7 +56,6 @@ export const getCampaignPending = (pageNumber) => async (dispatch) => {
     console.error("Error fetching campaign data:", error);
   }
 };
-// operator
 export const getCampaignOperator =
   (pageNumber) => async (dispatch, getState) => {
     try {
@@ -219,7 +217,6 @@ export const deleteNewsTopic = (id) => async (dispatch) => {
   }
 };
 
-// ==================================================================
 export const getAllCampaign = () => async (dispatch) => {
   try {
     const response = await axios.get(`${API_URL}/campaign`);
@@ -435,7 +432,6 @@ export const getTransactionCampaign = (id, page) => async (dispatch) => {
       `${API_URL}/transaction/campaign/${id}?page=${page}`
     );
     const data = response.data;
-    // dispatch(setDonatur(data.content));
     dispatch(setTotalPageNumberMessage(data.totalPages));
   } catch (error) {
     console.error("Error fetching message data:", error);

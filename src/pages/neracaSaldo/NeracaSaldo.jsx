@@ -3,7 +3,6 @@ import jsPDF from "jspdf";
 import "jspdf-autotable";
 import { useDispatch } from "react-redux";
 import { getNeracaSaldo } from "../../redux/actions/transaksiAction";
-// import logo from "../../assets/logo2.png";
 import Swal from "sweetalert2";
 import { OrbitProgress } from "react-loading-indicators";
 import DokumentasiNeracaSaldo from "./DokumentasiNeracaSaldo";
@@ -12,12 +11,10 @@ export default function NeracaSaldo() {
   const [format, setFormat] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
-  // const { posisiKeuangan } = useSelector((state) => state.summary);
   const dispatch = useDispatch();
   const [isLoading, setLoading] = useState(false);
   const reportTemplateRef = useRef(null);
   const [dateTime, setDateTime] = useState("");
-  // const [loading2, setLoading2] = useState(false);
 
   useEffect(() => {
     if (startDate && endDate) {
@@ -127,7 +124,6 @@ export default function NeracaSaldo() {
               className="w-full p-3 border border-gray-300 rounded-lg"
             >
               <option value="">Select Format</option>
-              {/* <option value="html">HTML</option> */}
               <option value="pdf">PDF</option>
             </select>
           </div>
@@ -150,15 +146,11 @@ export default function NeracaSaldo() {
         </div>
       </div>
       <div ref={reportTemplateRef}>
-        {/* {loading2 ? (
-          <h1>Loading</h1>
-        ) : ( */}
         <DokumentasiNeracaSaldo
           m1={startDate}
           y1={endDate}
           dateTime={dateTime}
         />
-        {/* )} */}
       </div>
     </>
   );

@@ -423,7 +423,6 @@ export default function LaporanPengelola() {
               (Dinyatakan Dalam Rupiah Kecuali Dinyatakan Lain)
             </p>
 
-            {/* Table */}
             <table className="w-full text-sm border-collapse border border-gray-300">
               <thead>
                 <tr className="bg-slate-100">
@@ -442,7 +441,6 @@ export default function LaporanPengelola() {
                 </tr>
               </thead>
               <tbody>
-                {/* I. PENERIMAAN DANA PENGELOLA */}
                 <tr className="bg-slate-50">
                   <td
                     colSpan={4}
@@ -484,7 +482,6 @@ export default function LaporanPengelola() {
                   </td>
                 </tr>
 
-                {/* II. PENDAYAGUNAAN DANA PENGELOLA */}
                 <tr className="bg-slate-50">
                   <td
                     colSpan={4}
@@ -540,7 +537,6 @@ export default function LaporanPengelola() {
                   </td>
                 </tr>
 
-                {/* III. SURPLUS (DEFISIT) DANA PENGELOLA */}
                 <tr className="bg-slate-100 font-semibold">
                   <td className="border border-gray-300 px-3 py-1.5 underline">
                     III. SURPLUS (DEFISIT) DANA PENGELOLA
@@ -558,7 +554,6 @@ export default function LaporanPengelola() {
                   </td>
                 </tr>
 
-                {/* IV. SALDO AWAL DANA PENGELOLA */}
                 <tr>
                   <td className="border border-gray-300 px-3 py-1.5">
                     IV. SALDO AWAL DANA PENGELOLA
@@ -576,7 +571,6 @@ export default function LaporanPengelola() {
                   </td>
                 </tr>
 
-                {/* V. KOREKSI DANA PENGELOLA */}
                 <tr>
                   <td className="border border-gray-300 px-3 py-1.5">
                     V. KOREKSI DANA PENGELOLA
@@ -590,7 +584,6 @@ export default function LaporanPengelola() {
                   </td>
                 </tr>
 
-                {/* VI. SALDO AKHIR DANA PENGELOLA */}
                 <tr className="bg-slate-200 font-bold">
                   <td className="border border-gray-300 px-3 py-2 underline decoration-double">
                     VI. SALDO AKHIR DANA PENGELOLA

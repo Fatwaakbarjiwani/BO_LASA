@@ -84,7 +84,6 @@ export default function LoginAdmin() {
               />
             </div>
 
-            {/* Login Button */}
             <div className="flex justify-center">
               {loading ? (
                 <div className="w-full flex justify-center mt-8">
@@ -148,7 +147,6 @@ export default function LoginAdmin() {
               />
             </div>
 
-            {/* Login Button */}
             <div className="flex justify-center">
               {loading ? (
                 <div className="w-full flex justify-center mt-8">

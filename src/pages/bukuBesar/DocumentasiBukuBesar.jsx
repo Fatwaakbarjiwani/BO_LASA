@@ -25,7 +25,6 @@ const DocumentasiBukuBesar = ({
           padding: "20px",
         }}
       >
-        {/* Header Section */}
         <div
           style={{
             display: "flex",
@@ -67,7 +66,6 @@ const DocumentasiBukuBesar = ({
           </div>
         </div>
         <hr style={{ border: "1px solid black" }} />
-        {/* Report Title */}
         <div
           style={{
             textAlign: "center",
@@ -91,7 +89,6 @@ const DocumentasiBukuBesar = ({
           COA: {coaName}
           {dateTime && <p className="text-black">{dateTime}</p>}
         </p>
-        {/* Table Section */}
         <table
           style={{
             width: "100%",
@@ -257,7 +254,6 @@ const DocumentasiBukuBesar = ({
           </tbody>
         </table>
       </div>
-      {/* ======================== */}
       {bukuBesar?.bukuBesarCoa2 == null ||
       bukuBesar == null ||
       coaId == coaId2 ? null : (
@@ -267,7 +263,6 @@ const DocumentasiBukuBesar = ({
             padding: "20px",
           }}
         >
-          {/* Header Section */}
           <div
             style={{
               display: "flex",
@@ -309,7 +304,6 @@ const DocumentasiBukuBesar = ({
             </div>
           </div>
           <hr style={{ border: "1px solid black" }} />
-          {/* Report Title */}
           <div
             style={{
               textAlign: "center",
@@ -333,7 +327,6 @@ const DocumentasiBukuBesar = ({
             COA: {coaName2}
             {dateTime && <p className="text-black">{dateTime}</p>}
           </p>
-          {/* Table Section */}
           <table
             style={{
               width: "100%",
@@ -504,7 +497,6 @@ const DocumentasiBukuBesar = ({
   );
 };
 
-// PropTypes validation
 DocumentasiBukuBesar.propTypes = {
   startDate: PropTypes.string.isRequired,
   endDate: PropTypes.string.isRequired,

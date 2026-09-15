@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { getCategoryCoa, getSaldoCoa } from "../../redux/actions/ziswafAction";
 import { createSaldoAwal } from "../../redux/actions/transaksiAction";
-// import Swal from "sweetalert2"; // Import SweetAlert2
 import { IoMdArrowBack } from "react-icons/io";
 
 export default function   SaldoAwal() {
@@ -21,7 +20,6 @@ export default function   SaldoAwal() {
   }, [dispatch, loading]);
 
   useEffect(() => {
-    // Initialize rows with data from coaCategory
     if (coaCategory.length > 0) {
       setRows(
         coaCategory.map((item) => ({
@@ -41,7 +39,6 @@ export default function   SaldoAwal() {
     setRows(updatedRows);
   };
 
-  // Format number as currency (Rupiah)
   const formatCurrency = (value) => {
     const numberValue = value.replace(/[^\d]/g, ""); // Remove non-numeric characters
     return numberValue.replace(/\B(?=(\d{3})+(?!\d))/g, "."); // Format with periods

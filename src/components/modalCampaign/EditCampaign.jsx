@@ -19,7 +19,6 @@ function EditCampaign() {
   const [isLoading, setLoading] = useState(false);
   const [changeTarget, setChangeTarget] = useState(false);
 
-  // State for form inputs
   const [campaignImage, setCampaignImage] = useState(null);
   const [showImage, setShowImage] = useState(null);
   const [category, setCategory] = useState("");

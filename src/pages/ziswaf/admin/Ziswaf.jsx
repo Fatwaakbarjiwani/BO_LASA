@@ -65,7 +65,6 @@ export default function Ziswaf() {
         >
           <option value="zakat">Zakat</option>
           <option value="infak">Infak</option>
-          {/* <option value="wakaf">Wakaf</option> */}
           <option value="dskl">DSKL</option>
         </select>
         <div className="flex justify-between">

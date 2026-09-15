@@ -15,7 +15,6 @@ export default function DokumentasiJurnal({ startDate, endDate, dateTime }) {
       className="relative"
       style={{ fontFamily: "Arial, sans-serif", margin: "20px" }}
     >
-      {/* Header */}
       <div
         style={{
           display: "flex",
@@ -68,7 +67,6 @@ export default function DokumentasiJurnal({ startDate, endDate, dateTime }) {
         {dateTime && <p className="text-black">{dateTime}</p>}
       </p>
 
-      {/* Table */}
       <table
         style={{
           width: "100%",

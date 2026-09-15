@@ -15,7 +15,6 @@ function EditZiswaf({ type }) {
   const { detailZiswaf } = useSelector((state) => state.ziswaf);
   const [isLoading, setLoading] = useState(false);
 
-  // State for form inputs
   const [category, setCategory] = useState("");
   const [name, setName] = useState("");
 

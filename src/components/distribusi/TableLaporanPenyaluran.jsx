@@ -10,11 +10,9 @@ export default function TableLaporanPenyaluran() {
   const dispatch = useDispatch();
   const { coaCategory } = useSelector((state) => state.ziswaf);
 
-  // Data states
   const [laporanData, setLaporanData] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // Edit modal states
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingLaporan, setEditingLaporan] = useState(null);
   const [originalLaporanData, setOriginalLaporanData] = useState(null);
@@ -30,24 +28,9 @@ export default function TableLaporanPenyaluran() {
   });
   const [editLoading, setEditLoading] = useState(false);
 
-  // Fetch COA data
   useEffect(() => {
     dispatch(getCategoryCoa());
   }, [dispatch]);
-
-  // Debug COA data loading
-  useEffect(() => {
-    if (coaCategory && coaCategory.length > 0) {
-      console.log("COA data loaded successfully:", coaCategory.length, "items");
-      console.log("Sample COA item:", coaCategory[0]);
-    } else if (coaCategory && coaCategory.length === 0) {
-      console.log("COA data is empty array");
-    } else {
-      console.log("COA data not loaded yet:", coaCategory);
-    }
-  }, [coaCategory]);
-
-  // Fetch laporan penyaluran data
   const fetchLaporanData = async () => {
     setLoading(true);
     try {
@@ -77,7 +60,6 @@ export default function TableLaporanPenyaluran() {
     return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
   };
 
-  // Handle edit functions
   const openEditModal = (laporanItem) => {
     setEditingLaporan(laporanItem);
     setOriginalLaporanData(JSON.parse(JSON.stringify(laporanItem))); // Deep copy
@@ -122,7 +104,6 @@ export default function TableLaporanPenyaluran() {
     }));
   };
 
-  // Handle debit/kredit rows
   const addDebitRow = () => {
     if (editForm.debitDetails.length >= 1) {
       alert("Debit hanya boleh maksimal 1 rekening!");
@@ -200,7 +181,6 @@ export default function TableLaporanPenyaluran() {
     e.preventDefault();
     if (!editingLaporan) return;
 
-    // Validate total debit = total kredit
     if (getTotal("debit") !== getTotal("kredit")) {
       alert("Total debit dan kredit harus sama!");
       return;
@@ -244,10 +224,8 @@ export default function TableLaporanPenyaluran() {
     } catch (error) {
       console.error("Error updating laporan penyaluran:", error);
 
-      // Restore original data if API call fails
       if (originalLaporanData) {
         setEditingLaporan(originalLaporanData);
-        // Update the data in the table to show original values
         setLaporanData((prevData) =>
           prevData.map((item) =>
             item.nomorBukti === originalLaporanData.nomorBukti
@@ -361,11 +339,9 @@ export default function TableLaporanPenyaluran() {
         </table>
       </div>
 
-      {/* Edit Modal */}
       {showEditModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg w-full max-w-4xl max-h-[90vh] flex flex-col">
-            {/* Modal Header */}
             <div className="flex justify-between items-center p-6 border-b border-gray-200 flex-shrink-0">
               <h2 className="text-xl font-bold text-gray-800">
                 Edit Laporan Penyaluran
@@ -378,10 +354,8 @@ export default function TableLaporanPenyaluran() {
               </button>
             </div>
 
-            {/* Modal Body - Scrollable */}
             <div className="flex-1 overflow-y-auto p-6">
               <form onSubmit={handleEditSubmit} className="space-y-6">
-                {/* Basic Info */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="nomorBukti" value="Nomor Bukti" />
@@ -458,7 +432,6 @@ export default function TableLaporanPenyaluran() {
                   />
                 </div>
 
-                {/* Informasi Aturan Debit/Kredit */}
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                   <div className="flex items-start">
                     <svg
@@ -497,7 +470,6 @@ export default function TableLaporanPenyaluran() {
                   </div>
                 </div>
 
-                {/* Debit Details */}
                 <div>
                   <div className="flex justify-between items-center mb-3">
                     <div>
@@ -640,7 +612,6 @@ export default function TableLaporanPenyaluran() {
                   </div>
                 </div>
 
-                {/* Kredit Details */}
                 <div>
                   <div className="flex justify-between items-center mb-3">
                     <div>
@@ -778,7 +749,6 @@ export default function TableLaporanPenyaluran() {
                   </div>
                 </div>
 
-                {/* Balance Check */}
                 {getTotal("debit") !== getTotal("kredit") && (
                   <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg">
                     <div className="flex items-center">
@@ -802,7 +772,6 @@ export default function TableLaporanPenyaluran() {
                   </div>
                 )}
 
-                {/* Balance Success */}
                 {getTotal("debit") === getTotal("kredit") &&
                   getTotal("debit") > 0 && (
                     <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg">
@@ -828,7 +797,6 @@ export default function TableLaporanPenyaluran() {
               </form>
             </div>
 
-            {/* Modal Footer */}
             <div className="flex space-x-3 p-6 border-t border-gray-200 flex-shrink-0">
               <button
                 type="button"

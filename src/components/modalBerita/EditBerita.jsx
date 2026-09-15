@@ -14,7 +14,6 @@ function EditBerita() {
   const [showImage, setShowImage] = useState(null);
   const [isLoading, setLoading] = useState(false);
 
-  // State for form inputs
   const [category, setCategory] = useState("");
   const [beritaName, setBeritaName] = useState("");
   const [description, setDescription] = useState("");

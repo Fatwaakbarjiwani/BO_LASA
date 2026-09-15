@@ -8,7 +8,6 @@ function CreateTopicBerita() {
   const dispatch = useDispatch();
   const { modalCreateTopicBerita } = useSelector((state) => state.berita);
   const [isLoading, setLoading] = useState(false);
-  // State for form inputs
   const [topicName, setTopicName] = useState("");
 
   useEffect(() => {

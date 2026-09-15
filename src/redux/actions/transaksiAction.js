@@ -252,7 +252,6 @@ export const createJurnalUmum =
     try {
       const { tokenAdmin } = getState().auth;
 
-      // Validasi data sebelum mengirim request
       if (!date || !keterangan || !jenis || rows.length === 0) {
         Swal.fire({
           title: "Proses gagal",
@@ -262,7 +261,6 @@ export const createJurnalUmum =
         return;
       }
 
-      // Format data debit dan kredit
       const debitDetails = rows
         .filter((row) => row.debet > 0)
         .map((row) => ({
@@ -277,7 +275,6 @@ export const createJurnalUmum =
           amount: row.kredit,
         }));
 
-      // Validasi debit dan kredit
       if (debitDetails.length === 0 || kreditDetails.length === 0) {
         Swal.fire({
           title: "Proses gagal",
@@ -287,7 +284,6 @@ export const createJurnalUmum =
         return;
       }
 
-      // Kirim permintaan API
       await axios.post(
         `${API_URL}/transaction/jurnal-umum`,
         {
@@ -305,14 +301,12 @@ export const createJurnalUmum =
         }
       );
 
-      // Jika berhasil
       Swal.fire({
         title: "Berhasil",
         text: "Proses membuat jurnal umum berhasil",
         icon: "success",
       });
     } catch (error) {
-      // Tangani error
       Swal.fire({
         title: "Proses gagal",
         text:
@@ -327,7 +321,6 @@ export const createLaporanPenyaluran =
     try {
       const { tokenAdmin } = getState().auth;
 
-      // Validasi data sebelum mengirim request
       if (!date || !keterangan || !jenis || !kategori || rows.length === 0) {
         Swal.fire({
           title: "Proses gagal",
@@ -337,7 +330,6 @@ export const createLaporanPenyaluran =
         return;
       }
 
-      // Format data debit dan kredit
       const debitDetails = rows
         .filter((row) => row.debet > 0)
         .map((row) => ({
@@ -352,7 +344,6 @@ export const createLaporanPenyaluran =
           amount: row.kredit,
         }));
 
-      // Validasi debit dan kredit
       if (debitDetails.length === 0 || kreditDetails.length === 0) {
         Swal.fire({
           title: "Proses gagal",
@@ -362,7 +353,6 @@ export const createLaporanPenyaluran =
         return;
       }
 
-      // Kirim permintaan API
       await axios.post(
         `${API_URL}/transaction/jurnal-umum`,
         {
@@ -381,14 +371,12 @@ export const createLaporanPenyaluran =
         }
       );
 
-      // Jika berhasil
       Swal.fire({
         title: "Proses membuat laporan penyaluran berhasil",
         text: "Pastikan membuat dokumentasi penyaluran",
         icon: "success",
       });
     } catch (error) {
-      // Tangani error
       Swal.fire({
         title: "Proses gagal",
         text:

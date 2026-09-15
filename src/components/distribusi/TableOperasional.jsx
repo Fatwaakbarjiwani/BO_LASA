@@ -26,7 +26,6 @@ export default function TableOperasional() {
           Penyaluran Dana
         </h1>
 
-        {/* Tombol Ubah Persentase */}
         <div className="flex justify-center mb-4">
           <button
             onClick={() => setEdit(!edit)}
@@ -36,7 +35,6 @@ export default function TableOperasional() {
           </button>
         </div>
 
-        {/* Konten */}
         <div className="bg-gray-100 p-4 rounded-lg shadow-sm">
           {!edit ? (
             <div className="text-center">

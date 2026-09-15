@@ -42,7 +42,6 @@ function NominalFitrah() {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-2xl p-6 w-full max-w-lg shadow-xl relative m-4 max-h-[90vh] overflow-y-auto">
-        {/* Tombol Close */}
         <button
           className="absolute top-4 right-4 text-gray-500 hover:text-red-600 text-2xl"
           onClick={() => dispatch(setModalCreateFitrah(false))}
@@ -50,12 +49,10 @@ function NominalFitrah() {
           <IoClose />
         </button>
 
-        {/* Judul */}
         <h2 className="text-3xl font-bold text-center text-gray-700 capitalize">
           Zakat Fitrah
         </h2>
 
-        {/* Detail Zakat dengan Desain Baru */}
         <div className="bg-white p-5 rounded-xl shadow-md border border-gray-200">
           <h3 className="text-lg font-semibold text-gray-700 mb-4 text-center">
             Informasi Zakat Fitrah
@@ -82,9 +79,7 @@ function NominalFitrah() {
           </div>
         </div>
 
-        {/* Form */}
         <form className="space-y-6 mt-4" onSubmit={handleCreateFitrah}>
-          {/* Input Nominal */}
           <div>
             <label className="block text-sm font-medium text-gray-600 mb-1 capitalize">
               Nominal Zakat Fitrah Baru
@@ -102,7 +97,6 @@ function NominalFitrah() {
             />
           </div>
 
-          {/* Tombol Aksi */}
           <div className="space-y-3">
             <button
               type="button"

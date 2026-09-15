@@ -8,7 +8,6 @@ function CreateCategoryCampaign() {
   const dispatch = useDispatch();
   const { modalCreateCategory } = useSelector((state) => state.campaign);
   const [isLoading, setLoading] = useState(false);
-  // State for form inputs
   const [campaignCategoryName, setCampaignCategoryName] = useState("");
   
   useEffect(() => {
