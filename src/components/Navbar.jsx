@@ -23,12 +23,13 @@ export default function Navbar() {
       <div className="flex items-center justify-center gap-4">
         <button
           onClick={() => dispatch(setIsSidebarOpen(!isSidebarOpen))}
-          className="border border-gray-500/20 rounded-full shadow"
+          className="flex h-9 w-9 items-center justify-center rounded-lg border border-gray-300 bg-white hover:bg-gray-50"
+          title="Toggle Sidebar"
         >
           <img
             src={DsToggle}
             alt="Toggle Sidebar"
-            className={`duration-300 ${isSidebarOpen ? "rotate-180" : ""}`}
+            className={`h-5 w-5 duration-300 ${isSidebarOpen ? "rotate-180" : ""}`}
           />
         </button>
       </div>
