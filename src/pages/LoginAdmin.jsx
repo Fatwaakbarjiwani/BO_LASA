@@ -1,6 +1,7 @@
 import { useState } from "react";
 import logoIcon from "../assets/logo.png";
 import logoName from "../assets/logo1.jpeg";
+import loginBg from "../assets/login-lazis-bg.png";
 import { useDispatch } from "react-redux";
 import { login, resetPassword } from "../redux/actions/authAction";
 import { OrbitProgress } from "react-loading-indicators";
@@ -32,62 +33,72 @@ export default function LoginAdmin() {
     });
   };
 
+  const inputClass =
+    "w-full rounded-xl border border-[#d5e0d2] bg-white px-3.5 py-3 text-sm text-[#1a3317] outline-none transition placeholder:text-[#9aab96] focus:border-[#2f6b28] focus:ring-2 focus:ring-[#2f6b28]/15";
+
   return (
     <div className="fixed inset-0 flex w-screen overflow-hidden font-['Plus_Jakarta_Sans',sans-serif]">
-      <aside className="login-fade-in relative hidden w-[46%] flex-col justify-between overflow-hidden bg-[#1f4d1a] px-12 py-12 text-white xl:px-16 lg:flex">
+      <aside className="login-fade-in relative hidden w-[48%] flex-col justify-between overflow-hidden bg-[#163a12] px-12 py-12 text-white xl:px-16 lg:flex">
+        <img
+          src={loginBg}
+          alt=""
+          className="absolute inset-0 h-full w-full scale-110 object-cover blur-[10px]"
+        />
         <div
           className="absolute inset-0"
           style={{
             background:
-              "linear-gradient(160deg, #163a12 0%, #245c1f 45%, #3d7a32 100%)",
+              "linear-gradient(180deg, rgba(12,36,10,0.55) 0%, rgba(12,36,10,0.4) 38%, rgba(10,28,8,0.78) 72%, rgba(8,22,6,0.94) 100%)",
           }}
         />
-        <div className="login-float absolute -right-20 top-16 h-72 w-72 rounded-full bg-white/[0.07]" />
-        <div className="absolute -left-16 bottom-20 h-52 w-52 rounded-full bg-black/20" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,rgba(105,197,62,0.2),transparent_55%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_60%_30%,transparent_0%,rgba(8,22,6,0.45)_100%)]" />
+        <div className="login-float absolute -right-24 top-10 h-80 w-80 rounded-full bg-[#c4a35a]/10 blur-2xl" />
+        <div className="absolute -left-20 bottom-10 h-64 w-64 rounded-full bg-[#69c53e]/10 blur-2xl" />
 
         <div className="relative z-10">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-white/70">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-white/75">
             Back Office
           </p>
         </div>
 
         <div
-          className="login-fade-up relative z-10"
+          className="login-fade-up relative z-10 max-w-md"
           style={{ animationDelay: "0.12s" }}
         >
-          <div className="inline-flex max-w-full items-center gap-4 rounded-2xl bg-white px-5 py-4">
-            <img
-              src={logoIcon}
-              alt=""
-              className="h-[72px] w-auto shrink-0 object-contain"
-            />
-            <img
-              src={logoName}
-              alt="LAZIS Sultan Agung"
-              className="h-[52px] w-auto max-w-[280px] object-contain object-left"
-            />
+          <div className="inline-flex flex-col gap-3 rounded-2xl bg-white p-5 shadow-[0_20px_50px_rgba(0,0,0,0.25)]">
+            <div className="flex items-center gap-4">
+              <img
+                src={logoIcon}
+                alt=""
+                className="h-[68px] w-auto shrink-0 object-contain"
+              />
+              <img
+                src={logoName}
+                alt="LAZIS Sultan Agung"
+                className="h-[48px] w-auto max-w-[240px] object-contain object-left"
+              />
+            </div>
           </div>
-          <p className="mt-8 max-w-sm text-[15px] font-medium leading-7 text-white/80">
+          <p className="mt-7 max-w-sm text-[15px] font-medium leading-7 text-white/90 drop-shadow-sm">
             Platform administrasi untuk mengelola kampanye, transaksi, dan
             penyaluran dana secara terpusat.
           </p>
         </div>
 
         <p
-          className="login-fade-up relative z-10 text-xs text-white/50"
+          className="login-fade-up relative z-10 text-xs text-white/55"
           style={{ animationDelay: "0.25s" }}
         >
           © {new Date().getFullYear()} LAZIS Sultan Agung
         </p>
       </aside>
 
-      <main className="relative flex flex-1 items-center justify-center bg-[#f5f8f3] px-6 py-10 sm:px-10">
+      <main className="relative flex flex-1 items-center justify-center bg-[#f3f6f1] px-6 py-10 sm:px-10">
         <div
-          className="pointer-events-none absolute inset-0 opacity-40"
+          className="pointer-events-none absolute inset-0"
           style={{
             backgroundImage:
-              "radial-gradient(circle at 85% 15%, rgba(105,197,62,0.12), transparent 40%), radial-gradient(circle at 10% 90%, rgba(31,77,26,0.08), transparent 35%)",
+              "radial-gradient(circle at 88% 12%, rgba(196,163,90,0.12), transparent 32%), radial-gradient(circle at 8% 88%, rgba(47,107,40,0.08), transparent 34%)",
           }}
         />
 
@@ -111,7 +122,7 @@ export default function LoginAdmin() {
           {!reset ? (
             <form onSubmit={handleLogin} className="space-y-5">
               <div className="mb-2">
-                <h1 className="text-[28px] font-bold tracking-tight text-[#1a3317]">
+                <h1 className="text-[30px] font-bold tracking-tight text-[#163a12]">
                   Masuk
                 </h1>
                 <p className="mt-1.5 text-sm font-medium text-[#5b6e57]">
@@ -134,7 +145,7 @@ export default function LoginAdmin() {
                   name="emailOrPhone"
                   autoComplete="username"
                   placeholder="Masukkan email atau nomor HP"
-                  className="w-full rounded-lg border border-[#d0ddd0] bg-white px-3.5 py-3 text-sm text-[#1a3317] outline-none transition placeholder:text-[#9aab96] focus:border-[#69c53e] focus:ring-2 focus:ring-[#69c53e]/20"
+                  className={inputClass}
                 />
               </div>
 
@@ -154,12 +165,12 @@ export default function LoginAdmin() {
                     name="password"
                     autoComplete="current-password"
                     placeholder="Masukkan password"
-                    className="w-full rounded-lg border border-[#d0ddd0] bg-white px-3.5 py-3 pr-16 text-sm text-[#1a3317] outline-none transition placeholder:text-[#9aab96] focus:border-[#69c53e] focus:ring-2 focus:ring-[#69c53e]/20"
+                    className={`${inputClass} pr-16`}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword((v) => !v)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-[#4f8f35] hover:text-[#3a6f26]"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-[#2f6b28] hover:text-[#163a12]"
                   >
                     {showPassword ? "Sembunyi" : "Lihat"}
                   </button>
@@ -170,7 +181,7 @@ export default function LoginAdmin() {
                 <button
                   type="button"
                   onClick={() => setReset(true)}
-                  className="text-[13px] font-semibold text-[#4f8f35] hover:underline"
+                  className="text-[13px] font-semibold text-[#2f6b28] hover:underline"
                 >
                   Lupa password?
                 </button>
@@ -180,14 +191,14 @@ export default function LoginAdmin() {
                 <div className="flex justify-center py-3">
                   <OrbitProgress
                     variant="dotted"
-                    color="#69c53e"
+                    color="#2f6b28"
                     style={{ fontSize: "8px" }}
                   />
                 </div>
               ) : (
                 <button
                   type="submit"
-                  className="w-full rounded-lg bg-[#69c53e] py-3 text-sm font-bold text-white transition hover:bg-[#5bb335] active:scale-[0.99]"
+                  className="w-full rounded-xl bg-[#2f6b28] py-3 text-sm font-bold text-white transition hover:bg-[#265821] active:scale-[0.99]"
                 >
                   Masuk
                 </button>
@@ -196,7 +207,7 @@ export default function LoginAdmin() {
           ) : (
             <form onSubmit={handleReset} className="space-y-5">
               <div className="mb-2">
-                <h1 className="text-[28px] font-bold tracking-tight text-[#1a3317]">
+                <h1 className="text-[30px] font-bold tracking-tight text-[#163a12]">
                   Reset Password
                 </h1>
                 <p className="mt-1.5 text-sm font-medium text-[#5b6e57]">
@@ -218,7 +229,7 @@ export default function LoginAdmin() {
                   id="resetEmailOrPhone"
                   name="emailOrPhone"
                   placeholder="Masukkan email atau nomor HP"
-                  className="w-full rounded-lg border border-[#d0ddd0] bg-white px-3.5 py-3 text-sm text-[#1a3317] outline-none transition placeholder:text-[#9aab96] focus:border-[#69c53e] focus:ring-2 focus:ring-[#69c53e]/20"
+                  className={inputClass}
                 />
               </div>
 
@@ -226,14 +237,14 @@ export default function LoginAdmin() {
                 <div className="flex justify-center py-3">
                   <OrbitProgress
                     variant="dotted"
-                    color="#69c53e"
+                    color="#2f6b28"
                     style={{ fontSize: "8px" }}
                   />
                 </div>
               ) : (
                 <button
                   type="submit"
-                  className="w-full rounded-lg bg-[#69c53e] py-3 text-sm font-bold text-white transition hover:bg-[#5bb335] active:scale-[0.99]"
+                  className="w-full rounded-xl bg-[#2f6b28] py-3 text-sm font-bold text-white transition hover:bg-[#265821] active:scale-[0.99]"
                 >
                   Kirim Reset
                 </button>
@@ -244,7 +255,7 @@ export default function LoginAdmin() {
                 <button
                   type="button"
                   onClick={() => setReset(false)}
-                  className="font-semibold text-[#4f8f35] hover:underline"
+                  className="font-semibold text-[#2f6b28] hover:underline"
                 >
                   halaman masuk
                 </button>
