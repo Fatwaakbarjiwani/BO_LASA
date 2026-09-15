@@ -8,8 +8,10 @@ export default {
     extend: {
       fontFamily: {
         Inter: ["Inter", "sans-serif"],
-        Montserrat: ["Montserrat", "sans - serif"],
+        Montserrat: ["Montserrat", "sans-serif"],
         Madimi: ["Madimi One", "sans-serif"],
+        Fraunces: ["Fraunces", "serif"],
+        Jakarta: ["Plus Jakarta Sans", "sans-serif"],
       },
       colors: {
         primary: "#69C53E",

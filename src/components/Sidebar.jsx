@@ -6,7 +6,8 @@ import { useDispatch, useSelector } from "react-redux";
 import Logout from "../assets/logout-01.svg";
 import LogoutWhite from "../assets/logoutwhite.svg";
 import { logout } from "../redux/actions/authAction";
-import logo from "../../src/assets/logo.svg";
+import logoIcon from "../assets/logo.png";
+import logoName from "../assets/logo1.jpeg";
 import {
   setPN,
   setPN1,
@@ -32,8 +33,31 @@ export default function Sidebar() {
         isSidebarOpen ? "w-1/6" : "w-1/12"
       } bg-white shadow-md flex flex-col items-end font-Madimi`}
     >
-      <div className={`duration-300 py-4 px-1 w-full justify-between bg-white`}>
-        <img src={logo} className="h-8 w-full" alt="" />
+      <div
+        className={`w-full border-b border-gray-100 bg-white duration-300 ${
+          isSidebarOpen ? "px-3 py-3" : "px-2 py-3"
+        }`}
+      >
+        <div
+          className={`flex items-center ${
+            isSidebarOpen ? "justify-start gap-2" : "justify-center"
+          }`}
+        >
+          <img
+            src={logoIcon}
+            alt=""
+            className={`object-contain shrink-0 ${
+              isSidebarOpen ? "h-10 w-auto" : "h-9 w-auto"
+            }`}
+          />
+          {isSidebarOpen && (
+            <img
+              src={logoName}
+              alt="LAZIS Sultan Agung"
+              className="h-8 w-auto max-w-[calc(100%-2.75rem)] object-contain object-left"
+            />
+          )}
+        </div>
       </div>
       <div className="w-full h-full flex flex-col justify-between">
         {user?.role == "ADMIN" ? (

@@ -1,6 +1,6 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap");
-/* @import url("https://fonts.googleapis.com/css2?family=Madimi+One&display=swap"); */
 @import url("https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap");
 @import "flowbite/dist/flowbite.css";
 
 @tailwind base;
@@ -9,4 +9,46 @@
 
 #card {
   height: 200px;
+}
+
+@keyframes login-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes login-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes login-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.login-fade-up {
+  animation: login-fade-up 0.7s ease-out both;
+}
+
+.login-fade-in {
+  animation: login-fade-in 0.9s ease-out both;
+}
+
+.login-float {
+  animation: login-float 7s ease-in-out infinite;
 }

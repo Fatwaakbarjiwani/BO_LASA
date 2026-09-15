@@ -42,7 +42,13 @@ function AppContent() {
         )}
         {!isLoginPage && <Navbar />}
         <div
-          className={`${!isLoginPage && isSidebarOpen ? `w-5/6` : `w-11/12`}`}
+          className={
+            isLoginPage
+              ? "w-full"
+              : isSidebarOpen
+                ? "w-5/6"
+                : "w-11/12"
+          }
         >
           <Routes>
             <Route
