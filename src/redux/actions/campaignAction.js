@@ -221,10 +221,18 @@ export const getAllCampaign = () => async (dispatch) => {
   try {
     const response = await axios.get(`${API_URL}/campaign`);
     const data = response.data;
-    dispatch(setAllCampaign(data.content));
-    dispatch(setTotalPNActiveCampaign(data.totalPages));
+    const list = Array.isArray(data)
+      ? data
+      : Array.isArray(data?.content)
+        ? data.content
+        : [];
+    dispatch(setAllCampaign(list));
+    if (data?.totalPages != null) {
+      dispatch(setTotalPNActiveCampaign(data.totalPages));
+    }
   } catch (error) {
     console.error("Error fetching campaign data:", error);
+    dispatch(setAllCampaign([]));
   }
 };
 export const getSearchCampaign = (name, page) => async (dispatch) => {

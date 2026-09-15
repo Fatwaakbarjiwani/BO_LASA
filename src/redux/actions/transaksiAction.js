@@ -176,24 +176,159 @@ export const getPresentage = () => async (dispatch) => {
     return;
   }
 };
-export const getEditPresentage = (number) => async (dispatch) => {
+
+// API lama (global percentage) — diganti per campaign
+// export const getEditPresentage = (number) => async (dispatch) => {
+//   try {
+//     await axios.put(`${API_URL}/percentage/edit/1`, {
+//       percentage: number,
+//     });
+//     Swal.fire({
+//       title: "Berhasil",
+//       text: "Proses membuat saldo awal berhasil",
+//       icon: "success",
+//     });
+//   } catch (error) {
+//     Swal.fire({
+//       title: "Gagal",
+//       text: "terjadi kesalahan",
+//       icon: "error",
+//     });
+//   }
+// };
+
+export const getAllPercentage = () => async (dispatch, getState) => {
   try {
-    await axios.put(`${API_URL}/percentage/edit/1`, {
-      percentage: number,
+    const { tokenAdmin } = getState().auth;
+    const response = await axios.get(`${API_URL}/percentage`, {
+      headers: {
+        Authorization: `Bearer ${tokenAdmin}`,
+      },
     });
-    Swal.fire({
-      title: "Berhasil",
-      text: "Proses membuat saldo awal berhasil",
-      icon: "success",
-    });
+    const data = response.data;
+    dispatch(setPersentase(Array.isArray(data) ? data : []));
+    return data;
   } catch (error) {
-    Swal.fire({
-      title: "Gagal",
-      text: "terjadi kesalahan",
-      icon: "error",
-    });
+    dispatch(setPersentase([]));
+    return [];
   }
 };
+
+export const getPercentageByCampaignId =
+  (campaignId) => async (_dispatch, getState) => {
+    const { tokenAdmin } = getState().auth;
+    const response = await axios.get(
+      `${API_URL}/percentage/campaign/${campaignId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${tokenAdmin}`,
+        },
+      }
+    );
+    return response.data;
+  };
+
+export const editPercentageByCampaignId =
+  (campaignId, percentage) => async (_dispatch, getState) => {
+    try {
+      if (!campaignId || percentage === "" || percentage == null) {
+        Swal.fire({
+          title: "Data Tidak Lengkap",
+          text: "Pilih campaign dan isi persentase.",
+          icon: "warning",
+        });
+        return;
+      }
+
+      const { tokenAdmin } = getState().auth;
+      const response = await axios.put(
+        `${API_URL}/percentage/edit/campaign/${campaignId}`,
+        {
+          percentage: Number(percentage),
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${tokenAdmin}`,
+          },
+        }
+      );
+
+      Swal.fire({
+        title: "Berhasil",
+        text:
+          response?.data?.message ||
+          "Persentase campaign berhasil diperbarui.",
+        icon: "success",
+      });
+      return response.data;
+    } catch (error) {
+      Swal.fire({
+        title: "Gagal",
+        text:
+          error?.response?.data?.message ||
+          "Terjadi kesalahan saat mengedit persentase campaign.",
+        icon: "error",
+      });
+      throw error;
+    }
+  };
+
+export const addPercentageForCampaign =
+  (campaignId, percentage) => async (_dispatch, getState) => {
+    try {
+      const resolvedCampaignId = Number(campaignId);
+      if (!campaignId || Number.isNaN(resolvedCampaignId)) {
+        Swal.fire({
+          title: "Data Tidak Lengkap",
+          text: "Pilih campaign dan isi persentase.",
+          icon: "warning",
+        });
+        return;
+      }
+
+      if (percentage === "" || percentage == null) {
+        Swal.fire({
+          title: "Data Tidak Lengkap",
+          text: "Pilih campaign dan isi persentase.",
+          icon: "warning",
+        });
+        return;
+      }
+
+      const { tokenAdmin } = getState().auth;
+      const response = await axios.post(
+        `${API_URL}/percentage/add`,
+        {
+          campaignId: resolvedCampaignId,
+          percentage: Number(percentage),
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${tokenAdmin}`,
+          },
+        }
+      );
+
+      if (response) {
+        Swal.fire({
+          title: "Berhasil",
+          text:
+            response?.data?.message ||
+            "Persentase campaign berhasil disimpan.",
+          icon: "success",
+        });
+      }
+    } catch (error) {
+      Swal.fire({
+        title: "Gagal",
+        text:
+          error?.response?.data?.message ||
+          "Terjadi kesalahan saat menyimpan persentase campaign.",
+        icon: "error",
+      });
+      throw error;
+    }
+  };
 export const getDistribution = (pageNumber) => async (dispatch) => {
   try {
     const response = await axios.get(
@@ -215,7 +350,7 @@ export const createDistribusiDokumentasi =
       const { tokenAdmin } = getState().auth;
       const formData = new FormData();
       {
-        image != null && formData.append("campaignImage", image);
+        image != null && formData.append("image", image);
       }
       formData.append("description", description);
       formData.append("receiver", receiver);
