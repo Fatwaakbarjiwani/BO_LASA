@@ -31,6 +31,7 @@ function CreateCampaign() {
   const [showImageDesc1, setShowImageDesc1] = useState(null);
   const [showImageDesc2, setShowImageDesc2] = useState(null);
   const [showImageDesc3, setShowImageDesc3] = useState(null);
+  const [linkVideo, setLinkVideo] = useState("");
 
   useEffect(() => {
     dispatch(getAllCampaignCategory());
@@ -88,7 +89,8 @@ function CreateCampaign() {
         isEmergency,
         campaignImageDesc1,
         campaignImageDesc2,
-        campaignImageDesc3
+        campaignImageDesc3,
+        linkVideo
       )
     ).finally(() => setLoading(false));
   };
@@ -189,6 +191,18 @@ function CreateCampaign() {
               value={description}
               onChange={(e) => setDescription(e.target.value)}
             ></textarea>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-600 mb-1">
+              Link Video (opsional)
+            </label>
+            <input
+              type="url"
+              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+              placeholder="https://youtu.be/..."
+              value={linkVideo}
+              onChange={(e) => setLinkVideo(e.target.value)}
+            />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-600 mb-1">

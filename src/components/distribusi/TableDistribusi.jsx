@@ -20,6 +20,7 @@ export default function TableDistribusi() {
     receiver: "",
     description: "",
     image: null,
+    linkVideo: "",
   });
   const [imagePreview, setImagePreview] = useState(null);
   const [existingImage, setExistingImage] = useState(null);
@@ -42,6 +43,7 @@ export default function TableDistribusi() {
       receiver: distributionItem.receiver || "",
       description: distributionItem.description || "",
       image: null,
+      linkVideo: distributionItem.linkVideo || "",
     });
     setImagePreview(null);
     setExistingImage(distributionItem.image || null);
@@ -57,6 +59,7 @@ export default function TableDistribusi() {
       receiver: "",
       description: "",
       image: null,
+      linkVideo: "",
     });
     setImagePreview(null);
     setExistingImage(null);
@@ -93,6 +96,7 @@ export default function TableDistribusi() {
       formData.append("distributionDate", editForm.distributionDate);
       formData.append("receiver", editForm.receiver);
       formData.append("description", editForm.description);
+      formData.append("linkVideo", editForm.linkVideo || "");
 
       if (editForm.image) {
         formData.append("image", editForm.image);
@@ -297,6 +301,19 @@ export default function TableDistribusi() {
                     rows={4}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
                     required
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="linkVideo" value="Link Video (Opsional)" />
+                  <input
+                    type="url"
+                    id="linkVideo"
+                    name="linkVideo"
+                    value={editForm.linkVideo}
+                    onChange={handleEditFormChange}
+                    placeholder="https://youtu.be/..."
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
 

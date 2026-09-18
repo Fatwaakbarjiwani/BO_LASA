@@ -40,6 +40,7 @@ function CreateDokumentasiPage() {
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
   const [date, setDate] = useState("");
+  const [linkVideo, setLinkVideo] = useState("");
 
   useEffect(() => {
     dispatch(getCategoryZiswaf("zakat"));
@@ -68,7 +69,8 @@ function CreateDokumentasiPage() {
         parseInt(amount.replace(/\./g, ""), 10),
         date,
         type,
-        id
+        id,
+        linkVideo
       )
     ).finally(() => setLoading(false));
   };
@@ -409,6 +411,18 @@ function CreateDokumentasiPage() {
               className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
               value={date}
               onChange={(e) => setDate(e.target.value)}
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-600 mb-1">
+              Link Video (opsional)
+            </label>
+            <input
+              type="url"
+              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+              placeholder="https://youtu.be/..."
+              value={linkVideo}
+              onChange={(e) => setLinkVideo(e.target.value)}
             />
           </div>
           <div className="flex w-full items-center justify-center">

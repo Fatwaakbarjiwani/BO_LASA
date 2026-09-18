@@ -343,7 +343,7 @@ export const getDistribution = (pageNumber) => async (dispatch) => {
 };
 
 export const createDistribusiDokumentasi =
-  (image, description, receiver, amount, date, type, id) =>
+  (image, description, receiver, amount, date, type, id, linkVideo = "") =>
   async (dispatch, getState) => {
     
     try {
@@ -356,6 +356,7 @@ export const createDistribusiDokumentasi =
       formData.append("receiver", receiver);
       formData.append("distributionAmount", amount);
       formData.append("distributionDate", date);
+      formData.append("linkVideo", linkVideo || "");
       const response = await axios.post(
         `${API_URL}/distribution/${type}/${id}`,
         formData,

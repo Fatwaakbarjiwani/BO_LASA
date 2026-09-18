@@ -487,7 +487,8 @@ export const createCampaign =
     emergency,
     campaignImageDesc1,
     campaignImageDesc2,
-    campaignImageDesc3
+    campaignImageDesc3,
+    linkVideo = ""
   ) =>
   async (dispatch, getState) => {
     try {
@@ -506,6 +507,7 @@ export const createCampaign =
       formData.append("endDate", end);
       formData.append("active", active);
       formData.append("emergency", emergency);
+      formData.append("linkVideo", linkVideo || "");
       {
         campaignImageDesc1 != null &&
           formData.append("campaignImageDesc1", campaignImageDesc1);
@@ -560,7 +562,8 @@ export const editCampaign =
     id,
     campaignImageDesc1,
     campaignImageDesc2,
-    campaignImageDesc3
+    campaignImageDesc3,
+    linkVideo = ""
   ) =>
   async (dispatch, getState) => {
     try {
@@ -579,6 +582,7 @@ export const editCampaign =
       formData.append("endDate", end);
       formData.append("active", active);
       formData.append("emergency", emergency);
+      formData.append("linkVideo", linkVideo || "");
       {
         campaignImageDesc1 != null &&
           formData.append("campaignImageDesc1", campaignImageDesc1);
