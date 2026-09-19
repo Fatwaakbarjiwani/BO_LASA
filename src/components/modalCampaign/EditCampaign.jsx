@@ -43,63 +43,88 @@ function EditCampaign() {
   }, [dispatch]);
 
   useEffect(() => {
-    if (detailCampaign && allCampaignCategory.length > 0) {
-      setCampaignName(detailCampaign?.campaignName || "");
-      setShowImage(detailCampaign?.campaignImage || null);
-      setCampaignCode(detailCampaign?.campaignCode || "");
-      setLocation(detailCampaign?.location || "");
-      setTargetAmount(detailCampaign?.targetAmount || "");
-      setDescription(detailCampaign?.description || "");
-      setStartDate(detailCampaign?.startDate || "");
-      setEndDate(detailCampaign?.endDate || "");
-      setIsEmergency(detailCampaign?.emergency || false);
-      setLinkVideo(detailCampaign?.linkVideo || "");
+    if (
+      !detailCampaign ||
+      Array.isArray(detailCampaign) ||
+      allCampaignCategory.length === 0
+    ) {
+      return;
+    }
 
-      let selectedCategoryId = "";
+    setCampaignName(detailCampaign?.campaignName || "");
+    setShowImage(detailCampaign?.campaignImage || null);
+    setCampaignCode(detailCampaign?.campaignCode || "");
+    setLocation(detailCampaign?.location || "");
+    setTargetAmount(detailCampaign?.targetAmount || "");
+    setDescription(detailCampaign?.description || "");
+    setStartDate(detailCampaign?.startDate || "");
+    setEndDate(detailCampaign?.endDate || "");
+    setIsEmergency(detailCampaign?.emergency || false);
+    setLinkVideo(detailCampaign?.linkVideo || "");
 
-      if (detailCampaign?.category) {
-        // If category is an object, try different possible structures
-        if (detailCampaign.category.campaignCategory) {
-          // Structure: { campaignCategory: "Dakwah" }
-          const matchingCategory = allCampaignCategory.find(
-            (cat) =>
-              cat.campaignCategory === detailCampaign.category.campaignCategory
-          );
-          selectedCategoryId = matchingCategory ? matchingCategory.id : "";
-        } else if (detailCampaign.category.id) {
-          // Structure: { id: 1, campaignCategory: "Dakwah" }
-          selectedCategoryId = detailCampaign.category.id;
-        } else if (typeof detailCampaign.category === "string") {
-          // Structure: category is just a string name
-          const matchingCategory = allCampaignCategory.find(
-            (cat) => cat.campaignCategory === detailCampaign.category
-          );
-          selectedCategoryId = matchingCategory ? matchingCategory.id : "";
-        }
-      } else if (detailCampaign?.categoryId) {
-        // If categoryId is provided directly
-        selectedCategoryId = detailCampaign.categoryId;
+    const findCategoryId = () => {
+      const byId = (id) => {
+        if (id == null || id === "") return "";
+        const match = allCampaignCategory.find(
+          (cat) => String(cat.id) === String(id)
+        );
+        return match ? String(match.id) : "";
+      };
+
+      const byName = (name) => {
+        if (!name) return "";
+        const match = allCampaignCategory.find(
+          (cat) =>
+            String(cat.campaignCategory || "").toLowerCase() ===
+            String(name).toLowerCase()
+        );
+        return match ? String(match.id) : "";
+      };
+
+      if (detailCampaign?.categoryId != null) {
+        const id = byId(detailCampaign.categoryId);
+        if (id) return id;
       }
 
-      setCategory(selectedCategoryId);
-      // Handle campaignImageDesc - they come as filename only, need to add base URL
-      const baseUrl = "https://skyconnect.lazis-sa.org/api/images/";
-      setShowImageDesc1(
-        detailCampaign?.campaignImageDesc1
-          ? `${baseUrl}${detailCampaign.campaignImageDesc1}`
-          : null
-      );
-      setShowImageDesc2(
-        detailCampaign?.campaignImageDesc2
-          ? `${baseUrl}${detailCampaign.campaignImageDesc2}`
-          : null
-      );
-      setShowImageDesc3(
-        detailCampaign?.campaignImageDesc3
-          ? `${baseUrl}${detailCampaign.campaignImageDesc3}`
-          : null
-      );
-    }
+      if (detailCampaign?.category != null) {
+        if (typeof detailCampaign.category === "object") {
+          const id =
+            byId(detailCampaign.category.id ?? detailCampaign.category.categoryId) ||
+            byName(detailCampaign.category.campaignCategory);
+          if (id) return id;
+        }
+        if (typeof detailCampaign.category === "string") {
+          const id = byId(detailCampaign.category) || byName(detailCampaign.category);
+          if (id) return id;
+        }
+        if (typeof detailCampaign.category === "number") {
+          const id = byId(detailCampaign.category);
+          if (id) return id;
+        }
+      }
+
+      // API detail biasanya kirim nama kategori di field ini
+      return byName(detailCampaign?.campaignCategory);
+    };
+
+    setCategory(findCategoryId());
+
+    const baseUrl = "https://skyconnect.lazis-sa.org/api/images/";
+    setShowImageDesc1(
+      detailCampaign?.campaignImageDesc1
+        ? `${baseUrl}${detailCampaign.campaignImageDesc1}`
+        : null
+    );
+    setShowImageDesc2(
+      detailCampaign?.campaignImageDesc2
+        ? `${baseUrl}${detailCampaign.campaignImageDesc2}`
+        : null
+    );
+    setShowImageDesc3(
+      detailCampaign?.campaignImageDesc3
+        ? `${baseUrl}${detailCampaign.campaignImageDesc3}`
+        : null
+    );
   }, [detailCampaign, allCampaignCategory]);
 
   useEffect(() => {
@@ -107,8 +132,9 @@ function EditCampaign() {
       setLoading(false);
       dispatch(setDetailCampaign([]));
       setChangeTarget(false);
+      setCategory("");
     }
-  }, [modalEditActive]);
+  }, [modalEditActive, dispatch]);
 
   if (!modalEditActive) {
     return null;
@@ -219,12 +245,13 @@ function EditCampaign() {
               className="bg-gray-50 w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:border focus:border-primary"
               value={category}
               onChange={(e) => setCategory(e.target.value)}
+              required
             >
               <option value="" disabled>
                 Pilih Kategori
               </option>
               {allCampaignCategory.map((item) => (
-                <option key={item.id} value={item.id}>
+                <option key={item.id} value={String(item.id)}>
                   {item.campaignCategory}
                 </option>
               ))}
