@@ -3,7 +3,7 @@ import jsPDF from "jspdf";
 import "jspdf-autotable";
 import { useDispatch, useSelector } from "react-redux";
 import { getBukuBesar } from "../../redux/actions/transaksiAction";
-import logo2 from "../../assets/logo2.png";
+import logo2 from "../../assets/logo-lazis.png";
 import { getCategoryCoa } from "../../redux/actions/ziswafAction";
 import Swal from "sweetalert2";
 import DocumentasiBukuBesar from "./DocumentasiBukuBesar";
@@ -131,7 +131,7 @@ export default function BukuBesar() {
         </head>
         <body>
           <div class="header">
-          <img  src=${logo2} alt="UNISSULA Logo" class="logo2"/>
+          <img  src=${logo2} alt="LAZIS SULTAN AGUNG Logo" class="logo2"/>
             <div class="header2">
               <h1>LAZIS SULTAN AGUNG</h1>
               <p>Jl. Raya Kaligawe Km.4, Semarang, Jawa Tengah</p>
@@ -186,7 +186,7 @@ export default function BukuBesar() {
             coaId == coaId2
               ? `<div></div>`
               : ` <div class="page-break header">
-          <img  src=${logo2} alt="UNISSULA Logo" class="logo2"/>
+          <img  src=${logo2} alt="LAZIS SULTAN AGUNG Logo" class="logo2"/>
             <div class="header2">
               <h1>LAZIS SULTAN AGUNG</h1>
               <p>Jl. Raya Kaligawe Km.4, Semarang, Jawa Tengah</p>

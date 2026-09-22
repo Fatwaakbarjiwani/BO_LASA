@@ -1,5 +1,5 @@
 import PropTypes from "prop-types"; // Import PropTypes
-import logo2 from "../../assets/logo2.png";
+import logo2 from "../../assets/logo-lazis.png";
 import { useSelector } from "react-redux";
 
 const DocumentasiBukuBesar = ({
@@ -274,7 +274,7 @@ const DocumentasiBukuBesar = ({
           >
             <img
               src={logo2}
-              alt="UNISSULA Logo"
+              alt="LAZIS SULTAN AGUNG Logo"
               style={{
                 width: "150px",
                 height: "auto",

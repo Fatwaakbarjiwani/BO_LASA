@@ -11,6 +11,18 @@ const TEMPLATE = [
   { id: "TRANSFER_DANA", nama: "Transfer Antar Dana", info: "Perpindahan kas antar dana" },
 ];
 
+/** Pilihan jenis dari /keuangan/meta berbentuk {kode, nama}; tetap menerima bentuk lama (string). */
+/** Label tampilan untuk kode jenis, dipakai juga bila backend masih mengirim kode saja (versi lama). */
+const LABEL_JENIS = {
+  TUNAI: "Wakaf Tunai", ASET: "Wakaf Aset", UMUM: "Infaq Umum", TERIKAT: "Infaq Terikat",
+  FITRAH: "Zakat Fitrah", MAAL: "Zakat Maal", PROFESI: "Zakat Profesi", PERDAGANGAN: "Zakat Perdagangan",
+  PERTANIAN: "Zakat Pertanian", EMAS_PERAK: "Zakat Emas & Perak",
+};
+const opsiJenis = (list) =>
+  (list || []).map((j) =>
+    typeof j === "string" ? { kode: j, nama: LABEL_JENIS[j] || j.replace(/_/g, " ") } : { ...j, nama: j.nama || LABEL_JENIS[j.kode] || j.kode });
+const TAMBAH_JENIS = "__TAMBAH__";
+
 const akunDana = (meta, dana, kelompok) =>
   meta.akun.filter((a) => a.dana === dana && a.kelompok === kelompok && a.postable);
 const rekDana = (meta, dana) => meta.rekening.filter((r) => r.dana === dana);
@@ -99,7 +111,7 @@ async function kirim(cmd, reset) {
 }
 
 // ----------------------------------------------------------------------------------------------
-function FormPenerimaan({ meta, alokasi }) {
+function FormPenerimaan({ meta, alokasi, onJenisZakatBaru }) {
   const danaOpsi = meta.dana.filter((d) => d.kode !== "PENGELOLA");
   const kosong = {
     tanggal: today(), dana: "ZAKAT", jenis: "FITRAH", akunId: "", rekId: "", donatur: "", donaturId: null,
@@ -111,7 +123,8 @@ function FormPenerimaan({ meta, alokasi }) {
 
   const akunList = akunDana(meta, f.dana, "PENERIMAAN");
   const rekList = rekDana(meta, f.dana);
-  const jenisList = f.dana === "ZAKAT" ? meta.jenisZakat : f.dana === "WAKAF" ? meta.jenisWakaf : f.dana === "INFAQ" ? meta.jenisInfaq : [];
+  const jenisOpsi = opsiJenis(f.dana === "ZAKAT" ? meta.jenisZakat : f.dana === "WAKAF" ? meta.jenisWakaf : f.dana === "INFAQ" ? meta.jenisInfaq : []);
+  const jenisList = jenisOpsi.map((j) => j.kode);
 
   useEffect(() => {
     const cocok = akunList.find((a) => (a.jenisPenerimaan || "") === (f.dana === "INFAQ" ? (f.jenis === "TERIKAT" ? "TERIKAT" : "TIDAK_TERIKAT") : f.jenis));
@@ -132,6 +145,30 @@ function FormPenerimaan({ meta, alokasi }) {
 
   const akun = meta.akun.find((a) => String(a.id) === String(f.akunId));
   const rek = meta.rekening.find((r) => String(r.coaId) === String(f.rekId));
+  const akunJenisCocok = f.dana !== "ZAKAT" || akunList.some((a) => a.jenisPenerimaan === f.jenis);
+
+  // Jenis zakat dinamis: bila jenis belum ada, petugas bisa menambahkannya langsung dari form ini.
+  const tambahJenisZakat = async () => {
+    const r = await Swal.fire({
+      title: "Tambah jenis zakat",
+      input: "text",
+      inputLabel: "Nama jenis zakat",
+      inputPlaceholder: "mis. Zakat Saham",
+      showCancelButton: true,
+      confirmButtonText: "Simpan",
+      cancelButtonText: "Batal",
+      inputValidator: (v) => (!v || !v.trim() ? "Nama wajib diisi" : undefined),
+    });
+    if (!r.isConfirmed) return;
+    try {
+      const baru = await keuangan.jenisZakatBaru(r.value.trim());
+      await onJenisZakatBaru();
+      set("jenis", baru.kode);
+      if (!baru.baru) Swal.fire({ icon: "info", title: "Sudah ada", text: `${baru.nama} sudah terdaftar dan dipilih.` });
+    } catch (e) {
+      Swal.fire({ icon: "error", title: "Gagal menambah jenis zakat", text: errMsg(e) });
+    }
+  };
   const persen = alokasi.find((a) => a.dana === f.dana && a.aktif && (!a.jenis || a.jenis === f.jenis));
 
   const baris = [
@@ -172,12 +209,15 @@ function FormPenerimaan({ meta, alokasi }) {
         </div>
         {jenisList.length > 0 && (
           <Field label={f.dana === "ZAKAT" ? "Jenis zakat" : f.dana === "WAKAF" ? "Jenis wakaf" : "Jenis infaq"}>
-            <select className={inputCls} value={f.jenis} onChange={(e) => set("jenis", e.target.value)}>
-              {jenisList.map((j) => <option key={j} value={j}>{j.replace("_", " & ")}</option>)}
+            <select className={inputCls} value={f.jenis}
+              onChange={(e) => (e.target.value === TAMBAH_JENIS ? tambahJenisZakat() : set("jenis", e.target.value))}>
+              {jenisOpsi.map((j) => <option key={j.kode} value={j.kode}>{j.nama}</option>)}
+              {f.dana === "ZAKAT" && <option value={TAMBAH_JENIS}>+ Tambah jenis zakat…</option>}
             </select>
           </Field>
         )}
-        <Field label="Akun penerimaan">
+        <Field label="Akun penerimaan"
+          hint={akunJenisCocok ? undefined : "Belum ada akun COA khusus untuk jenis zakat ini; pilih akun penerimaan zakat yang sesuai (atau buat akunnya di COA dengan jenis penerimaan yang sama)."}>
           <select className={inputCls} value={f.akunId} onChange={(e) => set("akunId", e.target.value)}>
             {akunList.map((a) => <option key={a.id} value={a.id}>{a.kode} {a.nama}</option>)}
           </select>
@@ -231,7 +271,7 @@ function FormPenerimaan({ meta, alokasi }) {
     </div>
   );
 }
-FormPenerimaan.propTypes = { meta: PropTypes.object, alokasi: PropTypes.array };
+FormPenerimaan.propTypes = { meta: PropTypes.object, alokasi: PropTypes.array, onJenisZakatBaru: PropTypes.func };
 
 // ----------------------------------------------------------------------------------------------
 function FormPenyaluran({ meta }) {
@@ -252,15 +292,19 @@ function FormPenyaluran({ meta }) {
       akunId: akunList.some((a) => String(a.id) === String(s.akunId)) ? s.akunId : akunList[0]?.id || "",
       rekId: rekList.some((r) => String(r.coaId) === String(s.rekId)) ? s.rekId : rekList.find((r) => !r.kas)?.coaId || rekList[0]?.coaId || "",
     }));
+    setRows((rs) => rs.map((r) => ({ ...r, mustahikId: "" })));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [f.dana]);
 
   const akun = meta.akun.find((a) => String(a.id) === String(f.akunId));
   const rek = meta.rekening.find((r) => String(r.coaId) === String(f.rekId));
+  // Wakaf disalurkan ke mauquf 'alaih; Zakat/Infaq/DSKL ke mustahik.
+  const wakaf = f.dana === "WAKAF";
+  const penerimaList = mustahik.filter((m) => (m.jenisPenerima || "MUSTAHIK") === (wakaf ? "MAUQUF_ALAIH" : "MUSTAHIK"));
   const total = rows.reduce((s, r) => s + (r.jumlah || 0), 0);
   const ubah = (i, k, v) => setRows((rs) => rs.map((r, j) => (j === i ? { ...r, [k]: v } : r)));
   const pilihMustahik = (i, id) => {
-    const m = mustahik.find((x) => String(x.id) === String(id));
+    const m = penerimaList.find((x) => String(x.id) === String(id));
     setRows((rs) => rs.map((r, j) => (j === i ? { ...r, mustahikId: id, nama: m ? m.nama : r.nama, asnaf: m?.asnaf || r.asnaf } : r)));
   };
 
@@ -311,13 +355,15 @@ function FormPenyaluran({ meta }) {
         <Btn color="green" disabled={!siap} onClick={simpan} className="w-full">Simpan penyaluran</Btn>
       </div>
       <div>
-        <div className="text-sm font-semibold text-gray-600 mb-2">Rincian penerima {zakat && "(asnaf wajib)"}</div>
+        <div className="text-sm font-semibold text-gray-600 mb-2">
+          {wakaf ? "Rincian mauquf 'alaih (penerima manfaat wakaf)" : "Rincian penerima"} {zakat && "(asnaf wajib)"}
+        </div>
         <div className="space-y-2">
           {rows.map((r, i) => (
             <div key={i} className="border rounded-lg p-2 grid grid-cols-6 gap-2 bg-white">
               <select className={`${inputCls} col-span-3`} value={r.mustahikId} onChange={(e) => pilihMustahik(i, e.target.value)}>
-                <option value="">— mustahik terdaftar —</option>
-                {mustahik.map((m) => <option key={m.id} value={m.id}>{m.nama}</option>)}
+                <option value="">{wakaf ? "— mauquf 'alaih terdaftar —" : "— mustahik terdaftar —"}</option>
+                {penerimaList.map((m) => <option key={m.id} value={m.id}>{m.nama}</option>)}
               </select>
               <input className={`${inputCls} col-span-3`} placeholder="atau ketik nama / lembaga" value={r.nama} onChange={(e) => ubah(i, "nama", e.target.value)} />
               <div className="col-span-3"><Nominal value={r.jumlah} onChange={(v) => ubah(i, "jumlah", v)} /></div>
@@ -476,6 +522,9 @@ export default function InputJurnal() {
   const [tpl, setTpl] = useState("PENERIMAAN");
   const [err, setErr] = useState("");
 
+  const muatUlangJenisZakat = () =>
+    keuangan.jenisZakat().then((list) => setMeta((m) => ({ ...m, jenisZakat: list })));
+
   useEffect(() => {
     keuangan.meta().then(setMeta).catch((e) => setErr(errMsg(e)));
     keuangan.alokasi().then(setAlokasi).catch(() => {});
@@ -483,10 +532,11 @@ export default function InputJurnal() {
 
   const form = useMemo(() => {
     if (!meta) return null;
-    if (tpl === "PENERIMAAN") return <FormPenerimaan key={tpl} meta={meta} alokasi={alokasi} />;
+    if (tpl === "PENERIMAAN") return <FormPenerimaan key={tpl} meta={meta} alokasi={alokasi} onJenisZakatBaru={muatUlangJenisZakat} />;
     if (tpl === "PENYALURAN") return <FormPenyaluran key={tpl} meta={meta} />;
     if (tpl === "BEBAN_OPERASIONAL") return <FormBeban key={tpl} meta={meta} />;
     return <FormTransfer key={tpl} meta={meta} />;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [meta, tpl, alokasi]);
 
   return (
