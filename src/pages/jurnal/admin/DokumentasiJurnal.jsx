@@ -1,5 +1,5 @@
 import { useSelector } from "react-redux";
-import logo from "../../../assets/logo2.png";
+import logo from "../../../assets/logo-lazis.png";
 import PropTypes from "prop-types";
 
 export default function DokumentasiJurnal({ startDate, endDate, dateTime }) {

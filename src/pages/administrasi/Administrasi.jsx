@@ -28,7 +28,7 @@ const GRUP = [
       ["coa", "COA", CoaPage],
       ["saldoAwal", "Saldo Awal", SaldoAwal],
       ["rekening", "Rekening & Harian", RekeningPage],
-      ["mustahik", "Mustahik", MustahikPage],
+      ["mustahik", "Mustahik & Mauquf Alaih", MustahikPage],
     ],
   },
   {

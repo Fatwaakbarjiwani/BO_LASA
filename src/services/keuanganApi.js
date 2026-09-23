@@ -41,6 +41,14 @@ export const keuangan = {
   versi: () => api.get("/keuangan/monitor/versi").then((r) => r.data),
   audit: () => api.get("/keuangan/monitor/audit").then((r) => r.data),
 
+  // Jenis zakat dinamis (master jenis_zakat)
+  jenisZakat: (semua = false) =>
+    api.get("/keuangan/jenis-zakat", { params: { semua } }).then((r) => r.data),
+  jenisZakatBaru: (nama) =>
+    api.post("/keuangan/jenis-zakat", { nama }).then((r) => r.data),
+  jenisZakatUbah: (kode, b) =>
+    api.put(`/keuangan/jenis-zakat/${kode}`, b).then((r) => r.data),
+
   mustahik: (params) =>
     api.get("/keuangan/mustahik", { params }).then((r) => r.data),
   mustahikBaru: (b) => api.post("/keuangan/mustahik", b).then((r) => r.data),

@@ -3,7 +3,7 @@ import jsPDF from "jspdf";
 import "jspdf-autotable";
 import { useDispatch, useSelector } from "react-redux";
 import { getPosisiKeuangan } from "../../redux/actions/transaksiAction";
-import logo from "../../assets/logo2.png";
+import logo from "../../assets/logo-lazis.png";
 import Swal from "sweetalert2";
 import { OrbitProgress } from "react-loading-indicators";
 import DokumentasiNeraca from "./DokumentasiNeraca";

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import PropTypes from "prop-types";
 import { useDispatch, useSelector } from "react-redux";
 import { getLaporanPengelola } from "../../redux/actions/transaksiAction";
-import logo from "../../assets/logo2.png";
+import logo from "../../assets/logo-lazis.png";
 import { OrbitProgress } from "react-loading-indicators";
 
 const MONTH_NAMES = [

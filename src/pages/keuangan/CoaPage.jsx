@@ -8,6 +8,7 @@ const KELOMPOK = ["KAS_BANK", "ASET_LAIN", "KEWAJIBAN", "SALDO_DANA", "PENERIMAA
 const TIPE = ["Asset", "Liability", "Equity", "Revenue", "Expense"];
 const ASNAF = ["FAKIR", "MISKIN", "AMIL", "MUALAF", "RIQAB", "GHARIM", "FISABILILLAH", "IBNU_SABIL"];
 const BIDANG = ["PENDIDIKAN", "SOSIAL", "KEAGAMAAN", "DAKWAH", "KEMANUSIAAN", "EKONOMI_PEMBERDAYAAN", "LINGKUNGAN", "KESEHATAN"];
+const LABEL_JENIS_PENERIMAAN = { TUNAI: "Wakaf Tunai", ASET: "Wakaf Aset", TERIKAT: "Infaq Terikat", TIDAK_TERIKAT: "Infaq Tidak Terikat" };
 const JENIS_PENERIMAAN = ["FITRAH", "MAAL", "PROFESI", "PERDAGANGAN", "PERTANIAN", "EMAS_PERAK", "TUNAI", "ASET", "TERIKAT", "TIDAK_TERIKAT"];
 
 const kosong = {
@@ -142,7 +143,7 @@ export default function CoaPage() {
             )}
             {form.kelompok === "PENERIMAAN" && (
               <Field label="Jenis penerimaan (untuk aplikasi mobile)">
-                <select className={inputCls} value={form.jenisPenerimaan} onChange={(e) => set("jenisPenerimaan", e.target.value)}><option value="">—</option>{JENIS_PENERIMAAN.map((d) => <option key={d}>{d}</option>)}</select>
+                <select className={inputCls} value={form.jenisPenerimaan} onChange={(e) => set("jenisPenerimaan", e.target.value)}><option value="">—</option>{JENIS_PENERIMAAN.map((d) => <option key={d} value={d}>{LABEL_JENIS_PENERIMAAN[d] || d}</option>)}</select>
               </Field>
             )}
             <Field label="Nama pendek di LPD" hint="Tanpa awalan ‘Pendayagunaan Dana …’"><input className={inputCls} value={form.namaLpd} onChange={(e) => set("namaLpd", e.target.value)} /></Field>
