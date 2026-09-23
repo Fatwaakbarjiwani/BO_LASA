@@ -1,5 +1,5 @@
 import { useSelector } from "react-redux";
-import logo from "../../assets/logo2.png";
+import logo from "../../assets/logo-lazis.png";
 import PropTypes from "prop-types";
 
 export default function DokumentasiNeraca({ m1, m2, y1, y2, dateTime, lv }) {
