@@ -112,13 +112,14 @@ export const getMe =
       if (navigatePathSuccess) navigate(navigatePathSuccess);
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        if (error.response.status === 400) {
+        if (error.response?.status === 400) {
           logout();
           if (navigatePathError) navigate(navigatePathError);
           return;
         }
 
-        toast.error(error?.response?.data?.message);
+        // Tanpa response (network/CORS/timeout): jangan sampai halaman ikut kosong, beri tahu saja.
+        toast.error(error.response?.data?.message || "Tidak dapat memuat profil admin. Periksa koneksi ke server.");
         return;
       }
 
