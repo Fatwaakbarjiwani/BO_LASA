@@ -8,7 +8,6 @@ const FUND = [
   { id: "INFAQ", nama: "Infaq / Shodaqoh" },
   { id: "DSKL", nama: "DSKL" },
   { id: "OPERASIONAL", nama: "Operasional (Amil)" },
-  { id: "WAKAF", nama: "Wakaf" },
 ];
 const BULAN = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
 const namaBulan = (p) => BULAN[parseInt(p.slice(5), 10) - 1] || p;
