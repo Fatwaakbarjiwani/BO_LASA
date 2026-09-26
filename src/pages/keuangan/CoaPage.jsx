@@ -73,7 +73,7 @@ export default function CoaPage() {
 
   return (
     <div>
-      <Judul aksi={<Btn onClick={() => buka(null)}>+ Tambah akun</Btn>}>Daftar COA</Judul>
+      <Judul aksi={<Btn onClick={() => buka(null)}>+ Tambah akun</Btn>}>Daftar Akun (COA)</Judul>
       {netral > 0 && (
         <div className="bg-amber-50 border border-amber-200 text-amber-800 text-sm rounded p-2 mb-3">
           {netral} akun postable belum memiliki dana (netral). Akun netral hanya boleh ada pada masa transisi.

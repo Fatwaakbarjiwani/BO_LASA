@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import PropTypes from "prop-types";
 import Swal from "sweetalert2";
 import { keuangan, errMsg } from "../../services/keuanganApi";
 import { Btn, DanaBadge, Judul, Modal, Tabel, inputCls, rp } from "./ui";
@@ -9,15 +10,27 @@ const STATUS_WARNA = {
   DRAFT: "bg-yellow-100 text-yellow-800",
 };
 
-export default function DaftarJurnal() {
+const KOSONG = { dana: "", jenis: "", periode: "", status: "", q: "", akun: "" };
+
+/**
+ * initialFilter: dikirim dari halaman laporan lain lewat tombol "Lacak sumber" (mis. LpdPage).
+ * Setiap objek baru (referensi berubah) menimpa filter yang sedang aktif di sini, termasuk saat
+ * nilainya sama tapi user mengklik lacak lagi dari baris berbeda — makanya pemanggil selalu
+ * membuat objek baru, bukan menaruh literal yang sama.
+ */
+export default function DaftarJurnal({ initialFilter }) {
   const [rows, setRows] = useState([]);
-  const [f, setF] = useState({ dana: "", jenis: "", periode: "", status: "", q: "" });
+  const [f, setF] = useState(() => (initialFilter ? { ...KOSONG, ...initialFilter } : KOSONG));
   const [detail, setDetail] = useState(null);
   const [loading, setLoading] = useState(false);
 
+  useEffect(() => {
+    if (initialFilter) setF({ ...KOSONG, ...initialFilter });
+  }, [initialFilter]);
+
   const muat = useCallback(() => {
     setLoading(true);
-    const params = Object.fromEntries(Object.entries(f).filter(([, v]) => v));
+    const params = Object.fromEntries(Object.entries(f).filter(([k, v]) => v && k !== "akunLabel"));
     keuangan.jurnal(params).then(setRows).catch((e) => Swal.fire("Gagal", errMsg(e), "error")).finally(() => setLoading(false));
   }, [f]);
   useEffect(() => { muat(); }, [muat]);
@@ -47,6 +60,12 @@ export default function DaftarJurnal() {
   return (
     <div>
       <Judul aksi={<Btn color="gray" onClick={muat}>{loading ? "Memuat…" : "Muat ulang"}</Btn>}>Daftar Jurnal</Judul>
+      {f.akun && (
+        <div className="mb-3 flex items-center gap-2 bg-blue-50 border border-blue-200 text-blue-800 text-sm rounded-lg px-3 py-2 w-fit">
+          <span>Menelusuri akun: <b>{f.akunLabel || f.akun}</b>{f.periode ? ` · ${f.periode}` : ""}</span>
+          <button className="text-blue-500 hover:text-blue-800 font-bold" onClick={() => setF({ ...f, akun: "", akunLabel: "" })} title="Hapus filter akun">×</button>
+        </div>
+      )}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-2 mb-3">
         <select className={inputCls} value={f.dana} onChange={(e) => setF({ ...f, dana: e.target.value })}>
           <option value="">Semua dana</option>
@@ -128,3 +147,15 @@ export default function DaftarJurnal() {
     </div>
   );
 }
+
+DaftarJurnal.propTypes = {
+  initialFilter: PropTypes.shape({
+    dana: PropTypes.string,
+    jenis: PropTypes.string,
+    periode: PropTypes.string,
+    status: PropTypes.string,
+    q: PropTypes.string,
+    akun: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    akunLabel: PropTypes.string,
+  }),
+};

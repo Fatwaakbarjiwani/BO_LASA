@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import PropTypes from "prop-types";
 import Swal from "sweetalert2";
 import { keuangan, errMsg } from "../../services/keuanganApi";
 import { Btn, Judul, inputCls, num } from "./ui";
@@ -13,7 +14,7 @@ const BULAN = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "O
 const namaBulan = (p) => BULAN[parseInt(p.slice(5), 10) - 1] || p;
 const jumlah = (arr) => arr.reduce((s, v) => s + (v || 0), 0);
 
-export default function LpdPage() {
+export default function LpdPage({ onLacak }) {
   const [fund, setFund] = useState("ZAKAT");
   const [year, setYear] = useState(new Date().getFullYear());
   const [r, setR] = useState(null);
@@ -47,10 +48,23 @@ export default function LpdPage() {
   };
 
   const n = r?.months.length || 0;
-  const Baris = ({ label, vals, tebal, indent, total = true }) => (
+  const Baris = ({ label, vals, tebal, indent, total = true, accountId }) => (
     <tr className={`border-t ${tebal ? "font-semibold bg-gray-50" : ""}`}>
       <td className={`py-1.5 px-3 ${indent ? "pl-8" : ""}`}>{label}</td>
-      {vals.map((v, i) => <td key={i} className={`py-1.5 px-2 text-right tabular-nums ${v < 0 ? "text-red-600" : ""}`}>{num(v)}</td>)}
+      {vals.map((v, i) => (
+        <td key={i} className={`py-1.5 px-2 text-right tabular-nums ${v < 0 ? "text-red-600" : ""}`}>
+          {accountId && v !== 0 && onLacak ? (
+            <button
+              type="button"
+              className="hover:underline hover:text-blue-700"
+              title={`Lacak jurnal sumber ${label} · ${r.months[i]}`}
+              onClick={() => onLacak({ dana: fund, periode: r.months[i], akun: accountId, akunLabel: label })}
+            >
+              {num(v)}
+            </button>
+          ) : num(v)}
+        </td>
+      ))}
       <td className="py-1.5 px-3 text-right tabular-nums font-medium">{total ? num(jumlah(vals)) : ""}</td>
     </tr>
   );
@@ -74,6 +88,7 @@ export default function LpdPage() {
       <p className="text-sm text-gray-500 mb-3">
         Dihitung langsung dari buku besar; sama persis dengan yang dibaca aplikasi mobile. Bulan sebelum tanggal cut-over
         dihitung mundur dari saldo awal.
+        {onLacak && <> Klik angka pada baris akun untuk melacak jurnal sumbernya.</>}
       </p>
       {loading && <div className="text-gray-400">Memuat…</div>}
       {r && n === 0 && !loading && <div className="bg-yellow-50 border border-yellow-200 p-4 rounded">Belum ada data untuk {r.reportTitle} tahun {r.year}.</div>}
@@ -90,7 +105,7 @@ export default function LpdPage() {
             </thead>
             <tbody>
               <tr><td colSpan={n + 2} className="py-2 px-3 font-bold text-green-800 bg-green-50">{r.receiptTitle}</td></tr>
-              {r.receiptLines.map((l) => <Baris key={l.label} label={l.label} vals={l.monthly} indent />)}
+              {r.receiptLines.map((l) => <Baris key={l.label} label={l.label} vals={l.monthly} accountId={l.accountId} indent />)}
               <Baris label="Jumlah Penerimaan" vals={r.receiptTotals} tebal />
               <tr><td colSpan={n + 2} className="py-2 px-3 font-bold text-amber-800 bg-amber-50">{r.usageTitle}</td></tr>
               {r.usageGroups.map((g, gi) => (
@@ -108,12 +123,16 @@ export default function LpdPage() {
   );
 }
 
+LpdPage.propTypes = {
+  onLacak: PropTypes.func,
+};
+
 // eslint-disable-next-line react/prop-types
 function FragmentGrup({ g, n, Baris }) {
   return (
     <>
       {g.title && <tr><td colSpan={n + 2} className="py-1.5 px-3 text-gray-500 font-medium">{g.title}</td></tr>}
-      {g.lines.map((l) => <Baris key={l.label} label={l.label} vals={l.monthly} indent />)}
+      {g.lines.map((l) => <Baris key={l.label} label={l.label} vals={l.monthly} accountId={l.accountId} indent />)}
     </>
   );
 }
