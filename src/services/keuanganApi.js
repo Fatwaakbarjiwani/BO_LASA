@@ -101,4 +101,15 @@ export const keuangan = {
   coaDelete: (id) => api.delete(`/coa/delete/${id}`).then((r) => r.data),
 };
 
+/** Pendaftaran akun dari aplikasi mobile — diverifikasi admin di menu Pengguna > Pendaftar Aplikasi. */
+export const pendaftarMobile = {
+  list: (status = "MENUNGGU") =>
+    api.get("/admin/pendaftar-mobile", { params: { status } }).then((r) => r.data),
+  jumlah: () => api.get("/admin/pendaftar-mobile/jumlah").then((r) => r.data),
+  setujui: (id, b) =>
+    api.post(`/admin/pendaftar-mobile/${id}/setujui`, b).then((r) => r.data),
+  tolak: (id, catatan) =>
+    api.post(`/admin/pendaftar-mobile/${id}/tolak`, { catatan }).then((r) => r.data),
+};
+
 export default api;

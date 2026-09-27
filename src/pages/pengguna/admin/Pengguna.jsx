@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   activeOperator,
@@ -24,11 +24,14 @@ import {
 import ModalOperator from "../../../components/modalPengguna/CreateOperator";
 import { OrbitProgress } from "react-loading-indicators";
 import ModalAdmin from "../../../components/modalPengguna/CreateAdmin";
+import PendaftarMobile from "./PendaftarMobile";
+import { pendaftarMobile } from "../../../services/keuanganApi";
 
 const data = [
   { id: 1, nama: "Operator", value: "operator" },
   { id: 3, nama: "ADMIN Administrasi", value: "administrasi" },
   { id: 2, nama: "Donatur", value: "donatur" },
+  { id: 4, nama: "Pendaftar Aplikasi", value: "pendaftar-mobile" },
 ];
 
 export default function Pengguna() {
@@ -49,6 +52,21 @@ export default function Pengguna() {
   const [typeButton, setTypeButton] = useState("operator");
   const [id, setId] = useState("");
   const [email, setEmail] = useState("");
+  const [jumlahPendaftar, setJumlahPendaftar] = useState(0);
+
+  // Jumlah pendaftar aplikasi mobile yang menunggu verifikasi (badge pada switch "Pendaftar Aplikasi").
+  const muatJumlahPendaftar = useCallback(() => {
+    pendaftarMobile
+      .jumlah()
+      .then((r) => setJumlahPendaftar(r?.menunggu || 0))
+      .catch(() => setJumlahPendaftar(0));
+  }, []);
+
+  useEffect(() => {
+    muatJumlahPendaftar();
+    const t = setInterval(muatJumlahPendaftar, 60000);
+    return () => clearInterval(t);
+  }, [muatJumlahPendaftar]);
 
   useEffect(() => {
     if (
@@ -100,6 +118,11 @@ export default function Pengguna() {
               onClick={() => setTypeButton(item?.value)}
             >
               {item?.nama}
+              {item?.value == "pendaftar-mobile" && jumlahPendaftar > 0 && (
+                <span className="ml-2 inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-red-500 text-white text-xs font-bold">
+                  {jumlahPendaftar}
+                </span>
+              )}
             </button>
           ))}
         </div>
@@ -276,6 +299,9 @@ export default function Pengguna() {
           </div>
         )}
       </div>
+      {typeButton == "pendaftar-mobile" && (
+        <PendaftarMobile onJumlahBerubah={muatJumlahPendaftar} />
+      )}
       {typeButton == "donatur" && (
         <div className={`w-full`}>
           <div className="w-full rounded-md mt-5 overflow-auto">
