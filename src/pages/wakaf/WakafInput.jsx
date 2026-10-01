@@ -3,7 +3,7 @@ import PropTypes from "prop-types";
 import Swal from "sweetalert2";
 import { wakaf } from "../../services/wakafApi";
 import { errMsg } from "../../services/keuanganApi";
-import { Btn, Field, Judul, inputCls, num, today } from "../keuangan/ui";
+import { Btn, Field, Judul, SearchSelect, inputCls, num, today } from "../keuangan/ui";
 
 /*
  * Lima formulir input buku wakaf, sama dengan sheet input laporan BWI:
@@ -22,6 +22,12 @@ const ASET = ["KAS", "PIUTANG", "SURAT_BERHARGA", "LOGAM_MULIA", "ASET_LANCAR_LA
   "ASET_TAK_BERWUJUD", "ASET_TIDAK_LANCAR_LAIN"];
 const akunKelompok = (meta, kelompok) => meta.akun.filter((a) => kelompok.includes(a.kelompok));
 const namaAkun = (meta, kode) => meta?.akun.find((a) => a.kode === kode)?.nama || kode;
+/** Opsi sumber kas (rekening bank/kas), dilengkapi nama bank bila sudah didata lewat menu Sumber Kas. */
+const rekeningOpsi = (meta) =>
+  (meta.rekening || []).map((r) => ({
+    value: r.akunKode,
+    label: r.kodeBank ? `${r.namaBank}${r.noRek ? ` ${r.noRek}` : ""} (${r.akunNama})` : `${r.akunKode} ${r.akunNama}`,
+  }));
 const temporer = (jenis) => (jenis || "").includes("TEMPORER");
 const kreditPenerimaan = (jenis) =>
   jenis.endsWith("PENDEK") && temporer(jenis) ? "2201" : jenis.endsWith("PANJANG") && temporer(jenis) ? "2301" : "4101";
@@ -144,9 +150,12 @@ export function PenerimaanHarta() {
         <input className={inputCls} value={f.nama} onChange={(e) => set("nama", e.target.value)} />
       </Field>
       <Field label="Akun wakaf">
-        <select className={inputCls} value={f.akunKode} onChange={(e) => set("akunKode", e.target.value)}>
-          {akunList.map((a) => <option key={a.kode} value={a.kode}>{a.kode} {a.nama}</option>)}
-        </select>
+        <SearchSelect
+          value={f.akunKode}
+          onChange={(v) => set("akunKode", v)}
+          options={akunList.map((a) => ({ value: a.kode, label: `${a.kode} ${a.nama}` }))}
+          placeholder="Cari akun wakaf…"
+        />
       </Field>
       <Field label="Nilai wajar (Rp)" hint="Appraisal, NJOP (tanah/bangunan), atau nilai pasar"><Rupiah value={f.nilai} onChange={(v) => set("nilai", v)} /></Field>
       <Field label="Nama wakif"><input className={inputCls} value={f.wakifNama} onChange={(e) => set("wakifNama", e.target.value)} /></Field>
@@ -218,14 +227,20 @@ export function MutasiPengelolaan() {
         </select>
       </Field>
       <Field label="Dari akun (dikredit)">
-        <select className={inputCls} value={f.akunAsal} onChange={(e) => set("akunAsal", e.target.value)}>
-          {akunBoleh.map((a) => <option key={a.kode} value={a.kode}>{a.kode} {a.nama}</option>)}
-        </select>
+        <SearchSelect
+          value={f.akunAsal}
+          onChange={(v) => set("akunAsal", v)}
+          options={akunBoleh.map((a) => ({ value: a.kode, label: `${a.kode} ${a.nama}` }))}
+          placeholder="Cari akun…"
+        />
       </Field>
       <Field label="Ke akun (didebit)">
-        <select className={inputCls} value={f.akunTujuan} onChange={(e) => set("akunTujuan", e.target.value)}>
-          {akunBoleh.map((a) => <option key={a.kode} value={a.kode}>{a.kode} {a.nama}</option>)}
-        </select>
+        <SearchSelect
+          value={f.akunTujuan}
+          onChange={(v) => set("akunTujuan", v)}
+          options={akunBoleh.map((a) => ({ value: a.kode, label: `${a.kode} ${a.nama}` }))}
+          placeholder="Cari akun…"
+        />
       </Field>
       <Field label="Nominal (Rp)" hint="Kas keluar ditolak bila saldo kas wakaf tidak cukup"><Rupiah value={f.nominal} onChange={(v) => set("nominal", v)} /></Field>
       <Field label="Harta asal (opsional)">
@@ -330,9 +345,12 @@ export function HasilPengelolaan() {
     >
       <Field label="Tanggal transaksi"><input type="date" className={inputCls} value={f.tanggal} onChange={(e) => set("tanggal", e.target.value)} /></Field>
       <Field label="Jenis hasil pengelolaan">
-        <select className={inputCls} value={f.akunHasil} onChange={(e) => set("akunHasil", e.target.value)}>
-          {jenisList.map((a) => <option key={a.kode} value={a.kode}>{a.nama}</option>)}
-        </select>
+        <SearchSelect
+          value={f.akunHasil}
+          onChange={(v) => set("akunHasil", v)}
+          options={jenisList.map((a) => ({ value: a.kode, label: a.nama }))}
+          placeholder="Cari jenis hasil pengelolaan…"
+        />
       </Field>
       <Field label="Harta benda wakaf sumber (opsional)">
         <select className={inputCls} value={f.hartaId} onChange={(e) => set("hartaId", e.target.value)}>
@@ -341,9 +359,12 @@ export function HasilPengelolaan() {
         </select>
       </Field>
       <Field label={beban ? "Dibayar dari" : "Diterima di"}>
-        <select className={inputCls} value={f.akunKas} onChange={(e) => set("akunKas", e.target.value)}>
-          {meta.akun.filter((a) => a.kelompok === "KAS").map((a) => <option key={a.kode} value={a.kode}>{a.kode} {a.nama}</option>)}
-        </select>
+        <SearchSelect
+          value={f.akunKas}
+          onChange={(v) => set("akunKas", v)}
+          options={rekeningOpsi(meta)}
+          placeholder="Cari sumber kas…"
+        />
       </Field>
       <Field label={beban ? "Nominal (Rp)" : "Perolehan hasil (Rp)"}
         hint={f.akunHasil === "5102" ? "Hak nazhir paling banyak 10% dari hasil bersih pengelolaan (UU 41/2004 Ps. 12)" : undefined}>
@@ -392,9 +413,12 @@ export function PenyaluranMauquf() {
         </select>
       </Field>
       <Field label="Sub kategori">
-        <select className={inputCls} value={f.akunPenyaluran} onChange={(e) => set("akunPenyaluran", e.target.value)}>
-          {subs.map((a) => <option key={a.kode} value={a.kode}>{a.nama}</option>)}
-        </select>
+        <SearchSelect
+          value={f.akunPenyaluran}
+          onChange={(v) => set("akunPenyaluran", v)}
+          options={subs.map((a) => ({ value: a.kode, label: a.nama }))}
+          placeholder="Cari sub kategori…"
+        />
       </Field>
       <Field label="Penerima terdaftar (opsional)" hint="Data dari Administrasi > Mustahik & Mauquf Alaih">
         <select className={inputCls} value={f.mustahikId} onChange={(e) => set("mustahikId", e.target.value)}>
@@ -403,9 +427,12 @@ export function PenyaluranMauquf() {
         </select>
       </Field>
       <Field label="Sumber kas">
-        <select className={inputCls} value={f.akunKas} onChange={(e) => set("akunKas", e.target.value)}>
-          {meta.akun.filter((a) => a.kelompok === "KAS").map((a) => <option key={a.kode} value={a.kode}>{a.kode} {a.nama}</option>)}
-        </select>
+        <SearchSelect
+          value={f.akunKas}
+          onChange={(v) => set("akunKas", v)}
+          options={rekeningOpsi(meta)}
+          placeholder="Cari sumber kas…"
+        />
       </Field>
       <Field label="Nominal (Rp)"><Rupiah value={f.nominal} onChange={(v) => set("nominal", v)} /></Field>
       <Field label="Perantara"><input className={inputCls} value={f.perantara} onChange={(e) => set("perantara", e.target.value)} /></Field>

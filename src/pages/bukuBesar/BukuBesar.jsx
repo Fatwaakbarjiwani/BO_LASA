@@ -7,6 +7,7 @@ import logo2 from "../../assets/logo-lazis.png";
 import { getCategoryCoa } from "../../redux/actions/ziswafAction";
 import Swal from "sweetalert2";
 import DocumentasiBukuBesar from "./DocumentasiBukuBesar";
+import { SearchSelect } from "../keuangan/ui";
 
 export default function BukuBesar() {
   const [format, setFormat] = useState("");
@@ -302,56 +303,29 @@ export default function BukuBesar() {
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Kategori COA Pertama
             </label>
-            <select
+            <SearchSelect
               value={coaId}
-              onChange={(e) => {
-                const selectedOption = e.target.options[e.target.selectedIndex];
-                setCoaId(e.target.value); // Menyimpan ID dari value
-                setCoaName(selectedOption.text); // Mendapatkan accountName dari data attribute
+              onChange={(v) => {
+                setCoaId(v);
+                setCoaName(coaCategory.find((item) => String(item.id) === String(v))?.accountName || "");
               }}
-              className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-            >
-              <option value="" disabled>
-                Pilih Kategori
-              </option>
-              {coaCategory.map((item) => (
-                <option
-                  key={item.id}
-                  value={item.id}
-                  data-account-name={item.accountName}
-                >
-                  {item?.accountCode} {item?.accountName}
-                </option>
-              ))}
-            </select>
+              options={coaCategory.map((item) => ({ value: item.id, label: `${item?.accountCode} ${item?.accountName}` }))}
+              placeholder="Cari kategori COA…"
+            />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Kategori COA Kedua
             </label>
-            <select
+            <SearchSelect
               value={coaId2}
-              onChange={(e) => {
-                const selectedOption = e.target.options[e.target.selectedIndex];
-
-                setCoaId2(e.target.value); // Menyimpan ID dari value
-                setCoaName2(selectedOption.text); // Mendapatkan accountName dari data attribute
+              onChange={(v) => {
+                setCoaId2(v);
+                setCoaName2(coaCategory.find((item) => String(item.id) === String(v))?.accountName || "");
               }}
-              className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-            >
-              <option value="" disabled>
-                Pilih Kategori
-              </option>
-              {coaCategory.map((item) => (
-                <option
-                  key={item.id}
-                  value={item.id}
-                  data-account-name={item.accountName} // Menyimpan accountName di data attribute
-                >
-                  {item?.accountCode} {item?.accountName}
-                </option>
-              ))}
-            </select>
+              options={coaCategory.map((item) => ({ value: item.id, label: `${item?.accountCode} ${item?.accountName}` }))}
+              placeholder="Cari kategori COA…"
+            />
           </div>
         </div>
 

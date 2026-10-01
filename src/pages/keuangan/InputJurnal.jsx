@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import PropTypes from "prop-types";
 import Swal from "sweetalert2";
 import { keuangan, errMsg } from "../../services/keuanganApi";
-import { Btn, DanaBadge, Field, Judul, inputCls, num, rp, today } from "./ui";
+import { Btn, DanaBadge, Field, Judul, SearchSelect, inputCls, num, rp, today } from "./ui";
 
 const TEMPLATE = [
   { id: "PENERIMAAN", nama: "Penerimaan", info: "Zakat, Infaq, DSKL, Wakaf masuk" },
@@ -218,14 +218,20 @@ function FormPenerimaan({ meta, alokasi, onJenisZakatBaru }) {
         )}
         <Field label="Akun penerimaan"
           hint={akunJenisCocok ? undefined : "Belum ada akun COA khusus untuk jenis zakat ini; pilih akun penerimaan zakat yang sesuai (atau buat akunnya di COA dengan jenis penerimaan yang sama)."}>
-          <select className={inputCls} value={f.akunId} onChange={(e) => set("akunId", e.target.value)}>
-            {akunList.map((a) => <option key={a.id} value={a.id}>{a.kode} {a.nama}</option>)}
-          </select>
+          <SearchSelect
+            value={f.akunId}
+            onChange={(v) => set("akunId", v)}
+            options={akunList.map((a) => ({ value: a.id, label: `${a.kode} ${a.nama}` }))}
+            placeholder="Cari akun penerimaan…"
+          />
         </Field>
         <Field label="Masuk ke rekening" hint="Hanya rekening milik dana terpilih yang ditampilkan">
-          <select className={inputCls} value={f.rekId} onChange={(e) => set("rekId", e.target.value)}>
-            {rekList.map((r) => <option key={r.coaId} value={r.coaId}>{r.kas ? "Kas: " : ""}{r.namaBank} {r.noRek}</option>)}
-          </select>
+          <SearchSelect
+            value={f.rekId}
+            onChange={(v) => set("rekId", v)}
+            options={rekList.map((r) => ({ value: r.coaId, label: `${r.kas ? "Kas: " : ""}${r.namaBank} ${r.noRek || ""}` }))}
+            placeholder="Cari rekening…"
+          />
         </Field>
         <Field label="Nominal (rupiah)"><Nominal value={f.nominal} onChange={(v) => set("nominal", v)} /></Field>
       </div>
@@ -340,14 +346,20 @@ function FormPenyaluran({ meta }) {
           </Field>
         </div>
         <Field label="Program / akun pendayagunaan" hint={zakat && akun ? `Asnaf akun ini: ${akun.asnaf || "belum ditentukan (lengkapi di COA)"}` : akun?.bidang ? `Bidang: ${akun.bidang}` : undefined}>
-          <select className={inputCls} value={f.akunId} onChange={(e) => set("akunId", e.target.value)}>
-            {akunList.map((a) => <option key={a.id} value={a.id}>{a.kode} {a.nama}</option>)}
-          </select>
+          <SearchSelect
+            value={f.akunId}
+            onChange={(v) => set("akunId", v)}
+            options={akunList.map((a) => ({ value: a.id, label: `${a.kode} ${a.nama}` }))}
+            placeholder="Cari akun pendayagunaan…"
+          />
         </Field>
         <Field label="Dibayar dari rekening">
-          <select className={inputCls} value={f.rekId} onChange={(e) => set("rekId", e.target.value)}>
-            {rekList.map((r) => <option key={r.coaId} value={r.coaId}>{r.kas ? "Kas: " : ""}{r.namaBank} {r.noRek}</option>)}
-          </select>
+          <SearchSelect
+            value={f.rekId}
+            onChange={(v) => set("rekId", v)}
+            options={rekList.map((r) => ({ value: r.coaId, label: `${r.kas ? "Kas: " : ""}${r.namaBank} ${r.noRek || ""}` }))}
+            placeholder="Cari rekening…"
+          />
         </Field>
         <Field label="Keterangan"><input className={inputCls} value={f.ket} onChange={(e) => set("ket", e.target.value)} /></Field>
         <div className="text-sm text-gray-600">Total penyaluran: <b>{rp(total)}</b></div>
@@ -413,14 +425,20 @@ function FormBeban({ meta }) {
       <div className="space-y-3">
         <Field label="Tanggal"><input type="date" max={today()} className={inputCls} value={f.tanggal} onChange={(e) => set("tanggal", e.target.value)} /></Field>
         <Field label="Akun beban">
-          <select className={inputCls} value={f.akunId} onChange={(e) => set("akunId", e.target.value)}>
-            {akunList.map((a) => <option key={a.id} value={a.id}>{a.kode} {a.nama}</option>)}
-          </select>
+          <SearchSelect
+            value={f.akunId}
+            onChange={(v) => set("akunId", v)}
+            options={akunList.map((a) => ({ value: a.id, label: `${a.kode} ${a.nama}` }))}
+            placeholder="Cari akun beban…"
+          />
         </Field>
         <Field label="Dibayar dari rekening (Dana Pengelola)">
-          <select className={inputCls} value={f.rekId} onChange={(e) => set("rekId", e.target.value)}>
-            {rekList.map((r) => <option key={r.coaId} value={r.coaId}>{r.kas ? "Kas: " : ""}{r.namaBank} {r.noRek}</option>)}
-          </select>
+          <SearchSelect
+            value={f.rekId}
+            onChange={(v) => set("rekId", v)}
+            options={rekList.map((r) => ({ value: r.coaId, label: `${r.kas ? "Kas: " : ""}${r.namaBank} ${r.noRek || ""}` }))}
+            placeholder="Cari rekening…"
+          />
         </Field>
         <Field label="Nominal (rupiah)"><Nominal value={f.nominal} onChange={(v) => set("nominal", v)} /></Field>
         <Field label="Keterangan"><input className={inputCls} value={f.ket} onChange={(e) => set("ket", e.target.value)} /></Field>
@@ -492,14 +510,20 @@ function FormTransfer({ meta }) {
             </select>
           </Field>
           <Field label="Rekening asal">
-            <select className={inputCls} value={f.rekAsal} onChange={(e) => set("rekAsal", e.target.value)}>
-              {rekA.map((r) => <option key={r.coaId} value={r.coaId}>{r.kas ? "Kas: " : ""}{r.namaBank} {r.noRek}</option>)}
-            </select>
+            <SearchSelect
+              value={f.rekAsal}
+              onChange={(v) => set("rekAsal", v)}
+              options={rekA.map((r) => ({ value: r.coaId, label: `${r.kas ? "Kas: " : ""}${r.namaBank} ${r.noRek || ""}` }))}
+              placeholder="Cari rekening…"
+            />
           </Field>
           <Field label="Rekening tujuan">
-            <select className={inputCls} value={f.rekTujuan} onChange={(e) => set("rekTujuan", e.target.value)}>
-              {rekT.map((r) => <option key={r.coaId} value={r.coaId}>{r.kas ? "Kas: " : ""}{r.namaBank} {r.noRek}</option>)}
-            </select>
+            <SearchSelect
+              value={f.rekTujuan}
+              onChange={(v) => set("rekTujuan", v)}
+              options={rekT.map((r) => ({ value: r.coaId, label: `${r.kas ? "Kas: " : ""}${r.namaBank} ${r.noRek || ""}` }))}
+              placeholder="Cari rekening…"
+            />
           </Field>
         </div>
         <Field label="Nominal (rupiah)"><Nominal value={f.nominal} onChange={(v) => set("nominal", v)} /></Field>

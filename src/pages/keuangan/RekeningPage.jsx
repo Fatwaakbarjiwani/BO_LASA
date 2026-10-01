@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Swal from "sweetalert2";
 import { keuangan, errMsg } from "../../services/keuanganApi";
-import { Btn, DanaBadge, Judul, Tabel, inputCls, num, rp } from "./ui";
+import { Btn, DanaBadge, Field, Judul, Modal, SearchSelect, Tabel, inputCls, num, rp } from "./ui";
 
 const RUANG = [
   { id: "ZAKAT", nama: "Ruang Zakat" },
@@ -9,17 +9,41 @@ const RUANG = [
   { id: "WAKAF", nama: "Ruang Wakaf" },
 ];
 
+const DANA_POKOK = ["ZAKAT", "INFAQ_SHODAQOH", "DSKL", "AMIL", "MPZIS"];
+const REKENING_KOSONG = { coaId: "", kodeBank: "", namaBank: "", noRek: "", isKas: false, danaPokok: "ZAKAT" };
+
 export default function RekeningPage() {
   const [ruang, setRuang] = useState("ZAKAT");
   const [h, setH] = useState(null);
   const [master, setMaster] = useState([]);
+  const [coa, setCoa] = useState([]);
   const [edit, setEdit] = useState({});
+  const [form, setForm] = useState(null);
 
   const muat = useCallback(() => {
     keuangan.harian(ruang).then(setH).catch((e) => Swal.fire("Gagal", errMsg(e), "error"));
     keuangan.rekening().then(setMaster).catch(() => {});
+    keuangan.coaAll().then(setCoa).catch(() => {});
   }, [ruang]);
   useEffect(() => { muat(); }, [muat]);
+
+  const akunBelumTerdaftar = coa.filter((c) => c.kelompok === "KAS_BANK" && !master.some((m) => String(m.coaId) === String(c.id)));
+
+  const bukaTambah = () => setForm({ ...REKENING_KOSONG, coaId: akunBelumTerdaftar[0]?.id || "" });
+  const bukaEdit = (m) => setForm({
+    coaId: m.coaId, kodeBank: m.kodeBank, namaBank: m.namaBank, noRek: m.noRek || "",
+    isKas: !!m.kas, danaPokok: m.danaPokok, editId: m.coaId,
+  });
+
+  const simpanRekening = async (e) => {
+    e.preventDefault();
+    try {
+      if (form.editId) await keuangan.rekeningUbah(form.editId, form);
+      else await keuangan.rekeningBaru(form);
+      setForm(null);
+      muat();
+    } catch (err) { Swal.fire("Ditolak", errMsg(err), "error"); }
+  };
 
   const simpanSaldo = async (id) => {
     const v = edit[id];
@@ -84,7 +108,15 @@ export default function RekeningPage() {
             ]}
             baris={h.fundPockets.map((p, i) => ({ ...p, id: i }))}
           />
-          <h2 className="font-semibold mt-5 mb-2">Master rekening</h2>
+          <h2 className="font-semibold mt-5 mb-2 flex items-center justify-between">
+            Master rekening (sumber kas)
+            <Btn onClick={bukaTambah} disabled={!akunBelumTerdaftar.length}>+ Tambah rekening</Btn>
+          </h2>
+          {!akunBelumTerdaftar.length && (
+            <p className="text-xs text-gray-400 mb-2">
+              Semua akun berkelompok KAS_BANK sudah terdaftar. Buat dulu akun barunya di Daftar Akun (COA) bila perlu rekening baru.
+            </p>
+          )}
           <Tabel
             kolom={[
               { judul: "Kode", kunci: "kode" },
@@ -93,10 +125,44 @@ export default function RekeningPage() {
               { judul: "No. (tersamar)", kunci: "noRek" },
               { judul: "Dana", tampil: (m) => <DanaBadge dana={m.dana} /> },
               { judul: "Kas", tampil: (m) => (m.kas ? "ya" : "") },
+              { judul: "Status", tampil: (m) => (m.aktif ? "aktif" : "nonaktif") },
+              { judul: "", tampil: (m) => <Btn color="amber" onClick={() => bukaEdit(m)}>Edit</Btn> },
             ]}
             baris={master.map((m) => ({ ...m, id: m.coaId }))}
           />
         </>
+      )}
+      {form && (
+        <Modal title={form.editId ? "Ubah rekening" : "Tambah rekening baru"} onClose={() => setForm(null)}>
+          <form onSubmit={simpanRekening} className="space-y-3">
+            <Field label="Akun COA (kelompok KAS_BANK)">
+              {form.editId ? (
+                <input className={inputCls} disabled value={coa.find((c) => String(c.id) === String(form.coaId))?.accountName || ""} />
+              ) : (
+                <SearchSelect
+                  value={form.coaId}
+                  onChange={(v) => setForm({ ...form, coaId: v })}
+                  options={akunBelumTerdaftar.map((c) => ({ value: c.id, label: `${c.accountCode} ${c.accountName}` }))}
+                  placeholder="Cari akun kas/bank…"
+                />
+              )}
+            </Field>
+            <Field label="Kode bank" hint="Kode singkat, sama dengan yang dipakai aplikasi mobile (mis. BSI, MDR)">
+              <input required className={inputCls} value={form.kodeBank} onChange={(e) => setForm({ ...form, kodeBank: e.target.value })} />
+            </Field>
+            <Field label="Nama bank / rekening">
+              <input required className={inputCls} value={form.namaBank} onChange={(e) => setForm({ ...form, namaBank: e.target.value })} />
+            </Field>
+            <Field label="No. rekening (tersamar)"><input className={inputCls} value={form.noRek} onChange={(e) => setForm({ ...form, noRek: e.target.value })} /></Field>
+            <Field label="Dana pokok">
+              <select className={inputCls} value={form.danaPokok} onChange={(e) => setForm({ ...form, danaPokok: e.target.value })}>
+                {DANA_POKOK.map((d) => <option key={d}>{d}</option>)}
+              </select>
+            </Field>
+            <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={form.isKas} onChange={(e) => setForm({ ...form, isKas: e.target.checked })} /> Kas tunai (bukan rekening bank)</label>
+            <Btn className="w-full" color="green" type="submit" disabled={!form.coaId}>Simpan</Btn>
+          </form>
+        </Modal>
       )}
     </div>
   );

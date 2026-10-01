@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from "react";
 import PropTypes from "prop-types";
 
 export const rp = (v) =>
@@ -51,6 +52,64 @@ Field.propTypes = {
 
 export const inputCls =
   "w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white";
+
+/**
+ * Pengganti <select> untuk daftar panjang (mis. daftar akun COA): ketik untuk menyaring opsi,
+ * klik untuk memilih. `options` = [{value, label}]. Menampilkan label opsi terpilih saat tidak
+ * fokus, dan kotak pencarian saat fokus/mengetik.
+ */
+export function SearchSelect({ value, onChange, options, placeholder = "Cari…", className = "" }) {
+  const [open, setOpen] = useState(false);
+  const [q, setQ] = useState("");
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const onDocClick = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener("mousedown", onDocClick);
+    return () => document.removeEventListener("mousedown", onDocClick);
+  }, []);
+
+  const selected = options.find((o) => String(o.value) === String(value));
+  const filtered = q.trim()
+    ? options.filter((o) => o.label.toLowerCase().includes(q.trim().toLowerCase()))
+    : options;
+
+  return (
+    <div className="relative" ref={ref}>
+      <input
+        className={`${inputCls} ${className}`}
+        value={open ? q : (selected?.label ?? "")}
+        placeholder={placeholder}
+        onFocus={() => { setOpen(true); setQ(""); }}
+        onChange={(e) => { setQ(e.target.value); setOpen(true); }}
+      />
+      {open && (
+        <div className="absolute z-20 mt-1 w-full max-h-64 overflow-y-auto bg-white border border-gray-300 rounded-lg shadow-lg">
+          {filtered.length === 0 && <div className="px-3 py-2 text-sm text-gray-400">Tidak ditemukan</div>}
+          {filtered.map((o) => (
+            <div
+              key={o.value}
+              className={`px-3 py-2 text-sm cursor-pointer hover:bg-blue-50 ${String(o.value) === String(value) ? "bg-blue-50 font-medium" : ""}`}
+              onMouseDown={() => { onChange(o.value); setOpen(false); setQ(""); }}
+            >
+              {o.label}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+SearchSelect.propTypes = {
+  value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  onChange: PropTypes.func.isRequired,
+  options: PropTypes.arrayOf(PropTypes.shape({
+    value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+    label: PropTypes.string.isRequired,
+  })).isRequired,
+  placeholder: PropTypes.string,
+  className: PropTypes.string,
+};
 
 export function Btn({ color = "blue", className = "", ...props }) {
   const c = {

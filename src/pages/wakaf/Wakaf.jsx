@@ -1,14 +1,20 @@
 import { useState } from "react";
 import PropTypes from "prop-types";
 import { HasilPengelolaan, MutasiPengelolaan, PenerimaanHarta, PengukuranUlang, PenyaluranMauquf } from "./WakafInput";
-import { DaftarAkunWakaf, DaftarHarta, DaftarJurnalWakaf, WakafOnline } from "./WakafData";
+import { DaftarAkunWakaf, DaftarHarta, DaftarJurnalWakaf, SumberKasWakaf, WakafOnline } from "./WakafData";
 import { BukuBesarWakaf, LaporanWakaf, WakafTemporer } from "./WakafLaporan";
+import MustahikPage from "../keuangan/MustahikPage";
 
 const Lap = (jenis) => {
   const C = () => <LaporanWakaf jenis={jenis} />;
   C.displayName = `Laporan-${jenis}`;
   return C;
 };
+
+// Master Mauquf 'Alaih (penerima manfaat wakaf) dipindah ke sini dari Administrasi, supaya
+// data master wakaf terkumpul di satu menu. Halamannya sama dengan Mustahik (satu tabel di
+// backend, dibedakan lewat jenisPenerima), hanya dikunci ke jenis MAUQUF_ALAIH.
+const MauqufAlaihPage = () => <MustahikPage jenisTetap="MAUQUF_ALAIH" />;
 
 /**
  * Menu Wakaf: buku wakaf terpisah dari Administrasi Keuangan ZIS (tabel dan laporan sendiri).
@@ -32,6 +38,8 @@ const GRUP = [
       ["harta", "Daftar Harta Wakaf", DaftarHarta],
       ["jurnal", "Daftar Jurnal", DaftarJurnalWakaf],
       ["akun", "Daftar Akun", DaftarAkunWakaf],
+      ["sumberKas", "Sumber Kas", SumberKasWakaf],
+      ["mauquf", "Master Mauquf Alaih", MauqufAlaihPage],
     ],
   },
   {

@@ -31,7 +31,7 @@ const GRUP = [
       ["coa", "Daftar Akun (COA)", CoaPage],
       ["saldoAwal", "Saldo Awal", SaldoAwal],
       ["rekening", "Rekening & Harian", RekeningPage],
-      ["mustahik", "Mustahik & Mauquf Alaih", MustahikPage],
+      ["mustahik", "Mustahik", MustahikPage],
     ],
   },
   {
@@ -90,7 +90,10 @@ export default function Administrasi({ initial } = {}) {
   const aktif = GRUP.flatMap((g) => g.item).find(([id]) => id === page);
   const Halaman = aktif ? aktif[2] : null;
   const propsHalaman =
-    page === "lpd" ? { onLacak: trace } : page === "daftarJurnal" ? { initialFilter: lacak } : {};
+    page === "lpd" ? { onLacak: trace }
+      : page === "daftarJurnal" ? { initialFilter: lacak }
+      : page === "mustahik" ? { jenisTetap: "MUSTAHIK" }
+      : {};
 
   return (
     <div className="space-y-4">

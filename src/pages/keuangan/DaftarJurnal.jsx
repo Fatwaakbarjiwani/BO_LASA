@@ -2,7 +2,24 @@ import { useCallback, useEffect, useState } from "react";
 import PropTypes from "prop-types";
 import Swal from "sweetalert2";
 import { keuangan, errMsg } from "../../services/keuanganApi";
-import { Btn, DanaBadge, Judul, Modal, Tabel, inputCls, rp } from "./ui";
+import { Btn, DanaBadge, Judul, Modal, SearchSelect, Tabel, inputCls, rp } from "./ui";
+
+const hariIni = () => new Date().toISOString().slice(0, 10);
+
+/** Unduh baris jurnal yang sedang tampil (sudah terfilter) sebagai CSV. */
+function unduhJurnalCsv(rows, namaAkun) {
+  const kolom = [
+    ["No. Bukti", (j) => j.nomorBukti], ["Tanggal", (j) => String(j.tanggal).slice(0, 10)],
+    ["Jenis", (j) => j.jenis], ["Dana", (j) => j.dana], ["Keterangan", (j) => j.keterangan],
+    ["Nilai", (j) => j.total], ["Status", (j) => j.status],
+  ];
+  const table = [kolom.map(([judul]) => judul), ...rows.map((j) => kolom.map(([, ambil]) => ambil(j)))];
+  const csv = table.map((row) => row.map((c) => `"${String(c ?? "").replace(/"/g, '""')}"`).join(";")).join("\n");
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8" }));
+  a.download = `Daftar-Jurnal${namaAkun ? `-${namaAkun.replace(/\s+/g, "-")}` : ""}-${hariIni()}.csv`;
+  a.click();
+}
 
 const STATUS_WARNA = {
   POSTED: "bg-green-100 text-green-800",
@@ -20,6 +37,7 @@ const KOSONG = { dana: "", jenis: "", periode: "", status: "", q: "", akun: "" }
  */
 export default function DaftarJurnal({ initialFilter }) {
   const [rows, setRows] = useState([]);
+  const [rekening, setRekening] = useState([]);
   const [f, setF] = useState(() => (initialFilter ? { ...KOSONG, ...initialFilter } : KOSONG));
   const [detail, setDetail] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -27,6 +45,12 @@ export default function DaftarJurnal({ initialFilter }) {
   useEffect(() => {
     if (initialFilter) setF({ ...KOSONG, ...initialFilter });
   }, [initialFilter]);
+
+  // Rekening bank/kas untuk filter "per rekening bank" (kelompok KAS_BANK), dipakai juga untuk nama file unduhan.
+  useEffect(() => {
+    keuangan.coaAll().then((all) => setRekening(all.filter((r) => r.kelompok === "KAS_BANK")))
+      .catch(() => setRekening([]));
+  }, []);
 
   const muat = useCallback(() => {
     setLoading(true);
@@ -57,16 +81,25 @@ export default function DaftarJurnal({ initialFilter }) {
     }
   };
 
+  const akunTerpilih = rekening.find((r) => String(r.id) === String(f.akun));
   return (
     <div>
-      <Judul aksi={<Btn color="gray" onClick={muat}>{loading ? "Memuat…" : "Muat ulang"}</Btn>}>Daftar Jurnal</Judul>
+      <Judul
+        aksi={
+          <Btn color="gray" onClick={() => unduhJurnalCsv(rows, akunTerpilih ? `${akunTerpilih.accountCode}-${akunTerpilih.accountName}` : f.akunLabel)} disabled={!rows.length}>
+            Unduh CSV
+          </Btn>
+        }
+      >
+        Daftar Jurnal
+      </Judul>
       {f.akun && (
         <div className="mb-3 flex items-center gap-2 bg-blue-50 border border-blue-200 text-blue-800 text-sm rounded-lg px-3 py-2 w-fit">
           <span>Menelusuri akun: <b>{f.akunLabel || f.akun}</b>{f.periode ? ` · ${f.periode}` : ""}</span>
           <button className="text-blue-500 hover:text-blue-800 font-bold" onClick={() => setF({ ...f, akun: "", akunLabel: "" })} title="Hapus filter akun">×</button>
         </div>
       )}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-2 mb-3">
+      <div className="grid grid-cols-2 md:grid-cols-6 gap-2 mb-3">
         <select className={inputCls} value={f.dana} onChange={(e) => setF({ ...f, dana: e.target.value })}>
           <option value="">Semua dana</option>
           {["ZAKAT", "INFAQ", "DSKL", "PENGELOLA", "WAKAF"].map((d) => <option key={d}>{d}</option>)}
@@ -75,6 +108,18 @@ export default function DaftarJurnal({ initialFilter }) {
           <option value="">Semua jenis</option>
           {["PENERIMAAN", "PENYALURAN", "BEBAN_OPERASIONAL", "TRANSFER_DANA", "ALOKASI_AMIL", "BAGI_HASIL_BANK", "PENYESUAIAN"].map((d) => <option key={d}>{d}</option>)}
         </select>
+        <SearchSelect
+          value={f.akun}
+          onChange={(v) => {
+            const r = rekening.find((x) => String(x.id) === String(v));
+            setF({ ...f, akun: v, akunLabel: r ? `${r.accountCode} ${r.accountName}` : "" });
+          }}
+          options={[
+            { value: "", label: "Semua rekening bank" },
+            ...rekening.map((r) => ({ value: r.id, label: `${r.accountCode} ${r.accountName}` })),
+          ]}
+          placeholder="Cari rekening bank…"
+        />
         <input type="month" className={inputCls} value={f.periode} onChange={(e) => setF({ ...f, periode: e.target.value })} />
         <select className={inputCls} value={f.status} onChange={(e) => setF({ ...f, status: e.target.value })}>
           <option value="">Semua status</option>

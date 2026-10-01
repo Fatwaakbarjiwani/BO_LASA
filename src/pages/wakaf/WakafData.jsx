@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import Swal from "sweetalert2";
 import { wakaf } from "../../services/wakafApi";
 import { errMsg } from "../../services/keuanganApi";
-import { Btn, Judul, Modal, Tabel, inputCls, num, rp } from "../keuangan/ui";
+import { Btn, Field, Judul, Modal, SearchSelect, Tabel, inputCls, num, rp } from "../keuangan/ui";
 import { useWakafMeta } from "./WakafInput";
 
 const JENIS_JURNAL = {
@@ -10,6 +10,18 @@ const JENIS_JURNAL = {
   HASIL_PENGELOLAAN: "Hasil Pengelolaan", PENYALURAN: "Penyaluran", SALDO_AWAL: "Saldo Awal", PENYESUAIAN: "Penyesuaian",
 };
 const gagal = (e) => Swal.fire("Gagal", errMsg(e), "error");
+const hariIni = () => new Date().toISOString().slice(0, 10);
+
+/** Unduh baris tabel (array objek datar) sebagai CSV; `kolom` = [judul, kunciAtauFungsi][]. */
+function unduhCsvBaris(namaFile, kolom, baris) {
+  const rows = [kolom.map(([judul]) => judul)];
+  baris.forEach((r) => rows.push(kolom.map(([, ambil]) => (typeof ambil === "function" ? ambil(r) : r[ambil]))));
+  const csv = rows.map((row) => row.map((c) => `"${String(c ?? "").replace(/"/g, '""')}"`).join(";")).join("\n");
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8" }));
+  a.download = `${namaFile}-${hariIni()}.csv`;
+  a.click();
+}
 
 // ------------------------------------------------------------------ Daftar harta benda wakaf
 
@@ -22,6 +34,13 @@ export function DaftarHarta() {
   }, [f]);
   useEffect(() => { muat(); }, [muat]);
   const total = rows.reduce((s, r) => s + r.currentValue, 0);
+  const eksporCsv = () => unduhCsvBaris("Daftar-Harta-Wakaf", [
+    ["Nama harta", "name"], ["Wakif", "wakif"], ["Jenis", "typeLabel"], ["Akun", "account"],
+    ["Tanggal perolehan", "acquiredAt"], ["Jangka waktu", "term"], ["Jatuh tempo", (r) => r.dueDate || ""],
+    ["AIW", (r) => (r.hasAiw ? "Ada" : "Tidak")], ["Sertifikat", (r) => (r.hasCertificate ? "Ada" : "Tidak")],
+    ["Jenis wakaf", (r) => (r.purpose === "SOSIAL" ? "Sosial" : "Produktif")],
+    ["Nilai awal", "initialValue"], ["Nilai kini", "currentValue"],
+  ], rows);
   return (
     <div>
       <Judul
@@ -32,6 +51,7 @@ export function DaftarHarta() {
               {meta?.jenisHbw.map((j) => <option key={j.kode} value={j.kode}>{j.nama}</option>)}
             </select>
             <input className={inputCls} placeholder="Cari nama harta / wakif" value={f.q} onChange={(e) => setF({ ...f, q: e.target.value })} />
+            <Btn color="gray" onClick={eksporCsv} disabled={!rows.length}>Unduh CSV</Btn>
           </>
         }
       >
@@ -201,11 +221,33 @@ const KELOMPOK = {
   BEBAN_PENGELOLAAN: "Beban Pengelolaan", PENYALURAN: "Penyaluran",
 };
 
+const KOSONG_AKUN = { kode: "", nama: "", kelompok: "KAS", normal: "D", grup: "", urut: 100, aktif: true };
+
 export function DaftarAkunWakaf() {
-  const [meta] = useWakafMeta();
+  const [rows, setRows] = useState([]);
+  const [form, setForm] = useState(null);
+  const muat = useCallback(() => wakaf.akunSemua().then(setRows).catch(gagal), []);
+  useEffect(() => { muat(); }, [muat]);
+
+  const bukaTambah = () => setForm({ ...KOSONG_AKUN });
+  const bukaEdit = (a) => setForm({
+    kode: a.kode, nama: a.nama, kelompok: a.kelompok, normal: a.normal, grup: a.grup || "",
+    urut: a.urut, aktif: !!a.aktif, sistem: !!a.sistem, editKode: a.kode,
+  });
+
+  const simpan = async (e) => {
+    e.preventDefault();
+    try {
+      if (form.editKode) await wakaf.akunUbah(form.editKode, form);
+      else await wakaf.akunBaru(form);
+      setForm(null);
+      muat();
+    } catch (err) { gagal(err); }
+  };
+
   return (
     <div>
-      <Judul>Daftar Akun Wakaf</Judul>
+      <Judul aksi={<Btn onClick={bukaTambah}>+ Tambah akun</Btn>}>Daftar Akun Wakaf</Judul>
       <p className="text-sm text-gray-500 mb-3">Akun mengikuti &quot;Jenis Akun&quot; laporan BWI dan daftar akun PSAK 412. Terpisah dari COA ZIS.</p>
       <Tabel
         kolom={[
@@ -214,9 +256,142 @@ export function DaftarAkunWakaf() {
           { judul: "Kelompok", tampil: (a) => KELOMPOK[a.kelompok] || a.kelompok },
           { judul: "Kategori", tampil: (a) => a.grup || "" },
           { judul: "Saldo normal", tampil: (a) => (a.normal === "D" ? "Debit" : "Kredit") },
+          { judul: "Status", tampil: (a) => (a.aktif ? "aktif" : "nonaktif") },
+          { judul: "", tampil: (a) => <Btn color="amber" onClick={() => bukaEdit(a)}>Edit</Btn> },
         ]}
-        baris={meta?.akun || []}
+        baris={rows.map((a) => ({ ...a, id: a.kode }))}
       />
+      {form && (
+        <Modal title={form.editKode ? "Ubah akun" : "Akun baru"} onClose={() => setForm(null)}>
+          <form onSubmit={simpan} className="space-y-3">
+            {form.editKode && form.sistem && (
+              <div className="bg-amber-50 border border-amber-200 text-amber-800 text-sm rounded p-2">
+                Akun bawaan format BWI: hanya kategori dan status aktif yang bisa diubah, supaya peta jurnal tetap aman.
+              </div>
+            )}
+            <Field label="Kode akun">
+              <input required disabled={!!form.editKode} className={inputCls} value={form.kode} onChange={(e) => setForm({ ...form, kode: e.target.value })} />
+            </Field>
+            <Field label="Nama akun">
+              <input required disabled={form.editKode && form.sistem} className={inputCls} value={form.nama} onChange={(e) => setForm({ ...form, nama: e.target.value })} />
+            </Field>
+            <Field label="Kelompok">
+              <select disabled={form.editKode && form.sistem} className={inputCls} value={form.kelompok} onChange={(e) => setForm({ ...form, kelompok: e.target.value })}>
+                {Object.entries(KELOMPOK).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+              </select>
+            </Field>
+            <Field label="Saldo normal">
+              <select disabled={form.editKode && form.sistem} className={inputCls} value={form.normal} onChange={(e) => setForm({ ...form, normal: e.target.value })}>
+                <option value="D">Debit</option>
+                <option value="K">Kredit</option>
+              </select>
+            </Field>
+            <Field label="Kategori (opsional)" hint="Mis. kategori mauquf alaih untuk akun Penyaluran">
+              <input className={inputCls} value={form.grup} onChange={(e) => setForm({ ...form, grup: e.target.value })} />
+            </Field>
+            <Field label="Urutan tampil">
+              <input type="number" disabled={form.editKode && form.sistem} className={inputCls} value={form.urut} onChange={(e) => setForm({ ...form, urut: e.target.value })} />
+            </Field>
+            {form.editKode && (
+              <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={form.aktif} onChange={(e) => setForm({ ...form, aktif: e.target.checked })} /> Aktif</label>
+            )}
+            <Btn className="w-full" color="green" type="submit">Simpan</Btn>
+          </form>
+        </Modal>
+      )}
+    </div>
+  );
+}
+
+// ------------------------------------------------------------------ Sumber kas wakaf (rekening bank/kas)
+
+const BARU = "__BARU__";
+const KOSONG_SUMBER_KAS = { pilihAkun: "", kodeBaru: "", namaBaru: "", kodeBank: "", namaBank: "", noRek: "", isKas: false };
+
+export function SumberKasWakaf() {
+  const [meta] = useWakafMeta();
+  const [rows, setRows] = useState([]);
+  const [form, setForm] = useState(null);
+  const muat = useCallback(() => wakaf.sumberKas().then(setRows).catch(gagal), []);
+  useEffect(() => { muat(); }, [muat]);
+
+  const akunBelumTerdaftar = (meta?.akun || []).filter((a) => a.kelompok === "KAS" && !rows.some((r) => r.akunKode === a.kode));
+
+  const bukaTambah = () => setForm({ ...KOSONG_SUMBER_KAS, pilihAkun: akunBelumTerdaftar[0]?.kode || BARU });
+  const bukaEdit = (r) => setForm({
+    pilihAkun: r.akunKode, kodeBaru: "", namaBaru: "", kodeBank: r.kodeBank, namaBank: r.namaBank,
+    noRek: r.noRek || "", isKas: !!r.kas, editKode: r.akunKode,
+  });
+
+  const simpan = async (e) => {
+    e.preventDefault();
+    try {
+      if (form.editKode) {
+        await wakaf.sumberKasUbah(form.editKode, form);
+      } else {
+        const akunBaru = form.pilihAkun === BARU;
+        await wakaf.sumberKasBaru({
+          akunKode: akunBaru ? null : form.pilihAkun,
+          kodeBaru: akunBaru ? form.kodeBaru : null, namaBaru: akunBaru ? form.namaBaru : null,
+          kodeBank: form.kodeBank, namaBank: form.namaBank, noRek: form.noRek, isKas: form.isKas,
+        });
+      }
+      setForm(null);
+      muat();
+    } catch (err) { gagal(err); }
+  };
+
+  const akunBaru = form && !form.editKode && form.pilihAkun === BARU;
+
+  return (
+    <div>
+      <Judul aksi={<Btn onClick={bukaTambah}>+ Tambah sumber kas</Btn>}>Sumber Kas Wakaf</Judul>
+      <p className="text-sm text-gray-500 mb-3">
+        Rekening bank / kas tunai yang dipakai sebagai sumber dan tujuan kas pada input Hasil Pengelolaan dan
+        Penyaluran Mauquf Alaih. Bisa ditambah tanpa menyentuh database langsung.
+      </p>
+      <Tabel
+        kolom={[
+          { judul: "Kode akun", kunci: "akunKode" },
+          { judul: "Akun wakaf", kunci: "akunNama" },
+          { judul: "Bank", tampil: (r) => `${r.kodeBank} · ${r.namaBank}` },
+          { judul: "No. (tersamar)", kunci: "noRek" },
+          { judul: "Kas", tampil: (r) => (r.kas ? "ya" : "") },
+          { judul: "Status", tampil: (r) => (r.aktif ? "aktif" : "nonaktif") },
+          { judul: "", tampil: (r) => <Btn color="amber" onClick={() => bukaEdit(r)}>Edit</Btn> },
+        ]}
+        baris={rows}
+      />
+      {form && (
+        <Modal title={form.editKode ? "Ubah sumber kas" : "Tambah sumber kas"} onClose={() => setForm(null)}>
+          <form onSubmit={simpan} className="space-y-3">
+            {!form.editKode && (
+              <Field label="Akun KAS" hint="Pilih akun kas yang sudah ada, atau buat akun baru untuk rekening ini">
+                <SearchSelect
+                  value={form.pilihAkun}
+                  onChange={(v) => setForm({ ...form, pilihAkun: v })}
+                  options={[
+                    ...akunBelumTerdaftar.map((a) => ({ value: a.kode, label: `${a.kode} ${a.nama}` })),
+                    { value: BARU, label: "+ Buat akun KAS baru…" },
+                  ]}
+                  placeholder="Cari akun kas…"
+                />
+              </Field>
+            )}
+            {akunBaru && (
+              <>
+                <Field label="Kode akun baru" hint="mis. 1104"><input required className={inputCls} value={form.kodeBaru} onChange={(e) => setForm({ ...form, kodeBaru: e.target.value })} /></Field>
+                <Field label="Nama akun baru" hint="mis. Bank BSI Wakaf"><input required className={inputCls} value={form.namaBaru} onChange={(e) => setForm({ ...form, namaBaru: e.target.value })} /></Field>
+              </>
+            )}
+            <Field label="Kode bank" hint="Kode singkat, sama dengan aplikasi mobile"><input required className={inputCls} value={form.kodeBank} onChange={(e) => setForm({ ...form, kodeBank: e.target.value })} /></Field>
+            <Field label="Nama bank / rekening"><input required className={inputCls} value={form.namaBank} onChange={(e) => setForm({ ...form, namaBank: e.target.value })} /></Field>
+            <Field label="No. rekening (tersamar)"><input className={inputCls} value={form.noRek} onChange={(e) => setForm({ ...form, noRek: e.target.value })} /></Field>
+            <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={form.isKas} onChange={(e) => setForm({ ...form, isKas: e.target.checked })} /> Kas tunai (bukan rekening bank)</label>
+            <Btn className="w-full" color="green" type="submit">Simpan</Btn>
+          </form>
+        </Modal>
+      )}
     </div>
   );
 }

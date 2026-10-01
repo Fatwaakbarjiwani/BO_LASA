@@ -58,6 +58,7 @@ export const keuangan = {
     api.delete(`/keuangan/mustahik/${id}`).then((r) => r.data),
 
   rekening: () => api.get("/keuangan/rekening").then((r) => r.data),
+  rekeningBaru: (b) => api.post("/keuangan/rekening", b).then((r) => r.data),
   rekeningUbah: (id, b) =>
     api.put(`/keuangan/rekening/${id}`, b).then((r) => r.data),
 

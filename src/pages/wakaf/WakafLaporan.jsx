@@ -3,7 +3,7 @@ import PropTypes from "prop-types";
 import Swal from "sweetalert2";
 import { wakaf } from "../../services/wakafApi";
 import { errMsg } from "../../services/keuanganApi";
-import { Btn, Judul, Tabel, inputCls, num } from "../keuangan/ui";
+import { Btn, Judul, SearchSelect, Tabel, inputCls, num } from "../keuangan/ui";
 import { useWakafMeta } from "./WakafInput";
 
 const hariIni = () => new Date().toISOString().slice(0, 10);
@@ -148,9 +148,13 @@ export function BukuBesarWakaf() {
       <Judul
         aksi={
           <>
-            <select className={inputCls} value={p.akun} onChange={(e) => setP({ ...p, akun: e.target.value })}>
-              {meta?.akun.map((a) => <option key={a.kode} value={a.kode}>{a.kode} {a.nama}</option>)}
-            </select>
+            <SearchSelect
+              value={p.akun}
+              onChange={(v) => setP({ ...p, akun: v })}
+              options={(meta?.akun || []).map((a) => ({ value: a.kode, label: `${a.kode} ${a.nama}` }))}
+              placeholder="Cari akun…"
+              className="w-56"
+            />
             <input type="date" className={inputCls} value={p.from} onChange={(e) => setP({ ...p, from: e.target.value })} />
             <input type="date" className={inputCls} value={p.to} onChange={(e) => setP({ ...p, to: e.target.value })} />
           </>

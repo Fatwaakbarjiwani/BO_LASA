@@ -35,4 +35,12 @@ export const wakaf = {
     api.post("/online/catat", { jenisHbw }, { params: { nomorBukti } }).then(data),
 
   laporan: (jenis, params) => api.get(`/laporan/${jenis}`, { params }).then(data),
+
+  sumberKas: () => api.get("/sumber-kas").then(data),
+  sumberKasBaru: (b) => api.post("/sumber-kas", b).then(data),
+  sumberKasUbah: (akunKode, b) => api.put(`/sumber-kas/${akunKode}`, b).then(data),
+
+  akunSemua: () => api.get("/akun").then(data),
+  akunBaru: (b) => api.post("/akun", b).then(data),
+  akunUbah: (kode, b) => api.put(`/akun/${kode}`, b).then(data),
 };

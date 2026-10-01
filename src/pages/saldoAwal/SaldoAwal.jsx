@@ -26,8 +26,8 @@ export default function   SaldoAwal() {
           id: item.id,
           code: item.accountCode,
           rekening: item.accountName,
-          debet: 0,
-          kredit: 0,
+          accountType: item.accountType,
+          nilai: 0,
         }))
       );
     }
@@ -92,10 +92,7 @@ export default function   SaldoAwal() {
                 Rekening
               </th>
               <th className="px-4 py-2 text-left text-sm font-medium text-gray-600">
-                Debet
-              </th>
-              <th className="px-4 py-2 text-left text-sm font-medium text-gray-600">
-                Kredit
+                Nilai
               </th>
             </tr>
           </thead>
@@ -106,10 +103,7 @@ export default function   SaldoAwal() {
                 <td className="px-4 py-2 text-gray-700">{row.accountCode}</td>
                 <td className="px-4 py-2 text-gray-700">{row.accountName}</td>
                 <td className="px-4 py-2">
-                  {formatCurrency(row.debit.toString())}
-                </td>
-                <td className="px-4 py-2">
-                  {formatCurrency(row.kredit.toString())}
+                  {formatCurrency(row.saldoAwal.toString())}
                 </td>
               </tr>
             ))}
@@ -130,10 +124,7 @@ export default function   SaldoAwal() {
                   Rekening
                 </th>
                 <th className="px-4 py-2 text-left text-sm font-medium text-gray-600">
-                  Debet
-                </th>
-                <th className="px-4 py-2 text-left text-sm font-medium text-gray-600">
-                  Kredit
+                  Nilai
                 </th>
               </tr>
             </thead>
@@ -146,19 +137,9 @@ export default function   SaldoAwal() {
                   <td className="px-4 py-2">
                     <input
                       type="text"
-                      value={formatCurrency(row.debet.toString())}
+                      value={formatCurrency(row.nilai.toString())}
                       onChange={(e) =>
-                        handleRowChange(index, "debet", e.target.value)
-                      }
-                      className="w-full p-2 border border-gray-300 rounded-lg"
-                    />
-                  </td>
-                  <td className="px-4 py-2">
-                    <input
-                      type="text"
-                      value={formatCurrency(row.kredit.toString())}
-                      onChange={(e) =>
-                        handleRowChange(index, "kredit", e.target.value)
+                        handleRowChange(index, "nilai", e.target.value)
                       }
                       className="w-full p-2 border border-gray-300 rounded-lg"
                     />
@@ -170,10 +151,7 @@ export default function   SaldoAwal() {
                   Total
                 </td>
                 <td className="px-4 py-2 text-gray-700 font-bold">
-                  {formatCurrency(getTotal("debet").toString())}
-                </td>
-                <td className="px-4 py-2 text-gray-700 font-bold">
-                  {formatCurrency(getTotal("kredit").toString())}
+                  {formatCurrency(getTotal("nilai").toString())}
                 </td>
               </tr>
             </tbody>
