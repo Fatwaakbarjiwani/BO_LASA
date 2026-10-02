@@ -379,44 +379,87 @@ export function HasilPengelolaan() {
 
 // ------------------------------------------------------------------ 5. Penyaluran ke mauquf alaih
 
+const TAMBAH = "__TAMBAH__";
+
+/** Minta nama lewat dialog; mengembalikan string ter-trim atau null bila dibatalkan. */
+async function mintaNama(title, inputLabel, inputPlaceholder, inputValue = "") {
+  const r = await Swal.fire({
+    title, input: "text", inputLabel, inputPlaceholder, inputValue, showCancelButton: true,
+    confirmButtonText: "Simpan", cancelButtonText: "Batal",
+    inputValidator: (v) => (!v || !v.trim() ? "Wajib diisi" : undefined),
+  });
+  return r.isConfirmed ? r.value.trim() : null;
+}
+
 export function PenyaluranMauquf() {
-  const [meta] = useWakafMeta();
+  const [meta, muatMeta] = useWakafMeta();
   const kosong = {
     tanggal: today(), kategori: "Pendidikan", akunPenyaluran: "", mauqufAlaih: "", mustahikId: "", akunKas: "1101",
     nominal: "", diserahkanLangsung: false, perantara: "Lazis Sultan Agung", stafNazhir: "", keterangan: "",
   };
   const [f, setF] = useState(kosong);
+  const [versi, setVersi] = useState(0);
   const set = (k, v) => setF((o) => ({ ...o, [k]: v }));
   const subs = useMemo(() => (meta ? meta.akun.filter((a) => a.kelompok === "PENYALURAN" && a.grup === f.kategori) : []), [meta, f.kategori]);
   useEffect(() => {
     if (!subs.some((a) => a.kode === f.akunPenyaluran)) set("akunPenyaluran", subs[0]?.kode || "");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [subs]);
+  useEffect(() => {
+    // Kategori terpilih bisa hilang dari daftar setelah sub kategorinya dinonaktifkan/dipindah.
+    if (meta && !meta.kategoriMauqufAlaih.includes(f.kategori)) set("kategori", meta.kategoriMauqufAlaih[0] || "");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [meta]);
+
+  const muatUlang = async () => { await muatMeta(); setVersi((v) => v + 1); };
+
+  // Tambah sub kategori langsung dari form (kategori baru = sub kategori pertama di kategori tsb).
+  const tambahSub = async (kategoriBaru) => {
+    let kategori = f.kategori;
+    if (kategoriBaru) {
+      kategori = await mintaNama("Kategori mauquf alaih baru", "Nama kategori", "mis. Lingkungan");
+      if (!kategori) return;
+    }
+    const nama = await mintaNama(`Sub kategori baru — ${kategori}`, "Nama sub kategori", "mis. Living Cost");
+    if (!nama) return;
+    try {
+      const r = await wakaf.subKategoriBaru(nama, kategori);
+      await muatUlang();
+      setF((o) => ({ ...o, kategori: r.kategori, akunPenyaluran: r.kode }));
+      if (!r.baru) Swal.fire("Sudah ada", `${r.nama} sudah terdaftar dan dipilih.`, "info");
+    } catch (e) {
+      Swal.fire("Gagal menambah sub kategori", errMsg(e), "error");
+    }
+  };
+
   if (!meta) return <div className="text-gray-400">Memuat…</div>;
   const nom = Number(f.nominal) || 0;
   return (
+    <div className="space-y-4">
     <Kerangka
       judul="Penyaluran Manfaat ke Mauquf Alaih"
       info="Penyaluran hasil pengelolaan wakaf per kategori dan sub kategori mauquf alaih (format BWI)."
       pratinjau={<Pratinjau meta={meta} baris={[{ akun: f.akunPenyaluran, debit: nom }, { akun: f.akunKas, kredit: nom }]} />}
       bisaSimpan={!!(f.akunPenyaluran && f.mauqufAlaih && nom > 0)}
       onSimpan={() => simpan(() => wakaf.penyaluran({ ...f, nominal: nom, mustahikId: f.mustahikId ? Number(f.mustahikId) : null }),
-        () => setF({ ...kosong, tanggal: f.tanggal, kategori: f.kategori }))}
+        () => setF({ ...kosong, tanggal: f.tanggal, kategori: f.kategori, akunPenyaluran: f.akunPenyaluran }))}
     >
       <Field label="Tanggal transaksi"><input type="date" className={inputCls} value={f.tanggal} onChange={(e) => set("tanggal", e.target.value)} /></Field>
       <Field label="Mauquf alaih / nama program" hint="Mis. Beasiswa GenKU Lazis SA 2026">
         <input className={inputCls} value={f.mauqufAlaih} onChange={(e) => set("mauqufAlaih", e.target.value)} />
       </Field>
       <Field label="Kategori mauquf alaih">
-        <select className={inputCls} value={f.kategori} onChange={(e) => set("kategori", e.target.value)}>
+        <select className={inputCls} value={f.kategori}
+          onChange={(e) => (e.target.value === TAMBAH ? tambahSub(true) : set("kategori", e.target.value))}>
           {meta.kategoriMauqufAlaih.map((k) => <option key={k}>{k}</option>)}
+          <option value={TAMBAH}>+ Kategori baru…</option>
         </select>
       </Field>
       <Field label="Sub kategori">
         <SearchSelect
           value={f.akunPenyaluran}
-          onChange={(v) => set("akunPenyaluran", v)}
-          options={subs.map((a) => ({ value: a.kode, label: a.nama }))}
+          onChange={(v) => (v === TAMBAH ? tambahSub(false) : set("akunPenyaluran", v))}
+          options={[...subs.map((a) => ({ value: a.kode, label: a.nama })), { value: TAMBAH, label: "+ Tambah sub kategori…" }]}
           placeholder="Cari sub kategori…"
         />
       </Field>
@@ -440,5 +483,86 @@ export function PenyaluranMauquf() {
       <Field label="Staf nazhir"><input className={inputCls} value={f.stafNazhir} onChange={(e) => set("stafNazhir", e.target.value)} /></Field>
       <Field label="Keterangan"><input className={inputCls} value={f.keterangan} onChange={(e) => set("keterangan", e.target.value)} /></Field>
     </Kerangka>
+    <KelolaSubKategori kategoriList={meta.kategoriMauqufAlaih} versi={versi} onBerubah={muatUlang} />
+    </div>
   );
 }
+
+/**
+ * Pengelolaan sub kategori penyaluran (dinamis): ganti nama, pindah kategori, aktif/nonaktif. Sub kategori yang
+ * sudah dipakai transaksi tidak dihapus — cukup dinonaktifkan supaya tidak muncul di form, laporan lama tetap utuh.
+ */
+function KelolaSubKategori({ kategoriList, versi, onBerubah }) {
+  const [buka, setBuka] = useState(false);
+  const [list, setList] = useState([]);
+  const [cari, setCari] = useState("");
+  const muat = () => wakaf.subKategori().then(setList).catch((e) => Swal.fire("Gagal memuat sub kategori", errMsg(e), "error"));
+  useEffect(() => { if (buka) muat(); }, [buka, versi]);
+
+  const ubah = async (kode, body) => {
+    try {
+      await wakaf.subKategoriUbah(kode, body);
+      await muat();
+      await onBerubah();
+    } catch (e) {
+      Swal.fire("Gagal menyimpan", errMsg(e), "error");
+    }
+  };
+  const ganti = async (s) => {
+    const nama = await mintaNama("Ganti nama sub kategori", "Nama sub kategori", "", s.nama);
+    if (nama && nama !== s.nama) ubah(s.kode, { nama });
+  };
+  const pindah = async (s) => {
+    const opsi = Object.fromEntries([...new Set([...kategoriList, s.kategori])].map((k) => [k, k]));
+    const r = await Swal.fire({
+      title: `Pindah kategori — ${s.nama}`, input: "select", inputOptions: { ...opsi, [TAMBAH]: "+ Kategori baru…" },
+      inputValue: s.kategori, showCancelButton: true, confirmButtonText: "Pindahkan", cancelButtonText: "Batal",
+    });
+    if (!r.isConfirmed) return;
+    const kategori = r.value === TAMBAH ? await mintaNama("Kategori baru", "Nama kategori", "mis. Lingkungan") : r.value;
+    if (kategori && kategori !== s.kategori) ubah(s.kode, { kategori });
+  };
+
+  const q = cari.trim().toLowerCase();
+  const tampil = list.filter((s) => !q || `${s.kode} ${s.nama} ${s.kategori}`.toLowerCase().includes(q));
+  return (
+    <div className="bg-white rounded-lg shadow p-4">
+      <button type="button" className="text-sm font-semibold text-gray-700" onClick={() => setBuka((b) => !b)}>
+        {buka ? "▾" : "▸"} Kelola kategori &amp; sub kategori mauquf alaih
+      </button>
+      {buka && (
+        <div className="mt-3 space-y-2">
+          <input className={inputCls} placeholder="Cari sub kategori / kategori…" value={cari} onChange={(e) => setCari(e.target.value)} />
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="text-xs text-gray-500">
+                <tr><th className="text-left py-1">Kode</th><th className="text-left">Sub kategori</th><th className="text-left">Kategori</th>
+                  <th className="text-right">Dipakai</th><th className="text-center">Status</th><th className="text-right">Aksi</th></tr>
+              </thead>
+              <tbody>
+                {tampil.map((s) => (
+                  <tr key={s.kode} className={`border-t ${s.aktif ? "" : "text-gray-400"}`}>
+                    <td className="py-1.5">{s.kode}</td>
+                    <td>{s.nama}</td>
+                    <td>{s.kategori}</td>
+                    <td className="text-right tabular-nums">{s.dipakai}</td>
+                    <td className="text-center">{s.aktif ? "Aktif" : "Nonaktif"}</td>
+                    <td className="text-right whitespace-nowrap space-x-2">
+                      <button type="button" className="text-blue-600 hover:underline" onClick={() => ganti(s)}>Ganti nama</button>
+                      <button type="button" className="text-blue-600 hover:underline" onClick={() => pindah(s)}>Pindah kategori</button>
+                      <button type="button" className={s.aktif ? "text-red-600 hover:underline" : "text-green-700 hover:underline"}
+                        onClick={() => ubah(s.kode, { aktif: !s.aktif })}>{s.aktif ? "Nonaktifkan" : "Aktifkan"}</button>
+                    </td>
+                  </tr>
+                ))}
+                {tampil.length === 0 && <tr><td colSpan={6} className="py-3 text-center text-gray-400">Tidak ada data</td></tr>}
+              </tbody>
+            </table>
+          </div>
+          <p className="text-xs text-gray-400">Sub kategori baru ditambahkan dari pilihan &quot;+ Tambah sub kategori…&quot; di form. Sub kategori yang sudah dipakai tidak dihapus, cukup dinonaktifkan.</p>
+        </div>
+      )}
+    </div>
+  );
+}
+KelolaSubKategori.propTypes = { kategoriList: PropTypes.array, versi: PropTypes.number, onBerubah: PropTypes.func };

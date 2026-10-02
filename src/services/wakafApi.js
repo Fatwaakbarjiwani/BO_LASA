@@ -25,6 +25,11 @@ export const wakaf = {
   hasil: (b) => api.post("/hasil", b).then(data),
   penyaluran: (b) => api.post("/penyaluran", b).then(data),
 
+  // Sub kategori penyaluran mauquf alaih (dinamis): {kode, nama, kategori, aktif, sistem, dipakai}
+  subKategori: () => api.get("/sub-kategori").then(data),
+  subKategoriBaru: (nama, kategori) => api.post("/sub-kategori", { nama, kategori }).then(data),
+  subKategoriUbah: (kode, b) => api.put(`/sub-kategori/${kode}`, b).then(data),
+
   jurnal: (params) => api.get("/jurnal", { params }).then(data),
   jurnalDetail: (id) => api.get(`/jurnal/${id}`).then(data),
   batalkan: (id, alasan) => api.post(`/jurnal/${id}/void`, { alasan }).then(data),

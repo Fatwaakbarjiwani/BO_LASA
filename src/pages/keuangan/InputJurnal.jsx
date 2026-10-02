@@ -1,6 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import PropTypes from "prop-types";
 import Swal from "sweetalert2";
+import { useDispatch, useSelector } from "react-redux";
+import { getCategoryZiswaf } from "../../redux/actions/ziswafAction";
 import { keuangan, errMsg } from "../../services/keuanganApi";
 import { Btn, DanaBadge, Field, Judul, SearchSelect, inputCls, num, rp, today } from "./ui";
 
@@ -23,11 +25,63 @@ const opsiJenis = (list) =>
     typeof j === "string" ? { kode: j, nama: LABEL_JENIS[j] || j.replace(/_/g, " ") } : { ...j, nama: j.nama || LABEL_JENIS[j.kode] || j.kode });
 const TAMBAH_JENIS = "__TAMBAH__";
 
+/**
+ * "Campaign" tampil sebagai pilihan Dana di form, tetapi bukan dana tersendiri di buku besar: dana campaign
+ * adalah Infaq Terikat (sama seperti pemetaan jurnal lama, lihat migrasi V13/V15: 'campaign' -> INFAQ).
+ * Daftar campaign diambil dari endpoint yang sama dengan menu "Jurnal Umum (lama)": GET /campaign.
+ */
+const CAMPAIGN = "CAMPAIGN";
+const OPSI_CAMPAIGN = { kode: CAMPAIGN, nama: "Campaign" };
+const danaPosting = (dana) => (dana === CAMPAIGN ? "INFAQ" : dana);
+const opsiCampaign = (list) =>
+  (list || []).map((c) => ({
+    kode: String(c.campaignId),
+    nama: `${c.campaignId}. ${c.campaignName}${c.active === false ? " (nonaktif)" : ""}`,
+  }));
+
 const akunDana = (meta, dana, kelompok) =>
   meta.akun.filter((a) => a.dana === dana && a.kelompok === kelompok && a.postable);
 const rekDana = (meta, dana) => meta.rekening.filter((r) => r.dana === dana);
 const antarDana = (meta, dana) =>
   meta.akun.find((a) => a.kelompok === "ANTAR_DANA" && a.dana === dana);
+
+/**
+ * Akun yang dipakai jurnal alokasi hak amil — aturan pemilihannya sama dengan PostingService.alokasiAmil di server:
+ * Bagian Amil (pendayagunaan dana sumber, asnaf AMIL / bernama "Bagian Amil"), Rekening Antar Dana dana sumber,
+ * Rekening Antar Dana Pengelola, dan 4401 Penerimaan Hak Amil (Dana Pengelola). Semua harus akun yang bisa diposting.
+ */
+const pertama = (list) => [...list].sort((a, b) => Number(a.id) - Number(b.id))[0];
+const bisaPosting = (a) => !!a && !!Number(a.postable ?? 1);
+function akunAlokasiAmil(meta, dana) {
+  const bagian = pertama(meta.akun.filter((a) => a.dana === dana && a.kelompok === "PENDAYAGUNAAN" && bisaPosting(a)
+    && (a.asnaf === "AMIL" || /bagian amil/i.test(a.nama || ""))));
+  const antarSumber = pertama(meta.akun.filter((a) => a.kelompok === "ANTAR_DANA" && a.dana === dana && bisaPosting(a)));
+  const antarPengelola = pertama(meta.akun.filter((a) => a.kelompok === "ANTAR_DANA" && a.dana === "PENGELOLA" && bisaPosting(a)));
+  const penerimaanAmil = pertama(meta.akun.filter((a) => a.kode === "4401" && a.dana === "PENGELOLA" && bisaPosting(a)));
+  const daftar = [
+    ["bagian", bagian, `Bagian Amil — akun pendayagunaan Dana ${dana} dengan asnaf AMIL`],
+    ["antarSumber", antarSumber, `Rekening Antar Dana (${dana})`],
+    ["antarPengelola", antarPengelola, "Rekening Antar Dana (PENGELOLA)"],
+    ["penerimaanAmil", penerimaanAmil, "4401 Penerimaan Hak Amil (Dana Pengelola)"],
+  ];
+  const kurang = daftar.filter(([, a]) => !a).map(([, , label]) => `${label} — belum ada (atau masih berupa akun induk)`);
+  return { bagian, antarSumber, antarPengelola, penerimaanAmil, kurang };
+}
+const labelAkun = (a) => (a ? `${a.kode} ${a.nama}` : null);
+
+/**
+ * Pilih kebijakan hak amil dengan aturan yang sama dengan server (PostingService.alokasiAmil):
+ * aktif, dana sama, berlaku_sejak <= tanggal transaksi, jenis kosong ("semua jenis") atau sama dengan jenis
+ * penerimaan; kebijakan khusus jenis diutamakan atas "semua jenis", lalu yang berlaku_sejak paling baru.
+ */
+const tglStr = (v) => (v == null ? "" : typeof v === "number" ? new Date(v).toISOString().slice(0, 10) : String(v).slice(0, 10));
+function pilihKebijakanAmil(alokasi, dana, jenis, tanggal) {
+  const j = (jenis || "").toUpperCase();
+  const cocok = (alokasi || []).filter((a) => a.dana === dana && Number(a.aktif ?? 1) && tglStr(a.berlakuSejak) <= tanggal
+    && (!a.jenis || String(a.jenis).toUpperCase() === j));
+  cocok.sort((a, b) => (a.jenis ? 0 : 1) - (b.jenis ? 0 : 1) || tglStr(b.berlakuSejak).localeCompare(tglStr(a.berlakuSejak)));
+  return cocok[0];
+}
 
 function Nominal({ value, onChange, ...rest }) {
   return (
@@ -43,7 +97,7 @@ function Nominal({ value, onChange, ...rest }) {
 }
 Nominal.propTypes = { value: PropTypes.number, onChange: PropTypes.func };
 
-function Pratinjau({ baris }) {
+function Pratinjau({ baris, judul = "Pratinjau jurnal (per dana)", catatan }) {
   const valid = baris.filter((b) => b.akun);
   const perDana = {};
   valid.forEach((b) => {
@@ -54,9 +108,9 @@ function Pratinjau({ baris }) {
   const timpang = Object.entries(perDana).filter(([, v]) => v.d !== v.k);
   return (
     <div className="bg-gray-50 border rounded-lg p-3">
-      <div className="text-sm font-semibold text-gray-600 mb-2">
-        Pratinjau jurnal (per dana)
-      </div>
+      <div className="text-sm font-semibold text-gray-600">{judul}</div>
+      {catatan && <div className="text-xs text-gray-500">{catatan}</div>}
+      <div className="mb-2" />
       <table className="w-full text-sm">
         <thead className="text-xs text-gray-500">
           <tr>
@@ -90,52 +144,99 @@ function Pratinjau({ baris }) {
     </div>
   );
 }
-Pratinjau.propTypes = { baris: PropTypes.array };
+Pratinjau.propTypes = { baris: PropTypes.array, judul: PropTypes.string, catatan: PropTypes.node };
 
-async function kirim(cmd, reset) {
+/**
+ * Simpan jurnal. Mode edit: minta konfirmasi + alasan (opsional), lalu PUT — nomor bukti tetap; baris lama
+ * ditandai terhapus (tetap terlihat di Daftar Jurnal) dan isi sebelum edit dicatat di audit log.
+ */
+async function kirim(cmd, reset, edit, onSelesai) {
   try {
-    const r = await keuangan.postJurnal(cmd);
+    let r;
+    if (edit) {
+      const k = await Swal.fire({
+        icon: "question",
+        title: `Simpan perubahan ${edit.nomorBukti}?`,
+        html: "Nomor bukti tetap sama. Isi lama tetap tersimpan sebagai riwayat (baris terhapus di Daftar Jurnal).<br/><small>Alokasi hak amil otomatis ikut dihitung ulang.</small>",
+        input: "text",
+        inputLabel: "Alasan perubahan (opsional)",
+        showCancelButton: true,
+        confirmButtonText: "Simpan perubahan",
+        cancelButtonText: "Batal",
+      });
+      if (!k.isConfirmed) return;
+      r = await keuangan.editJurnal(edit.id, { ...cmd, alasan: k.value?.trim() || null });
+    } else {
+      r = await keuangan.postJurnal(cmd);
+    }
     const extra = [
       ...(r.alokasi?.length ? [`Alokasi hak amil: ${r.alokasi.join(", ")}`] : []),
       ...(r.peringatan || []),
     ];
     await Swal.fire({
       icon: extra.length ? "info" : "success",
-      title: "Jurnal tersimpan",
+      title: edit ? "Perubahan tersimpan" : "Jurnal tersimpan",
       html: `<b>${r.nomorBukti}</b>${extra.length ? "<br/><small>" + extra.join("<br/>") + "</small>" : ""}`,
     });
     reset();
+    onSelesai?.();
   } catch (e) {
     Swal.fire({ icon: "error", title: "Jurnal ditolak", text: errMsg(e) });
   }
 }
 
+/** Opsi rekening untuk dropdown yang bisa dicari. */
+const opsiRekening = (list) =>
+  list.map((r) => ({ value: r.coaId, label: `${r.kas ? "Kas: " : ""}${r.namaBank || ""} ${r.noRek || ""}`.trim() + (r.namaAkun ? ` — ${r.namaAkun}` : "") }));
+
+function TombolSimpan({ edit, onBatalEdit, disabled, onClick, children }) {
+  return (
+    <div className="flex gap-2">
+      <Btn color="green" disabled={disabled} onClick={onClick} className="flex-1">{edit ? `Simpan perubahan ${edit.nomorBukti}` : children}</Btn>
+      {edit && <Btn color="gray" onClick={onBatalEdit}>Batal edit</Btn>}
+    </div>
+  );
+}
+TombolSimpan.propTypes = { edit: PropTypes.object, onBatalEdit: PropTypes.func, disabled: PropTypes.bool, onClick: PropTypes.func, children: PropTypes.node };
+
 // ----------------------------------------------------------------------------------------------
-function FormPenerimaan({ meta, alokasi, onJenisZakatBaru }) {
-  const danaOpsi = meta.dana.filter((d) => d.kode !== "PENGELOLA");
+function FormPenerimaan({ meta, alokasi, campaign, onJenisZakatBaru, awal, edit, onSelesai, onBatalEdit }) {
+  const danaOpsi = [...meta.dana.filter((d) => d.kode !== "PENGELOLA"), OPSI_CAMPAIGN];
   const kosong = {
     tanggal: today(), dana: "ZAKAT", jenis: "FITRAH", akunId: "", rekId: "", donatur: "", donaturId: null,
-    anonim: false, samarkan: false, metode: "TRANSFER_BANK", nominal: 0, campaignId: "", ket: "", bukti: "",
+    anonim: false, samarkan: false, metode: "TRANSFER_BANK", nominal: 0, ket: "", bukti: "",
   };
-  const [f, setF] = useState(kosong);
+  const [f, setF] = useState(awal ? { ...kosong, ...awal } : kosong);
   const [saran, setSaran] = useState([]);
+  // Akun penerimaan dipilih otomatis hanya saat dana/jenis benar-benar berubah, supaya akun hasil muat-edit
+  // (atau pilihan manual) tidak tertimpa ketika daftar campaign selesai dimuat.
+  const sebelum = useRef(awal ? { dana: awal.dana, jenis: awal.jenis } : null);
   const set = (k, v) => setF((s) => ({ ...s, [k]: v }));
 
-  const akunList = akunDana(meta, f.dana, "PENERIMAAN");
-  const rekList = rekDana(meta, f.dana);
-  const jenisOpsi = opsiJenis(f.dana === "ZAKAT" ? meta.jenisZakat : f.dana === "WAKAF" ? meta.jenisWakaf : f.dana === "INFAQ" ? meta.jenisInfaq : []);
+  const isCampaign = f.dana === CAMPAIGN;
+  const dana = danaPosting(f.dana);
+  const akunList = akunDana(meta, dana, "PENERIMAAN");
+  const rekList = rekDana(meta, dana);
+  const jenisOpsi = isCampaign
+    ? opsiCampaign(campaign)
+    : opsiJenis(f.dana === "ZAKAT" ? meta.jenisZakat : f.dana === "WAKAF" ? meta.jenisWakaf : f.dana === "INFAQ" ? meta.jenisInfaq : []);
   const jenisList = jenisOpsi.map((j) => j.kode);
+  // Jenis penerimaan COA yang dicari: campaign selalu Infaq Terikat.
+  const jenisCoa = isCampaign ? "TERIKAT" : f.dana === "INFAQ" ? (f.jenis === "TERIKAT" ? "TERIKAT" : "TIDAK_TERIKAT") : f.jenis;
 
   useEffect(() => {
-    const cocok = akunList.find((a) => (a.jenisPenerimaan || "") === (f.dana === "INFAQ" ? (f.jenis === "TERIKAT" ? "TERIKAT" : "TIDAK_TERIKAT") : f.jenis));
+    const cocok = akunList.find((a) => (a.jenisPenerimaan || "") === jenisCoa);
+    const berubah = !sebelum.current || sebelum.current.dana !== f.dana || sebelum.current.jenis !== f.jenis;
+    sebelum.current = { dana: f.dana, jenis: f.jenis };
     setF((s) => ({
       ...s,
-      jenis: jenisList.includes(s.jenis) ? s.jenis : jenisList[0] || "",
-      akunId: cocok ? cocok.id : akunList[0]?.id || "",
+      // Daftar campaign dimuat asinkron: selama masih kosong, jangan buang campaign yang sudah terpilih.
+      jenis: jenisList.includes(s.jenis) || (isCampaign && jenisList.length === 0) ? s.jenis : jenisList[0] || "",
+      akunId: !berubah && akunList.some((a) => String(a.id) === String(s.akunId)) ? s.akunId : cocok ? cocok.id : akunList[0]?.id || "",
       rekId: rekList.some((r) => String(r.coaId) === String(s.rekId)) ? s.rekId : rekList.find((r) => !r.kas)?.coaId || rekList[0]?.coaId || "",
     }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [f.dana, f.jenis]);
+  }, [f.dana, f.jenis, campaign]);
 
   useEffect(() => {
     if (f.donatur.length < 2) return setSaran([]);
@@ -169,18 +270,41 @@ function FormPenerimaan({ meta, alokasi, onJenisZakatBaru }) {
       Swal.fire({ icon: "error", title: "Gagal menambah jenis zakat", text: errMsg(e) });
     }
   };
-  const persen = alokasi.find((a) => a.dana === f.dana && a.aktif && (!a.jenis || a.jenis === f.jenis));
+  const persen = pilihKebijakanAmil(alokasi, dana, isCampaign ? "TERIKAT" : f.jenis, f.tanggal);
 
   const baris = [
-    { dana: f.dana, akun: rek?.namaAkun, debit: f.nominal },
-    { dana: f.dana, akun: akun ? `${akun.kode} ${akun.nama}` : null, kredit: f.nominal },
+    { dana, akun: rek?.namaAkun, debit: f.nominal },
+    { dana, akun: akun ? `${akun.kode} ${akun.nama}` : null, kredit: f.nominal },
   ];
-  const siap = f.nominal > 0 && akun && rek && f.donatur.trim();
+  const siap = f.nominal > 0 && akun && rek && f.donatur.trim() && (!isCampaign || f.jenis);
 
-  const simpan = () =>
-    kirim(
+  // Potongan hak amil (dibulatkan ke rupiah, sama dengan server) dan jurnal alokasinya.
+  const amilPersen = persen && dana !== "PENGELOLA" ? Number(persen.persen) : 0;
+  const amil = amilPersen > 0 && f.nominal > 0 ? Math.round((f.nominal * amilPersen) / 100) : 0;
+  const akunAmil = amil > 0 ? akunAlokasiAmil(meta, dana) : null;
+  const amilJalan = amil > 0 && akunAmil.kurang.length === 0;
+  const barisAmil = amilJalan ? [
+    { dana, akun: labelAkun(akunAmil.bagian), debit: amil },
+    { dana, akun: labelAkun(akunAmil.antarSumber), kredit: amil },
+    { dana: "PENGELOLA", akun: labelAkun(akunAmil.antarPengelola), debit: amil },
+    { dana: "PENGELOLA", akun: labelAkun(akunAmil.penerimaanAmil), kredit: amil },
+  ] : [];
+
+  const simpan = async () => {
+    if (amil > 0 && !amilJalan) {
+      const k = await Swal.fire({
+        icon: "warning",
+        title: "Hak amil tidak akan dipotong",
+        html: `Kebijakan hak amil ${amilPersen}% berlaku, tetapi akun berikut belum siap di COA:<br/><small>${akunAmil.kurang.join("<br/>")}</small><br/><br/>Penerimaan tetap disimpan penuh tanpa jurnal alokasi. Lanjutkan?`,
+        showCancelButton: true,
+        confirmButtonText: "Simpan tanpa potongan",
+        cancelButtonText: "Batal, lengkapi COA dulu",
+      });
+      if (!k.isConfirmed) return;
+    }
+    return kirim(
       {
-        jenis: "PENERIMAAN", tanggal: f.tanggal, danaKode: f.dana, keterangan: f.ket || null,
+        jenis: "PENERIMAAN", tanggal: f.tanggal, danaKode: dana, keterangan: f.ket || null,
         lines: [
           { coaId: rek.coaId, debit: f.nominal },
           { coaId: akun.id, kredit: f.nominal },
@@ -189,12 +313,15 @@ function FormPenerimaan({ meta, alokasi, onJenisZakatBaru }) {
           donaturId: f.donaturId, donaturNama: f.donatur.trim(), donaturTipe: "INDIVIDU",
           anonim: f.anonim, samarkan: f.samarkan,
           jenisZakat: f.dana === "ZAKAT" ? f.jenis : null, jenisWakaf: f.dana === "WAKAF" ? f.jenis : null,
-          jenisInfaq: f.dana === "INFAQ" ? f.jenis : null, metodeBayar: f.metode,
-          campaignId: f.campaignId ? Number(f.campaignId) : null, buktiUrl: f.bukti || null,
+          jenisInfaq: f.dana === "INFAQ" ? f.jenis : isCampaign ? "TERIKAT" : null, metodeBayar: f.metode,
+          campaignId: isCampaign && f.jenis ? Number(f.jenis) : null, buktiUrl: f.bukti || null,
         },
       },
       () => setF({ ...kosong, tanggal: f.tanggal, dana: f.dana }),
+      edit,
+      onSelesai,
     );
+  };
 
   return (
     <div className="grid md:grid-cols-2 gap-4">
@@ -207,8 +334,12 @@ function FormPenerimaan({ meta, alokasi, onJenisZakatBaru }) {
             </select>
           </Field>
         </div>
+        {isCampaign && jenisList.length === 0 && (
+          <div className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded p-2">Belum ada campaign.</div>
+        )}
         {jenisList.length > 0 && (
-          <Field label={f.dana === "ZAKAT" ? "Jenis zakat" : f.dana === "WAKAF" ? "Jenis wakaf" : "Jenis infaq"}>
+          <Field label={isCampaign ? "Jenis (campaign)" : f.dana === "ZAKAT" ? "Jenis zakat" : f.dana === "WAKAF" ? "Jenis wakaf" : "Jenis infaq"}
+            hint={isCampaign ? "Dicatat sebagai Dana Infaq Terikat untuk campaign terpilih" : undefined}>
             <select className={inputCls} value={f.jenis}
               onChange={(e) => (e.target.value === TAMBAH_JENIS ? tambahJenisZakat() : set("jenis", e.target.value))}>
               {jenisOpsi.map((j) => <option key={j.kode} value={j.kode}>{j.nama}</option>)}
@@ -225,12 +356,12 @@ function FormPenerimaan({ meta, alokasi, onJenisZakatBaru }) {
             placeholder="Cari akun penerimaan…"
           />
         </Field>
-        <Field label="Masuk ke rekening" hint="Hanya rekening milik dana terpilih yang ditampilkan">
+        <Field label="Masuk ke rekening" hint="Ketik nama bank / nomor rekening untuk mencari. Hanya rekening milik dana terpilih yang ditampilkan.">
           <SearchSelect
             value={f.rekId}
             onChange={(v) => set("rekId", v)}
-            options={rekList.map((r) => ({ value: r.coaId, label: `${r.kas ? "Kas: " : ""}${r.namaBank} ${r.noRek || ""}` }))}
-            placeholder="Cari rekening…"
+            options={opsiRekening(rekList)}
+            placeholder="Cari bank / no. rekening…"
           />
         </Field>
         <Field label="Nominal (rupiah)"><Nominal value={f.nominal} onChange={(v) => set("nominal", v)} /></Field>
@@ -255,52 +386,72 @@ function FormPenerimaan({ meta, alokasi, onJenisZakatBaru }) {
               {meta.metodeBayar.map((m) => <option key={m} value={m}>{m.replace("_", " ")}</option>)}
             </select>
           </Field>
-          {f.dana === "INFAQ" && (
-            <Field label="Campaign (opsional)">
-              <select className={inputCls} value={f.campaignId} onChange={(e) => set("campaignId", e.target.value)}>
-                <option value="">—</option>
-                {meta.campaign.map((c) => <option key={c.id} value={c.id}>{c.nama}</option>)}
-              </select>
-            </Field>
-          )}
         </div>
         <Field label="Keterangan"><input className={inputCls} value={f.ket} onChange={(e) => set("ket", e.target.value)} /></Field>
-        <Pratinjau baris={baris} />
-        {persen && f.nominal > 0 && (
-          <div className="text-sm bg-amber-50 border border-amber-200 rounded p-2 text-amber-800">
-            Hak amil {persen.persen}% ({rp(Math.round((f.nominal * persen.persen) / 100))}) akan dijurnalkan otomatis
-            dari {f.dana} ke Dana Pengelola.
+        <Pratinjau baris={baris} judul="Pratinjau jurnal penerimaan (per dana)" />
+        {amil > 0 && (
+          <div className="text-sm bg-amber-50 border border-amber-200 rounded p-3 text-amber-900 space-y-1">
+            <div className="font-semibold">Potongan hak amil {amilPersen}%</div>
+            <table className="w-full tabular-nums">
+              <tbody>
+                <tr><td>Penerimaan bruto</td><td className="text-right">{rp(f.nominal)}</td></tr>
+                <tr><td>Hak amil {amilPersen}% × {rp(f.nominal)}</td><td className="text-right">− {rp(amil)}</td></tr>
+                <tr className="border-t border-amber-200 font-semibold"><td>Bersih untuk Dana {dana}</td><td className="text-right">{rp(f.nominal - amil)}</td></tr>
+                <tr><td>Masuk ke Dana Pengelola</td><td className="text-right">{rp(amil)}</td></tr>
+              </tbody>
+            </table>
           </div>
         )}
-        <Btn color="green" disabled={!siap} onClick={simpan} className="w-full">Simpan penerimaan</Btn>
+        {amilJalan && (
+          <Pratinjau baris={barisAmil} judul="Pratinjau jurnal alokasi hak amil (dibuat otomatis)"
+            catatan={edit ? "Jurnal alokasi yang sudah ada ikut diperbarui; nomor buktinya tetap." : "Dicatat sebagai jurnal terpisah dengan nomor bukti sendiri."} />
+        )}
+        {amil > 0 && !amilJalan && (
+          <div className="text-sm bg-red-50 border border-red-200 rounded p-3 text-red-800">
+            <div className="font-semibold">Hak amil tidak akan dipotong — akun COA belum lengkap</div>
+            <ul className="list-disc ml-5 mt-1">{akunAmil.kurang.map((k) => <li key={k}>{k}</li>)}</ul>
+            <div className="mt-1 text-xs">Lengkapi di Administrasi → Daftar Akun (COA). Bila tetap disimpan, penerimaan dicatat penuh tanpa jurnal alokasi.</div>
+          </div>
+        )}
+        <TombolSimpan edit={edit} onBatalEdit={onBatalEdit} disabled={!siap} onClick={simpan}>Simpan penerimaan</TombolSimpan>
       </div>
     </div>
   );
 }
-FormPenerimaan.propTypes = { meta: PropTypes.object, alokasi: PropTypes.array, onJenisZakatBaru: PropTypes.func };
+FormPenerimaan.propTypes = {
+  meta: PropTypes.object, alokasi: PropTypes.array, campaign: PropTypes.array, onJenisZakatBaru: PropTypes.func,
+  awal: PropTypes.object, edit: PropTypes.object, onSelesai: PropTypes.func, onBatalEdit: PropTypes.func,
+};
 
 // ----------------------------------------------------------------------------------------------
-function FormPenyaluran({ meta }) {
-  const danaOpsi = meta.dana.filter((d) => d.kode !== "PENGELOLA");
-  const kosong = { tanggal: today(), dana: "ZAKAT", akunId: "", rekId: "", ket: "" };
-  const [f, setF] = useState(kosong);
-  const [rows, setRows] = useState([{ mustahikId: "", nama: "", asnaf: "", jumlah: 0, jml: 1 }]);
+function FormPenyaluran({ meta, campaign, awal, edit, onSelesai, onBatalEdit }) {
+  const danaOpsi = [...meta.dana.filter((d) => d.kode !== "PENGELOLA"), OPSI_CAMPAIGN];
+  const kosong = { tanggal: today(), dana: "ZAKAT", jenis: "", akunId: "", rekId: "", ket: "" };
+  const [f, setF] = useState(awal ? { ...kosong, ...awal, rows: undefined } : kosong);
+  const [rows, setRows] = useState(awal?.rows?.length ? awal.rows : [{ mustahikId: "", nama: "", asnaf: "", jumlah: 0, jml: 1 }]);
+  const danaSebelum = useRef(awal ? awal.dana : null);
   const [mustahik, setMustahik] = useState([]);
   const set = (k, v) => setF((s) => ({ ...s, [k]: v }));
 
   useEffect(() => { keuangan.mustahik({}).then(setMustahik).catch(() => {}); }, []);
 
-  const akunList = akunDana(meta, f.dana, "PENDAYAGUNAAN");
-  const rekList = rekDana(meta, f.dana);
+  const isCampaign = f.dana === CAMPAIGN;
+  const dana = danaPosting(f.dana);
+  const campaignOpsi = opsiCampaign(campaign);
+  const akunList = akunDana(meta, dana, "PENDAYAGUNAAN");
+  const rekList = rekDana(meta, dana);
   useEffect(() => {
     setF((s) => ({
       ...s,
+      jenis: !isCampaign ? "" : campaignOpsi.some((c) => c.kode === s.jenis) || campaignOpsi.length === 0 ? s.jenis : campaignOpsi[0]?.kode || "",
       akunId: akunList.some((a) => String(a.id) === String(s.akunId)) ? s.akunId : akunList[0]?.id || "",
       rekId: rekList.some((r) => String(r.coaId) === String(s.rekId)) ? s.rekId : rekList.find((r) => !r.kas)?.coaId || rekList[0]?.coaId || "",
     }));
-    setRows((rs) => rs.map((r) => ({ ...r, mustahikId: "" })));
+    // Penerima terdaftar hanya direset bila dana benar-benar berganti (mustahik vs mauquf alaih).
+    if (danaSebelum.current !== null && danaSebelum.current !== f.dana) setRows((rs) => rs.map((r) => ({ ...r, mustahikId: "" })));
+    danaSebelum.current = f.dana;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [f.dana]);
+  }, [f.dana, campaign]);
 
   const akun = meta.akun.find((a) => String(a.id) === String(f.akunId));
   const rek = meta.rekening.find((r) => String(r.coaId) === String(f.rekId));
@@ -315,23 +466,26 @@ function FormPenyaluran({ meta }) {
   };
 
   const baris = [
-    { dana: f.dana, akun: akun ? `${akun.kode} ${akun.nama}` : null, debit: total },
-    { dana: f.dana, akun: rek?.namaAkun, kredit: total },
+    { dana, akun: akun ? `${akun.kode} ${akun.nama}` : null, debit: total },
+    { dana, akun: rek?.namaAkun, kredit: total },
   ];
   const zakat = f.dana === "ZAKAT";
-  const siap = total > 0 && akun && rek && rows.every((r) => r.jumlah > 0 && (r.mustahikId || r.nama.trim()));
+  const siap = total > 0 && akun && rek && (!isCampaign || f.jenis) && rows.every((r) => r.jumlah > 0 && (r.mustahikId || r.nama.trim()));
 
   const simpan = () =>
     kirim(
       {
-        jenis: "PENYALURAN", tanggal: f.tanggal, danaKode: f.dana, keterangan: f.ket || null,
+        jenis: "PENYALURAN", tanggal: f.tanggal, danaKode: dana, keterangan: f.ket || null,
+        campaignId: isCampaign && f.jenis ? Number(f.jenis) : null,
         lines: [{ coaId: akun.id, debit: total }, { coaId: rek.coaId, kredit: total }],
         penyaluran: rows.map((r) => ({
           mustahikId: r.mustahikId ? Number(r.mustahikId) : null, namaPenerima: r.nama || null,
           asnaf: r.asnaf || null, coaId: akun.id, jumlah: r.jumlah, jmlPenerima: r.jml || 1, keterangan: null,
         })),
       },
-      () => { setF({ ...kosong, tanggal: f.tanggal, dana: f.dana }); setRows([{ mustahikId: "", nama: "", asnaf: "", jumlah: 0, jml: 1 }]); },
+      () => { setF({ ...kosong, tanggal: f.tanggal, dana: f.dana, jenis: f.jenis }); setRows([{ mustahikId: "", nama: "", asnaf: "", jumlah: 0, jml: 1 }]); },
+      edit,
+      onSelesai,
     );
 
   return (
@@ -345,6 +499,17 @@ function FormPenyaluran({ meta }) {
             </select>
           </Field>
         </div>
+        {isCampaign && (
+          campaignOpsi.length > 0 ? (
+            <Field label="Jenis (campaign)" hint="Dibayar dari Dana Infaq Terikat milik campaign terpilih">
+              <select className={inputCls} value={f.jenis} onChange={(e) => set("jenis", e.target.value)}>
+                {campaignOpsi.map((c) => <option key={c.kode} value={c.kode}>{c.nama}</option>)}
+              </select>
+            </Field>
+          ) : (
+            <div className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded p-2">Belum ada campaign.</div>
+          )
+        )}
         <Field label="Program / akun pendayagunaan" hint={zakat && akun ? `Asnaf akun ini: ${akun.asnaf || "belum ditentukan (lengkapi di COA)"}` : akun?.bidang ? `Bidang: ${akun.bidang}` : undefined}>
           <SearchSelect
             value={f.akunId}
@@ -364,7 +529,7 @@ function FormPenyaluran({ meta }) {
         <Field label="Keterangan"><input className={inputCls} value={f.ket} onChange={(e) => set("ket", e.target.value)} /></Field>
         <div className="text-sm text-gray-600">Total penyaluran: <b>{rp(total)}</b></div>
         <Pratinjau baris={baris} />
-        <Btn color="green" disabled={!siap} onClick={simpan} className="w-full">Simpan penyaluran</Btn>
+        <TombolSimpan edit={edit} onBatalEdit={onBatalEdit} disabled={!siap} onClick={simpan}>Simpan penyaluran</TombolSimpan>
       </div>
       <div>
         <div className="text-sm font-semibold text-gray-600 mb-2">
@@ -395,12 +560,15 @@ function FormPenyaluran({ meta }) {
     </div>
   );
 }
-FormPenyaluran.propTypes = { meta: PropTypes.object };
+FormPenyaluran.propTypes = {
+  meta: PropTypes.object, campaign: PropTypes.array, awal: PropTypes.object, edit: PropTypes.object,
+  onSelesai: PropTypes.func, onBatalEdit: PropTypes.func,
+};
 
 // ----------------------------------------------------------------------------------------------
-function FormBeban({ meta }) {
+function FormBeban({ meta, awal, edit, onSelesai, onBatalEdit }) {
   const kosong = { tanggal: today(), akunId: "", rekId: "", nominal: 0, ket: "" };
-  const [f, setF] = useState(kosong);
+  const [f, setF] = useState(awal ? { ...kosong, ...awal } : kosong);
   const set = (k, v) => setF((s) => ({ ...s, [k]: v }));
   const akunList = akunDana(meta, "PENGELOLA", "BEBAN_OPERASIONAL");
   const rekList = rekDana(meta, "PENGELOLA");
@@ -419,6 +587,8 @@ function FormBeban({ meta }) {
       { jenis: "BEBAN_OPERASIONAL", tanggal: f.tanggal, danaKode: "PENGELOLA", keterangan: f.ket || null,
         lines: [{ coaId: akun.id, debit: f.nominal }, { coaId: rek.coaId, kredit: f.nominal }] },
       () => setF({ ...kosong, tanggal: f.tanggal, akunId: f.akunId, rekId: f.rekId }),
+      edit,
+      onSelesai,
     );
   return (
     <div className="grid md:grid-cols-2 gap-4">
@@ -445,18 +615,18 @@ function FormBeban({ meta }) {
       </div>
       <div className="space-y-3">
         <Pratinjau baris={baris} />
-        <Btn color="green" disabled={!(f.nominal > 0 && akun && rek)} onClick={simpan} className="w-full">Simpan beban</Btn>
+        <TombolSimpan edit={edit} onBatalEdit={onBatalEdit} disabled={!(f.nominal > 0 && akun && rek)} onClick={simpan}>Simpan beban</TombolSimpan>
       </div>
     </div>
   );
 }
-FormBeban.propTypes = { meta: PropTypes.object };
+FormBeban.propTypes = { meta: PropTypes.object, awal: PropTypes.object, edit: PropTypes.object, onSelesai: PropTypes.func, onBatalEdit: PropTypes.func };
 
 // ----------------------------------------------------------------------------------------------
-function FormTransfer({ meta }) {
+function FormTransfer({ meta, awal, edit, onSelesai, onBatalEdit }) {
   const danaOpsi = meta.dana;
   const kosong = { tanggal: today(), asal: "ZAKAT", tujuan: "PENGELOLA", rekAsal: "", rekTujuan: "", nominal: 0, ket: "" };
-  const [f, setF] = useState(kosong);
+  const [f, setF] = useState(awal ? { ...kosong, ...awal } : kosong);
   const set = (k, v) => setF((s) => ({ ...s, [k]: v }));
   const rekA = rekDana(meta, f.asal);
   const rekT = rekDana(meta, f.tujuan);
@@ -489,6 +659,8 @@ function FormTransfer({ meta }) {
           { coaId: adT.id, danaKode: f.tujuan, kredit: f.nominal },
         ] },
       () => setF({ ...kosong, tanggal: f.tanggal, asal: f.asal, tujuan: f.tujuan }),
+      edit,
+      onSelesai,
     );
   return (
     <div className="grid md:grid-cols-2 gap-4">
@@ -532,19 +704,200 @@ function FormTransfer({ meta }) {
       <div className="space-y-3">
         <Pratinjau baris={baris} />
         {f.asal === f.tujuan && <div className="text-sm text-red-600">Dana asal dan tujuan harus berbeda.</div>}
-        <Btn color="green" disabled={!siap} onClick={simpan} className="w-full">Simpan transfer</Btn>
+        <TombolSimpan edit={edit} onBatalEdit={onBatalEdit} disabled={!siap} onClick={simpan}>Simpan transfer</TombolSimpan>
       </div>
     </div>
   );
 }
-FormTransfer.propTypes = { meta: PropTypes.object };
+FormTransfer.propTypes = { meta: PropTypes.object, awal: PropTypes.object, edit: PropTypes.object, onSelesai: PropTypes.func, onBatalEdit: PropTypes.func };
+
+// ----------------------------------------------------------------------------------------------
+// Edit: ubah detail jurnal (GET /keuangan/jurnal/{id}) menjadi isian awal form. Mengembalikan null bila struktur
+// jurnal tidak cocok dengan form (mis. jurnal impor/lama berbaris banyak) — koreksinya lewat Daftar Jurnal.
+
+const tglIso = (v) => {
+  if (v == null) return today();
+  if (typeof v === "number") {
+    const d = new Date(v);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  }
+  return String(v).slice(0, 10);
+};
+const barisAktif = (d) => (d.baris || []).filter((b) => !Number(b.dihapus));
+const debitDari = (b) => Number(b.debit) || 0;
+const kreditDari = (b) => Number(b.kredit) || 0;
+const pasangan = (d) => {
+  const bs = barisAktif(d);
+  if (bs.length !== 2) return null;
+  const deb = bs.find((b) => debitDari(b) > 0);
+  const kre = bs.find((b) => kreditDari(b) > 0);
+  return deb && kre && deb !== kre ? { deb, kre } : null;
+};
+const benar = (v) => !!Number(v);
+
+function keFormAwal(tpl, d) {
+  if (d.jenis !== tpl) return null;
+  if (tpl === "PENERIMAAN") {
+    const p2 = pasangan(d);
+    if (!p2) return null;
+    const p = (d.penerimaan || [])[0] || {};
+    const campaignId = p.campaign_id ?? d.campaignId;
+    const dana = campaignId && d.dana === "INFAQ" ? CAMPAIGN : d.dana;
+    const jenis = dana === CAMPAIGN ? String(campaignId)
+      : (d.dana === "ZAKAT" ? p.jenis_zakat : d.dana === "WAKAF" ? p.jenis_wakaf : d.dana === "INFAQ" ? p.jenis_infaq : "") || "";
+    return {
+      tanggal: tglIso(d.tanggal), dana, jenis, akunId: p2.kre.coaId, rekId: p2.deb.coaId,
+      donatur: p.donatur_nama || "", donaturId: p.donatur_id ?? null, anonim: benar(p.anonim), samarkan: benar(p.samarkan),
+      metode: p.metode_bayar || "TRANSFER_BANK", nominal: debitDari(p2.deb), ket: d.keterangan || "", bukti: p.bukti_url || "",
+    };
+  }
+  if (tpl === "PENYALURAN") {
+    const p2 = pasangan(d);
+    if (!p2) return null;
+    const dana = d.campaignId && d.dana === "INFAQ" ? CAMPAIGN : d.dana;
+    const rows = (d.penyaluran || []).map((x) => ({
+      mustahikId: x.mustahikId ? String(x.mustahikId) : "", nama: x.namaPenerima || x.penerima || "",
+      asnaf: x.asnaf || "", jumlah: Number(x.jumlah) || 0, jml: x.jmlPenerima || 1,
+    }));
+    return {
+      tanggal: tglIso(d.tanggal), dana, jenis: dana === CAMPAIGN ? String(d.campaignId) : "",
+      akunId: p2.deb.coaId, rekId: p2.kre.coaId, ket: d.keterangan || "",
+      rows: rows.length ? rows : [{ mustahikId: "", nama: "", asnaf: "", jumlah: debitDari(p2.deb), jml: 1 }],
+    };
+  }
+  if (tpl === "BEBAN_OPERASIONAL") {
+    const p2 = pasangan(d);
+    if (!p2 || d.dana !== "PENGELOLA") return null;
+    return { tanggal: tglIso(d.tanggal), akunId: p2.deb.coaId, rekId: p2.kre.coaId, nominal: debitDari(p2.deb), ket: d.keterangan || "" };
+  }
+  // TRANSFER_DANA: 4 baris — dana asal (antar dana D / rekening K) dan dana tujuan (rekening D / antar dana K).
+  const bs = barisAktif(d);
+  if (bs.length !== 4) return null;
+  const asal = d.dana;
+  const bA = bs.filter((b) => b.dana === asal);
+  const bT = bs.filter((b) => b.dana !== asal);
+  const rekA = bA.find((b) => kreditDari(b) > 0);
+  const rekT = bT.find((b) => debitDari(b) > 0);
+  if (bA.length !== 2 || bT.length !== 2 || !rekA || !rekT) return null;
+  return {
+    tanggal: tglIso(d.tanggal), asal, tujuan: rekT.dana, rekAsal: rekA.coaId, rekTujuan: rekT.coaId,
+    nominal: kreditDari(rekA), ket: d.keterangan || "",
+  };
+}
+
+// ----------------------------------------------------------------------------------------------
+// Tabel data yang sudah diinput (tepat di bawah form), per jenis template.
+
+const NAMA_BULAN = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+/** 24 bulan terakhir (termasuk bulan ini), terbaru di atas: { value: "2026-09", label: "September 2026" }. */
+const OPSI_PERIODE = (() => {
+  const d = new Date();
+  return Array.from({ length: 24 }, (_, i) => {
+    const t = new Date(d.getFullYear(), d.getMonth() - i, 1);
+    return { value: `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, "0")}`, label: `${NAMA_BULAN[t.getMonth()]} ${t.getFullYear()}` };
+  });
+})();
+
+const STATUS_WARNA = { POSTED: "bg-green-100 text-green-800", VOID: "bg-gray-200 text-gray-600", DRAFT: "bg-amber-100 text-amber-800" };
+
+function RiwayatInput({ jenis, versi, edit, onEdit }) {
+  const [list, setList] = useState([]);
+  const [q, setQ] = useState("");
+  const [periode, setPeriode] = useState("");
+  const [status, setStatus] = useState("POSTED");
+  const [memuat, setMemuat] = useState(false);
+
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setMemuat(true);
+      keuangan.jurnal({ jenis, q: q.trim() || undefined, periode: periode || undefined, status: status || undefined, limit: 100 })
+        .then(setList)
+        .catch((e) => Swal.fire({ icon: "error", title: "Gagal memuat data", text: errMsg(e) }))
+        .finally(() => setMemuat(false));
+    }, 250);
+    return () => clearTimeout(t);
+  }, [jenis, q, periode, status, versi]);
+
+  const nama = TEMPLATE.find((t) => t.id === jenis)?.nama || jenis;
+  return (
+    <div className="bg-white shadow rounded-lg p-4 mt-4">
+      <div className="flex flex-wrap items-end justify-between gap-3 mb-3">
+        <div>
+          <div className="font-semibold text-gray-700">Data {nama.toLowerCase()} yang sudah diinput</div>
+          <div className="text-xs text-gray-500">Klik Edit untuk memuat jurnal ke form di atas.</div>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <input className={`${inputCls} w-56`} placeholder="Cari no. bukti / keterangan / nama…" value={q} onChange={(e) => setQ(e.target.value)} />
+          {/* Filter periode (bulan). Dropdown, bukan <input type="month">: Safari menampilkan input bulan sebagai
+              kotak teks kosong tanpa petunjuk. */}
+          <select className={`${inputCls} w-44`} value={periode} onChange={(e) => setPeriode(e.target.value)} title="Filter periode (bulan)">
+            <option value="">Semua periode</option>
+            {OPSI_PERIODE.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+          </select>
+          <select className={`${inputCls} w-32`} value={status} onChange={(e) => setStatus(e.target.value)}>
+            <option value="POSTED">Aktif</option>
+            <option value="VOID">Dibatalkan</option>
+            <option value="">Semua</option>
+          </select>
+        </div>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="min-w-full text-sm">
+          <thead className="bg-gray-100 text-gray-600 text-xs uppercase">
+            <tr>
+              <th className="text-left py-2 px-2">Tanggal</th>
+              <th className="text-left px-2">No. bukti</th>
+              <th className="text-left px-2">Dana</th>
+              <th className="text-left px-2">{jenis === "PENERIMAAN" ? "Donatur" : jenis === "PENYALURAN" ? "Penerima" : "Pihak"}</th>
+              <th className="text-left px-2">Keterangan</th>
+              <th className="text-right px-2">Nominal</th>
+              <th className="text-center px-2">Status</th>
+              <th className="text-right px-2">Aksi</th>
+            </tr>
+          </thead>
+          <tbody>
+            {list.map((j) => (
+              <tr key={j.id} className={`border-t ${edit?.id === j.id ? "bg-amber-50" : "hover:bg-gray-50"}`}>
+                <td className="py-1.5 px-2 whitespace-nowrap">{tglIso(j.tanggal)}</td>
+                <td className="px-2 whitespace-nowrap">{j.nomorBukti}</td>
+                <td className="px-2"><DanaBadge dana={j.dana} /></td>
+                <td className="px-2">{j.pihak || ""}</td>
+                <td className="px-2 max-w-xs truncate" title={j.keterangan || ""}>{j.keterangan || ""}</td>
+                <td className="px-2 text-right tabular-nums whitespace-nowrap">{rp(j.total)}</td>
+                <td className="px-2 text-center"><span className={`px-2 py-0.5 rounded text-xs ${STATUS_WARNA[j.status] || "bg-gray-100"}`}>{j.status}</span></td>
+                <td className="px-2 text-right">
+                  {j.status === "POSTED" && (
+                    edit?.id === j.id
+                      ? <span className="text-xs text-amber-700">sedang diedit</span>
+                      : <button type="button" className="text-blue-600 hover:underline" onClick={() => onEdit(j)}>Edit</button>
+                  )}
+                </td>
+              </tr>
+            ))}
+            {list.length === 0 && (
+              <tr><td colSpan={8} className="py-4 text-center text-gray-400">{memuat ? "Memuat…" : "Belum ada data"}</td></tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+      {list.length >= 100 && <div className="text-xs text-gray-400 mt-2">Menampilkan 100 data terbaru; persempit dengan pencarian atau periode.</div>}
+    </div>
+  );
+}
+RiwayatInput.propTypes = { jenis: PropTypes.string, versi: PropTypes.number, edit: PropTypes.object, onEdit: PropTypes.func };
 
 // ----------------------------------------------------------------------------------------------
 export default function InputJurnal() {
+  const dispatch = useDispatch();
+  // Daftar campaign: endpoint & state Redux yang sama dengan "Jurnal Umum (lama)".
+  const campaign = useSelector((state) => state.campaign.campaign);
   const [meta, setMeta] = useState(null);
   const [alokasi, setAlokasi] = useState([]);
   const [tpl, setTpl] = useState("PENERIMAAN");
   const [err, setErr] = useState("");
+  const [edit, setEdit] = useState(null); // { id, nomorBukti, awal }
+  const [versi, setVersi] = useState(0);
+  const atas = useRef(null);
 
   const muatUlangJenisZakat = () =>
     keuangan.jenisZakat().then((list) => setMeta((m) => ({ ...m, jenisZakat: list })));
@@ -552,33 +905,71 @@ export default function InputJurnal() {
   useEffect(() => {
     keuangan.meta().then(setMeta).catch((e) => setErr(errMsg(e)));
     keuangan.alokasi().then(setAlokasi).catch(() => {});
-  }, []);
+    // Kebijakan hak amil dimuat ulang tiap kali jendela kembali aktif, supaya kebijakan yang baru ditambah
+    // (di tab lain / lewat SQL) langsung terpakai tanpa refresh halaman.
+    const muatAlokasi = () => keuangan.alokasi().then(setAlokasi).catch(() => {});
+    window.addEventListener("focus", muatAlokasi);
+    dispatch(getCategoryZiswaf("campaign"));
+    return () => window.removeEventListener("focus", muatAlokasi);
+  }, [dispatch]);
+
+  const gantiTpl = (id) => { setEdit(null); setTpl(id); };
+  const batalEdit = () => setEdit(null);
+  const selesai = () => { setEdit(null); setVersi((v) => v + 1); };
+
+  const mulaiEdit = async (j) => {
+    try {
+      const d = await keuangan.jurnalDetail(j.id);
+      const awal = keFormAwal(tpl, d);
+      if (!awal) {
+        Swal.fire({
+          icon: "info",
+          title: "Tidak bisa diedit lewat form",
+          text: `Susunan baris jurnal ${d.nomorBukti} tidak sesuai form ${TEMPLATE.find((t) => t.id === tpl)?.nama} (mis. jurnal impor/lama dengan banyak baris). Koreksi lewat Daftar Jurnal: batalkan lalu input ulang.`,
+        });
+        return;
+      }
+      setEdit({ id: j.id, nomorBukti: d.nomorBukti, awal });
+      atas.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    } catch (e) {
+      Swal.fire({ icon: "error", title: "Gagal memuat jurnal", text: errMsg(e) });
+    }
+  };
 
   const form = useMemo(() => {
     if (!meta) return null;
-    if (tpl === "PENERIMAAN") return <FormPenerimaan key={tpl} meta={meta} alokasi={alokasi} onJenisZakatBaru={muatUlangJenisZakat} />;
-    if (tpl === "PENYALURAN") return <FormPenyaluran key={tpl} meta={meta} />;
-    if (tpl === "BEBAN_OPERASIONAL") return <FormBeban key={tpl} meta={meta} />;
-    return <FormTransfer key={tpl} meta={meta} />;
+    const k = `${tpl}-${edit?.id || "baru"}`;
+    const umum = { meta, awal: edit?.awal, edit, onSelesai: selesai, onBatalEdit: batalEdit };
+    if (tpl === "PENERIMAAN") return <FormPenerimaan key={k} {...umum} alokasi={alokasi} campaign={campaign} onJenisZakatBaru={muatUlangJenisZakat} />;
+    if (tpl === "PENYALURAN") return <FormPenyaluran key={k} {...umum} campaign={campaign} />;
+    if (tpl === "BEBAN_OPERASIONAL") return <FormBeban key={k} {...umum} />;
+    return <FormTransfer key={k} {...umum} />;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [meta, tpl, alokasi]);
+  }, [meta, tpl, alokasi, campaign, edit]);
 
   return (
-    <div>
+    <div ref={atas}>
       <Judul>Input Jurnal</Judul>
       {err && <div className="bg-red-50 text-red-700 p-3 rounded mb-3">{err}</div>}
       <div className="flex flex-wrap gap-2 mb-4">
         {TEMPLATE.map((t) => (
-          <button key={t.id} onClick={() => setTpl(t.id)}
+          <button key={t.id} onClick={() => gantiTpl(t.id)}
             className={`text-left px-4 py-2 rounded-lg border transition ${tpl === t.id ? "bg-blue-600 text-white border-blue-600" : "bg-white hover:bg-blue-50"}`}>
             <div className="font-semibold text-sm">{t.nama}</div>
             <div className={`text-xs ${tpl === t.id ? "text-blue-100" : "text-gray-500"}`}>{t.info}</div>
           </button>
         ))}
       </div>
-      <div className="bg-white shadow rounded-lg p-4">
+      {edit && (
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2 bg-amber-50 border border-amber-200 text-amber-800 rounded-lg px-3 py-2 text-sm">
+          <span>Mode edit: <b>{edit.nomorBukti}</b> — nomor bukti tetap; isi lama disimpan sebagai riwayat.</span>
+          <Btn color="gray" onClick={batalEdit}>Batal edit</Btn>
+        </div>
+      )}
+      <div className={`bg-white shadow rounded-lg p-4 ${edit ? "ring-2 ring-amber-300" : ""}`}>
         {form || <div className="text-gray-400">Memuat data referensi…</div>}
       </div>
+      <RiwayatInput jenis={tpl} versi={versi} edit={edit} onEdit={mulaiEdit} />
     </div>
   );
 }

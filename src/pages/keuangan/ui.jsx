@@ -81,10 +81,14 @@ export function SearchSelect({ value, onChange, options, placeholder = "Cari…"
         value={open ? q : (selected?.label ?? "")}
         placeholder={placeholder}
         onFocus={() => { setOpen(true); setQ(""); }}
+        onClick={() => setOpen(true)}
         onChange={(e) => { setQ(e.target.value); setOpen(true); }}
       />
       {open && (
-        <div className="absolute z-20 mt-1 w-full max-h-64 overflow-y-auto bg-white border border-gray-300 rounded-lg shadow-lg">
+        // preventDefault: komponen ini sering dibungkus <label> (Field). Tanpa ini, klik pada pilihan diteruskan label
+        // ke input (fokus ulang) sehingga daftar langsung terbuka lagi setelah memilih.
+        <div className="absolute z-20 mt-1 w-full max-h-64 overflow-y-auto bg-white border border-gray-300 rounded-lg shadow-lg"
+          onMouseDown={(e) => e.preventDefault()} onClick={(e) => e.preventDefault()}>
           {filtered.length === 0 && <div className="px-3 py-2 text-sm text-gray-400">Tidak ditemukan</div>}
           {filtered.map((o) => (
             <div

@@ -23,6 +23,8 @@ export const keuangan = {
     api.get("/keuangan/jurnal", { params }).then((r) => r.data),
   jurnalDetail: (id) => api.get(`/keuangan/jurnal/${id}`).then((r) => r.data),
   postJurnal: (cmd) => api.post("/keuangan/jurnal", cmd).then((r) => r.data),
+  /** Edit di tempat: nomor bukti tetap, baris lama ditandai terhapus. cmd boleh berisi `alasan`. */
+  editJurnal: (id, cmd) => api.put(`/keuangan/jurnal/${id}`, cmd).then((r) => r.data),
   voidJurnal: (id, alasan) =>
     api.post(`/keuangan/jurnal/${id}/void`, { alasan }).then((r) => r.data),
 
@@ -76,6 +78,8 @@ export const keuangan = {
   alokasi: () => api.get("/keuangan/alokasi-amil").then((r) => r.data),
   alokasiSimpan: (b) =>
     api.post("/keuangan/alokasi-amil", b).then((r) => r.data),
+  alokasiUbah: (id, b) =>
+    api.put(`/keuangan/alokasi-amil/${id}`, b).then((r) => r.data),
 
   lpd: (fund, year) =>
     api.get(`/keuangan/laporan/lpd/${fund}`, { params: { year } }).then((r) => r.data),
