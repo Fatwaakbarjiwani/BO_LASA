@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Swal from "sweetalert2";
 import { keuangan, errMsg } from "../../services/keuanganApi";
 import { Btn, DanaBadge, Field, Judul, Tabel, inputCls, rp } from "./ui";
@@ -26,7 +26,13 @@ const TAB = [
 
 export default function MonitorPage() {
   const [tab, setTab] = useState("ringkas");
-  const [data, setData] = useState(null);
+  // Data disimpan bersama nama tab pemiliknya. Sebelumnya, saat pindah tab, halaman sempat dirender dengan data
+  // tab lama (mis. objek "Sinkron Mobile" diberikan ke tabel Kontaminasi) sehingga crash/blank, dan respons
+  // yang datang terlambat bisa menimpa data tab yang sedang dibuka.
+  const [muatan, setMuatan] = useState({ tab: null, isi: null });
+  const tabAktif = useRef(tab);
+  tabAktif.current = tab;
+  const data = muatan.tab === tab ? muatan.isi : null;
   const [konfig, setKonfig] = useState([]);
   const [alokasi, setAlokasi] = useState([]);
   const KOSONG_AL = { dana: "ZAKAT", jenis: "", persen: "12.5", berlakuSejak: "", aktif: true };
@@ -36,22 +42,25 @@ export default function MonitorPage() {
   const [refJenis, setRefJenis] = useState({ zakat: [], infaq: [], wakaf: [] });
 
   const muat = useCallback(async () => {
+    const t = tab;
+    const simpan = (isi) => { if (tabAktif.current === t) setMuatan({ tab: t, isi }); };
     try {
-      setData(null);
-      if (tab === "ringkas") setData({ ...(await keuangan.versi()), mobile: await keuangan.versiMobile() });
-      else if (tab === "kontaminasi") setData(await keuangan.kontaminasi());
-      else if (tab === "timpang") setData(await keuangan.timpang());
-      else if (tab === "netral") setData(await keuangan.netral());
-      else if (tab === "pelanggaran") setData(await keuangan.pelanggaran());
-      else if (tab === "audit") setData(await keuangan.audit());
-      else if (tab === "pengaturan") {
-        setKonfig(await keuangan.konfigurasi());
-        const [daftar, meta, zakat] = await Promise.all([keuangan.alokasi(), keuangan.meta(), keuangan.jenisZakat(true)]);
+      setMuatan({ tab: null, isi: null });
+      if (t === "ringkas") simpan({ ...(await keuangan.versi()), mobile: await keuangan.versiMobile() });
+      else if (t === "kontaminasi") simpan(await keuangan.kontaminasi());
+      else if (t === "timpang") simpan(await keuangan.timpang());
+      else if (t === "netral") simpan(await keuangan.netral());
+      else if (t === "pelanggaran") simpan(await keuangan.pelanggaran());
+      else if (t === "audit") simpan(await keuangan.audit());
+      else if (t === "pengaturan") {
+        const [konf, daftar, meta, zakat] = await Promise.all([keuangan.konfigurasi(), keuangan.alokasi(), keuangan.meta(), keuangan.jenisZakat(true)]);
+        if (tabAktif.current !== t) return;
+        setKonfig(konf);
         setRefJenis({ zakat, infaq: meta.jenisInfaq || [], wakaf: meta.jenisWakaf || [] });
         setAlokasi(daftar);
-        setData([]);
+        simpan([]);
       }
-    } catch (e) { Swal.fire("Gagal", errMsg(e), "error"); }
+    } catch (e) { if (tabAktif.current === t) Swal.fire("Gagal memuat", errMsg(e), "error"); }
   }, [tab]);
   useEffect(() => { muat(); }, [muat]);
 
@@ -110,7 +119,8 @@ export default function MonitorPage() {
         ))}
       </div>
 
-      {tab === "ringkas" && data && (
+      {tab !== "pengaturan" && data === null && <div className="text-gray-400 text-sm py-4">Memuat…</div>}
+      {tab === "ringkas" && data && !Array.isArray(data) && (
         <div className="grid md:grid-cols-2 gap-4">
           <div className="bg-white shadow rounded p-4">
             <h3 className="font-semibold mb-2">Versi data per ruang</h3>
@@ -124,21 +134,21 @@ export default function MonitorPage() {
         </div>
       )}
 
-      {tab === "kontaminasi" && data && (
+      {tab === "kontaminasi" && Array.isArray(data) && (
         <>
           <p className="text-sm text-gray-500 mb-2">Baris jurnal yang dananya berbeda dari dana akun. Selesaikan dengan jurnal <b>Transfer Antar Dana</b>; targetnya nol.</p>
           <Tabel kolom={[{ judul: "No. bukti", kunci: "nomorBukti" }, { judul: "Tanggal", tampil: (r) => String(r.tanggal).slice(0, 10) }, { judul: "Jenis", kunci: "jenis" }, { judul: "Dana baris", tampil: (r) => <DanaBadge dana={r.danaBaris} /> }, { judul: "Dana akun", tampil: (r) => <DanaBadge dana={r.danaAkun} /> }, { judul: "Akun", tampil: (r) => `${r.kodeAkun} ${r.namaAkun}` }, { judul: "Nilai", kanan: true, tampil: (r) => rp(Number(r.debit) || Number(r.kredit)) }]} baris={data} kosong="Tidak ada kebocoran antar-dana 🎉" />
         </>
       )}
-      {tab === "timpang" && data && <Tabel kolom={[{ judul: "No. bukti", kunci: "nomorBukti" }, { judul: "Dana", tampil: (r) => <DanaBadge dana={r.dana} /> }, { judul: "Debit", kanan: true, tampil: (r) => rp(r.debit) }, { judul: "Kredit", kanan: true, tampil: (r) => rp(r.kredit) }]} baris={data} kosong="Semua jurnal seimbang di setiap dana" />}
-      {tab === "netral" && data && (
+      {tab === "timpang" && Array.isArray(data) && <Tabel kolom={[{ judul: "No. bukti", kunci: "nomorBukti" }, { judul: "Dana", tampil: (r) => <DanaBadge dana={r.dana} /> }, { judul: "Debit", kanan: true, tampil: (r) => rp(r.debit) }, { judul: "Kredit", kanan: true, tampil: (r) => rp(r.kredit) }]} baris={data} kosong="Semua jurnal seimbang di setiap dana" />}
+      {tab === "netral" && Array.isArray(data) && (
         <>
           <p className="text-sm text-gray-500 mb-2">Akun yang belum punya dana tetapi masih dipakai transaksi. Pecah per dana (mis. Kas Kecil), lalu reklasifikasi.</p>
           <Tabel kolom={[{ judul: "Akun", tampil: (r) => `${r.kode} ${r.nama}` }, { judul: "Jurnal", kanan: true, kunci: "jurnal" }, { judul: "Debit", kanan: true, tampil: (r) => rp(r.debit) }, { judul: "Kredit", kanan: true, tampil: (r) => rp(r.kredit) }]} baris={data} kosong="Tidak ada akun netral terpakai" />
         </>
       )}
-      {tab === "pelanggaran" && data && <Tabel kolom={[{ judul: "Waktu", tampil: (r) => String(r.waktu).replace("T", " ").slice(0, 19) }, { judul: "No. bukti", kunci: "nomorBukti" }, { judul: "Detail", tampil: (r) => <code className="text-xs">{typeof r.detail === "string" ? r.detail : JSON.stringify(r.detail)}</code> }]} baris={data} kosong="Belum ada pelanggaran tercatat (mode PANTAU)" />}
-      {tab === "audit" && data && <Tabel kolom={[{ judul: "Waktu", tampil: (r) => String(r.waktu).replace("T", " ").slice(0, 19) }, { judul: "Aksi", kunci: "aksi" }, { judul: "Entitas", tampil: (r) => `${r.entitas} ${r.entitasId ?? ""}` }, { judul: "Pengguna", kunci: "pengguna" }, { judul: "Detail", tampil: (r) => <code className="text-xs">{typeof r.detail === "string" ? r.detail : JSON.stringify(r.detail)}</code> }]} baris={data} />}
+      {tab === "pelanggaran" && Array.isArray(data) && <Tabel kolom={[{ judul: "Waktu", tampil: (r) => String(r.waktu).replace("T", " ").slice(0, 19) }, { judul: "No. bukti", kunci: "nomorBukti" }, { judul: "Detail", tampil: (r) => <code className="text-xs">{typeof r.detail === "string" ? r.detail : JSON.stringify(r.detail)}</code> }]} baris={data} kosong="Belum ada pelanggaran tercatat (mode PANTAU)" />}
+      {tab === "audit" && Array.isArray(data) && <Tabel kolom={[{ judul: "Waktu", tampil: (r) => String(r.waktu).replace("T", " ").slice(0, 19) }, { judul: "Aksi", kunci: "aksi" }, { judul: "Entitas", tampil: (r) => `${r.entitas} ${r.entitasId ?? ""}` }, { judul: "Pengguna", kunci: "pengguna" }, { judul: "Detail", tampil: (r) => <code className="text-xs">{typeof r.detail === "string" ? r.detail : JSON.stringify(r.detail)}</code> }]} baris={data} />}
 
       {tab === "pengaturan" && (
         <div className="grid md:grid-cols-2 gap-4">
@@ -152,7 +162,7 @@ export default function MonitorPage() {
                       <option>PANTAU</option><option>TEGAS</option>
                     </select>
                   ) : (
-                    <input type="date" className={inputCls} defaultValue={k.nilai} onBlur={(e) => e.target.value !== k.nilai && ubahKonfig(k.kunci, e.target.value)} />
+                    <input key={`${k.kunci}-${k.nilai}`} type="date" className={inputCls} defaultValue={k.nilai} onBlur={(e) => e.target.value && e.target.value !== k.nilai && ubahKonfig(k.kunci, e.target.value)} />
                   )}
                 </Field>
               </div>

@@ -27,6 +27,12 @@ export const keuangan = {
   editJurnal: (id, cmd) => api.put(`/keuangan/jurnal/${id}`, cmd).then((r) => r.data),
   voidJurnal: (id, alasan) =>
     api.post(`/keuangan/jurnal/${id}/void`, { alasan }).then((r) => r.data),
+  /** Daftar jurnal berhalaman: params jenis, status, q, from, to (yyyy-MM-dd), page (mulai 1), size. */
+  jurnalHalaman: (params) =>
+    api.get("/keuangan/jurnal/halaman", { params }).then((r) => r.data),
+  /** Buku Besar dari ledger: params akun ("" = semua, "1" atau "1,2,3"), from, to (yyyy-MM-dd). */
+  bukuBesar: (params) =>
+    api.get("/keuangan/buku-besar", { params }).then((r) => r.data),
 
   periode: () => api.get("/keuangan/periode").then((r) => r.data),
   periksa: (p) => api.get(`/keuangan/periode/${p}/periksa`).then((r) => r.data),
