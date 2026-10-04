@@ -97,6 +97,9 @@ export const keuangan = {
   panduanSimpan: (bagian) => api.put("/keuangan/panduan", bagian).then((r) => r.data),
   /** Buku besar untuk pop-up telusur & halaman Buku Besar: params coa, kelompok, dana, lr, from, to. */
   bukuBesarTelusur: (params) => api.get("/keuangan/buku-besar/telusur", { params }).then((r) => r.data),
+  /** Rincian CAMPAIGN, BIDANG, BANK/TUNAI seperti blok LAP BANK; bulan "yyyy-MM" atau kosong = setahun. */
+  rincianLapBank: (year, bulan) =>
+    api.get("/keuangan/laporan/rincian", { params: { year, bulan: bulan || undefined } }).then((r) => r.data),
   neraca: (year, mode) =>
     api.get("/keuangan/laporan/neraca", { params: { year, mode } }).then((r) => r.data),
   labaRugi: (year) =>

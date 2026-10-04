@@ -187,12 +187,18 @@ Tujuan halaman ini: mencocokkan **uang yang tercatat di sistem** dengan **uang y
 
 ## Laporan yang tersedia
 | Laporan | Isi | Dipakai untuk |
-| Perubahan Dana (LPD) | Penerimaan, pendayagunaan, saldo awal & akhir per dana (Zakat, Infaq, DSKL, Amil, Campaign) | Laporan pertanggungjawaban per dana |
+| Perubahan Dana (LPD) | Ringkasan seperti LAP BANK (tab Dana, Campaign, Bidang, Bank/Tunai: saldo awal, masuk, keluar, saldo akhir + diagram pie), lalu rincian penerimaan & pendayagunaan per dana | Laporan pertanggungjawaban per dana |
 | Laba Rugi | Pendapatan − beban gabungan semua dana (tanpa alokasi amil & transfer antar dana) | Kinerja bulanan/tahunan |
 | Buku Besar | Mutasi & saldo per akun pada rentang tanggal | Rincian & rekonsiliasi |
 | Neraca | Saldo setiap akun per akhir bulan: Aset, Kewajiban, Saldo Dana | Posisi harta & dana |
 | Neraca Saldo | Saldo debit/kredit semua akun per akhir bulan | Cek keseimbangan sebelum laporan |
 | Posisi Keuangan | Format ISAK 35: Aset, Liabilitas, Aset Neto, ringkas per dana | Laporan resmi |
+
+## Ringkasan LAP BANK (di halaman Perubahan Dana)
+1. Pilih tahun dan bulan. Panel **Ringkasan** berisi tab **Dana**, **Campaign**, **Bidang**, dan **Bank / Tunai**, masing-masing dengan kolom Saldo awal, Masuk, Keluar, Saldo akhir.
+2. Tab **Bidang** mengambil bidang dari akun pendayagunaan (Daftar Akun → Bidang program) atau kategori campaign. Lengkapi bidang akun agar baris "Belum ada bidang" mengecil.
+3. Tab **Bank / Tunai** sama dengan Rekening & Harian; klik nama rekening untuk melihat buku besarnya.
+4. \`Unduh CSV ringkasan\` dan \`Cetak ringkasan\` memuat keempat tabel sekaligus.
 
 ## Buku Besar
 1. Pilih mode: **Single akun** (1 dropdown), **Multiple akun** (2 dropdown), atau **Semua akun** (tanpa dropdown; hanya akun yang punya saldo/mutasi).
