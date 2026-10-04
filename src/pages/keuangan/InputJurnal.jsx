@@ -4,11 +4,18 @@ import Swal from "sweetalert2";
 import { useDispatch, useSelector } from "react-redux";
 import { getCategoryZiswaf } from "../../redux/actions/ziswafAction";
 import { keuangan, errMsg } from "../../services/keuanganApi";
-import { Btn, DanaBadge, Field, Judul, SearchSelect, inputCls, num, rp, today } from "./ui";
-import { RentangTanggal, teksRentang } from "./alatJurnal";
+import { Btn, DanaBadge, Field, Judul, Modal, SearchSelect, inputCls, num, rp } from "./ui";
+import { teksRentang } from "./alatJurnal";
 import { barisKopCsv, simpanCsv } from "./kopLaporan";
 import { cetakDaftarJurnal } from "./cetakJurnal";
 import { unduhExcelJurnal } from "../../services/jurnalExport";
+
+/** Tanggal hari ini menurut jam lokal (WIB). today() di ui.jsx memakai UTC sehingga sebelum 07.00 WIB
+ *  menghasilkan tanggal kemarin. */
+const today = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+};
 
 const TEMPLATE = [
   { id: "PENERIMAAN", nama: "Penerimaan", info: "Zakat, Infaq, DSKL, Wakaf masuk" },
@@ -344,11 +351,17 @@ function FormPenerimaan({ meta, alokasi, campaign, onJenisZakatBaru, awal, edit,
         {jenisList.length > 0 && (
           <Field label={isCampaign ? "Jenis (campaign)" : f.dana === "ZAKAT" ? "Jenis zakat" : f.dana === "WAKAF" ? "Jenis wakaf" : "Jenis infaq"}
             hint={isCampaign ? "Dicatat sebagai Dana Infaq Terikat untuk campaign terpilih" : undefined}>
-            <select className={inputCls} value={f.jenis}
-              onChange={(e) => (e.target.value === TAMBAH_JENIS ? tambahJenisZakat() : set("jenis", e.target.value))}>
-              {jenisOpsi.map((j) => <option key={j.kode} value={j.kode}>{j.nama}</option>)}
-              {f.dana === "ZAKAT" && <option value={TAMBAH_JENIS}>+ Tambah jenis zakat…</option>}
-            </select>
+            {isCampaign ? (
+              // Campaign bisa banyak: dropdown yang bisa dicari (ketik nama / nomor campaign).
+              <SearchSelect value={f.jenis} onChange={(v) => set("jenis", v)}
+                options={jenisOpsi.map((j) => ({ value: j.kode, label: j.nama }))} placeholder="Cari campaign…" />
+            ) : (
+              <select className={inputCls} value={f.jenis}
+                onChange={(e) => (e.target.value === TAMBAH_JENIS ? tambahJenisZakat() : set("jenis", e.target.value))}>
+                {jenisOpsi.map((j) => <option key={j.kode} value={j.kode}>{j.nama}</option>)}
+                {f.dana === "ZAKAT" && <option value={TAMBAH_JENIS}>+ Tambah jenis zakat…</option>}
+              </select>
+            )}
           </Field>
         )}
         <Field label="Akun penerimaan"
@@ -433,11 +446,7 @@ function FormPenyaluran({ meta, campaign, awal, edit, onSelesai, onBatalEdit }) 
   const kosong = { tanggal: today(), dana: "ZAKAT", jenis: "", akunId: "", rekId: "", ket: "" };
   const [f, setF] = useState(awal ? { ...kosong, ...awal, rows: undefined } : kosong);
   const [rows, setRows] = useState(awal?.rows?.length ? awal.rows : [{ mustahikId: "", nama: "", asnaf: "", jumlah: 0, jml: 1 }]);
-  const danaSebelum = useRef(awal ? awal.dana : null);
-  const [mustahik, setMustahik] = useState([]);
   const set = (k, v) => setF((s) => ({ ...s, [k]: v }));
-
-  useEffect(() => { keuangan.mustahik({}).then(setMustahik).catch(() => {}); }, []);
 
   const isCampaign = f.dana === CAMPAIGN;
   const dana = danaPosting(f.dana);
@@ -451,9 +460,6 @@ function FormPenyaluran({ meta, campaign, awal, edit, onSelesai, onBatalEdit }) 
       akunId: akunList.some((a) => String(a.id) === String(s.akunId)) ? s.akunId : akunList[0]?.id || "",
       rekId: rekList.some((r) => String(r.coaId) === String(s.rekId)) ? s.rekId : rekList.find((r) => !r.kas)?.coaId || rekList[0]?.coaId || "",
     }));
-    // Penerima terdaftar hanya direset bila dana benar-benar berganti (mustahik vs mauquf alaih).
-    if (danaSebelum.current !== null && danaSebelum.current !== f.dana) setRows((rs) => rs.map((r) => ({ ...r, mustahikId: "" })));
-    danaSebelum.current = f.dana;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [f.dana, campaign]);
 
@@ -461,20 +467,15 @@ function FormPenyaluran({ meta, campaign, awal, edit, onSelesai, onBatalEdit }) 
   const rek = meta.rekening.find((r) => String(r.coaId) === String(f.rekId));
   // Wakaf disalurkan ke mauquf 'alaih; Zakat/Infaq/DSKL ke mustahik.
   const wakaf = f.dana === "WAKAF";
-  const penerimaList = mustahik.filter((m) => (m.jenisPenerima || "MUSTAHIK") === (wakaf ? "MAUQUF_ALAIH" : "MUSTAHIK"));
   const total = rows.reduce((s, r) => s + (r.jumlah || 0), 0);
   const ubah = (i, k, v) => setRows((rs) => rs.map((r, j) => (j === i ? { ...r, [k]: v } : r)));
-  const pilihMustahik = (i, id) => {
-    const m = penerimaList.find((x) => String(x.id) === String(id));
-    setRows((rs) => rs.map((r, j) => (j === i ? { ...r, mustahikId: id, nama: m ? m.nama : r.nama, asnaf: m?.asnaf || r.asnaf } : r)));
-  };
 
   const baris = [
     { dana, akun: akun ? `${akun.kode} ${akun.nama}` : null, debit: total },
     { dana, akun: rek?.namaAkun, kredit: total },
   ];
   const zakat = f.dana === "ZAKAT";
-  const siap = total > 0 && akun && rek && (!isCampaign || f.jenis) && rows.every((r) => r.jumlah > 0 && (r.mustahikId || r.nama.trim()));
+  const siap = total > 0 && akun && rek && (!isCampaign || f.jenis) && rows.every((r) => r.jumlah > 0 && r.nama.trim());
 
   const simpan = () =>
     kirim(
@@ -483,7 +484,8 @@ function FormPenyaluran({ meta, campaign, awal, edit, onSelesai, onBatalEdit }) 
         campaignId: isCampaign && f.jenis ? Number(f.jenis) : null,
         lines: [{ coaId: akun.id, debit: total }, { coaId: rek.coaId, kredit: total }],
         penyaluran: rows.map((r) => ({
-          mustahikId: r.mustahikId ? Number(r.mustahikId) : null, namaPenerima: r.nama || null,
+          // Penerima diketik manual (tidak lagi memilih dari daftar mustahik terdaftar).
+          mustahikId: null, namaPenerima: r.nama.trim() || null,
           asnaf: r.asnaf || null, coaId: akun.id, jumlah: r.jumlah, jmlPenerima: r.jml || 1, keterangan: null,
         })),
       },
@@ -506,9 +508,8 @@ function FormPenyaluran({ meta, campaign, awal, edit, onSelesai, onBatalEdit }) 
         {isCampaign && (
           campaignOpsi.length > 0 ? (
             <Field label="Jenis (campaign)" hint="Dibayar dari Dana Infaq Terikat milik campaign terpilih">
-              <select className={inputCls} value={f.jenis} onChange={(e) => set("jenis", e.target.value)}>
-                {campaignOpsi.map((c) => <option key={c.kode} value={c.kode}>{c.nama}</option>)}
-              </select>
+              <SearchSelect value={f.jenis} onChange={(v) => set("jenis", v)}
+                options={campaignOpsi.map((c) => ({ value: c.kode, label: c.nama }))} placeholder="Cari campaign…" />
             </Field>
           ) : (
             <div className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded p-2">Belum ada campaign.</div>
@@ -542,11 +543,8 @@ function FormPenyaluran({ meta, campaign, awal, edit, onSelesai, onBatalEdit }) 
         <div className="space-y-2">
           {rows.map((r, i) => (
             <div key={i} className="border rounded-lg p-2 grid grid-cols-6 gap-2 bg-white">
-              <select className={`${inputCls} col-span-3`} value={r.mustahikId} onChange={(e) => pilihMustahik(i, e.target.value)}>
-                <option value="">{wakaf ? "— mauquf 'alaih terdaftar —" : "— mustahik terdaftar —"}</option>
-                {penerimaList.map((m) => <option key={m.id} value={m.id}>{m.nama}</option>)}
-              </select>
-              <input className={`${inputCls} col-span-3`} placeholder="atau ketik nama / lembaga" value={r.nama} onChange={(e) => ubah(i, "nama", e.target.value)} />
+              <input className={`${inputCls} col-span-6`} placeholder={wakaf ? "Nama mauquf 'alaih / lembaga" : "Nama penerima / lembaga"}
+                value={r.nama} onChange={(e) => ubah(i, "nama", e.target.value)} />
               <div className="col-span-3"><Nominal value={r.jumlah} onChange={(v) => ubah(i, "jumlah", v)} /></div>
               <input type="number" min="1" className={`${inputCls} col-span-1`} title="Jumlah penerima" value={r.jml} onChange={(e) => ubah(i, "jml", parseInt(e.target.value, 10) || 1)} />
               {zakat ? (
@@ -792,28 +790,155 @@ function keFormAwal(tpl, d) {
 // ----------------------------------------------------------------------------------------------
 // Tabel data yang sudah diinput (tepat di bawah form), per jenis template.
 
-const STATUS_WARNA = { POSTED: "bg-green-100 text-green-800", VOID: "bg-gray-200 text-gray-600", DRAFT: "bg-amber-100 text-amber-800" };
+// ----------------------------------------------------------------------------------------------
+// Tabel data yang sudah diinput (tepat di bawah form), per jenis template. Dipakai bersama keempat tab:
+// filter periode (tgl awal–akhir), pagination dari server, detail saat no. bukti diklik, edit, dan batal jurnal.
 
-function RiwayatInput({ jenis, versi, edit, onEdit }) {
-  const [list, setList] = useState([]);
+const STATUS_WARNA = { POSTED: "bg-green-100 text-green-800", VOID: "bg-gray-200 text-gray-600", DRAFT: "bg-amber-100 text-amber-800" };
+const STATUS_LABEL = { POSTED: "Aktif", VOID: "Dibatalkan", DRAFT: "Draft" };
+const UKURAN_HALAMAN = [20, 50, 100];
+const awalBulanIni = () => `${today().slice(0, 8)}01`;
+
+/** Minta alasan lalu batalkan jurnal. Mengembalikan true bila berhasil. */
+async function batalkanJurnal(j) {
+  const k = await Swal.fire({
+    icon: "warning",
+    title: `Batalkan jurnal ${j.nomorBukti}?`,
+    html: "Jurnal tidak dihapus, tetapi tidak dihitung lagi di laporan mana pun. Bila periodenya sudah ditutup, sistem membuat jurnal balik di periode berjalan.<br/><small>Jurnal alokasi hak amil milik penerimaan ini ikut dibatalkan.</small>",
+    input: "text",
+    inputLabel: "Alasan pembatalan",
+    inputPlaceholder: "mis. salah input nominal",
+    inputValidator: (v) => (!v || !v.trim() ? "Alasan wajib diisi" : undefined),
+    showCancelButton: true,
+    confirmButtonText: "Batalkan jurnal",
+    confirmButtonColor: "#dc2626",
+    cancelButtonText: "Kembali",
+  });
+  if (!k.isConfirmed) return false;
+  try {
+    const r = await keuangan.voidJurnal(j.id, k.value.trim());
+    await Swal.fire({ icon: "success", title: "Jurnal dibatalkan", text: r?.pesan || "" });
+    return true;
+  } catch (e) {
+    Swal.fire({ icon: "error", title: "Gagal membatalkan", text: errMsg(e) });
+    return false;
+  }
+}
+
+/** Rincian jurnal: akun, debet, kredit (+ rincian donatur/penerima). Dibuka dengan klik no. bukti. */
+function DetailJurnal({ id, onClose, onEdit, onBatal, bisaEdit }) {
+  const [d, setD] = useState(null);
+  const [tampilHapus, setTampilHapus] = useState(false);
+  useEffect(() => {
+    keuangan.jurnalDetail(id).then(setD).catch((e) => { Swal.fire({ icon: "error", title: "Gagal memuat jurnal", text: errMsg(e) }); onClose(); });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
+  const baris = (d?.baris || []).filter((b) => tampilHapus || !Number(b.dihapus));
+  const adaHapus = (d?.baris || []).some((b) => Number(b.dihapus));
+  const totD = baris.filter((b) => !Number(b.dihapus)).reduce((x, b) => x + (Number(b.debit) || 0), 0);
+  const totK = baris.filter((b) => !Number(b.dihapus)).reduce((x, b) => x + (Number(b.kredit) || 0), 0);
+  const pen = (d?.penerimaan || [])[0];
+  return (
+    <Modal title={d ? `Jurnal ${d.nomorBukti}` : "Memuat…"} onClose={onClose} wide>
+      {!d ? <div className="text-gray-400">Memuat…</div> : (
+        <div className="space-y-3 text-sm">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+            <div><div className="text-xs text-gray-500">Tanggal</div>{tglIso(d.tanggal)}</div>
+            <div><div className="text-xs text-gray-500">Jenis</div>{TEMPLATE.find((t) => t.id === d.jenis)?.nama || d.jenis}</div>
+            <div><div className="text-xs text-gray-500">Dana</div><DanaBadge dana={d.dana} /></div>
+            <div><div className="text-xs text-gray-500">Status</div><span className={`px-2 py-0.5 rounded text-xs ${STATUS_WARNA[d.status] || "bg-gray-100"}`}>{STATUS_LABEL[d.status] || d.status}</span></div>
+          </div>
+          {d.keterangan && <div><span className="text-xs text-gray-500">Keterangan: </span>{d.keterangan}</div>}
+          {pen && <div><span className="text-xs text-gray-500">Donatur: </span>{pen.donatur_nama}{pen.metode_bayar ? ` · ${String(pen.metode_bayar).replace(/_/g, " ")}` : ""}</div>}
+          <table className="w-full">
+            <thead className="bg-gray-100 text-xs text-gray-600 uppercase">
+              <tr><th className="text-left py-1.5 px-2">Akun</th><th className="text-left px-2">Dana</th><th className="text-right px-2">Debet</th><th className="text-right px-2">Kredit</th></tr>
+            </thead>
+            <tbody>
+              {baris.map((b) => (
+                <tr key={b.id} className={`border-t ${Number(b.dihapus) ? "text-gray-400 line-through" : ""}`}>
+                  <td className="py-1.5 px-2">{b.kode} {b.akun}</td>
+                  <td className="px-2"><DanaBadge dana={b.dana} /></td>
+                  <td className="px-2 text-right tabular-nums">{Number(b.debit) ? rp(b.debit) : ""}</td>
+                  <td className="px-2 text-right tabular-nums">{Number(b.kredit) ? rp(b.kredit) : ""}</td>
+                </tr>
+              ))}
+              <tr className="border-t font-semibold">
+                <td className="py-1.5 px-2" colSpan={2}>Total</td>
+                <td className="px-2 text-right tabular-nums">{rp(totD)}</td>
+                <td className="px-2 text-right tabular-nums">{rp(totK)}</td>
+              </tr>
+            </tbody>
+          </table>
+          {adaHapus && (
+            <label className="flex items-center gap-2 text-xs text-gray-500">
+              <input type="checkbox" checked={tampilHapus} onChange={(e) => setTampilHapus(e.target.checked)} />
+              Tampilkan baris lama (sebelum diedit / dibatalkan)
+            </label>
+          )}
+          {(d.penyaluran || []).length > 0 && (
+            <div>
+              <div className="text-xs font-semibold text-gray-600 mb-1">Rincian penerima</div>
+              <table className="w-full">
+                <tbody>
+                  {d.penyaluran.map((x) => (
+                    <tr key={x.id} className="border-t">
+                      <td className="py-1 px-2">{x.penerima || "-"}{x.asnaf ? <span className="text-xs text-gray-500"> · {x.asnaf}</span> : null}</td>
+                      <td className="px-2 text-right tabular-nums">{rp(x.jumlah)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+          {d.status === "POSTED" && (
+            <div className="flex justify-end gap-2 pt-2">
+              {bisaEdit && <Btn color="blue" onClick={() => { onClose(); onEdit({ id: d.id }); }}>Edit</Btn>}
+              <Btn color="red" onClick={async () => { if (await batalkanJurnal({ id: d.id, nomorBukti: d.nomorBukti })) { onClose(); onBatal(d.id); } }}>Batalkan jurnal</Btn>
+            </div>
+          )}
+        </div>
+      )}
+    </Modal>
+  );
+}
+DetailJurnal.propTypes = { id: PropTypes.number, onClose: PropTypes.func, onEdit: PropTypes.func, onBatal: PropTypes.func, bisaEdit: PropTypes.bool };
+
+function RiwayatInput({ jenis, versi, edit, onEdit, onBatal }) {
+  const [hasil, setHasil] = useState({ data: [], total: 0, page: 1, totalHalaman: 1 });
   const [q, setQ] = useState("");
-  const [dari, setDari] = useState("");
-  const [sampai, setSampai] = useState("");
+  const [dari, setDari] = useState(awalBulanIni());
+  const [sampai, setSampai] = useState(today());
   const [status, setStatus] = useState("POSTED");
+  const [page, setPage] = useState(1);
+  const [size, setSize] = useState(20);
   const [memuat, setMemuat] = useState(false);
+  const [detailId, setDetailId] = useState(null);
+  const [muatUlang, setMuatUlang] = useState(0);
+
+  // Filter berubah -> kembali ke halaman 1.
+  useEffect(() => { setPage(1); }, [jenis, q, dari, sampai, status, size]);
 
   useEffect(() => {
+    if (dari && sampai && dari > sampai) return;
     const t = setTimeout(() => {
       setMemuat(true);
-      keuangan.jurnal({ jenis, q: q.trim() || undefined, from: dari || undefined, to: sampai || undefined, status: status || undefined, limit: 100 })
-        .then(setList)
+      keuangan.jurnalHalaman({
+        jenis, q: q.trim() || undefined, from: dari || undefined, to: sampai || undefined,
+        status: status || undefined, page, size,
+      })
+        .then(setHasil)
         .catch((e) => Swal.fire({ icon: "error", title: "Gagal memuat data", text: errMsg(e) }))
         .finally(() => setMemuat(false));
     }, 250);
     return () => clearTimeout(t);
-  }, [jenis, q, dari, sampai, status, versi]);
+  }, [jenis, q, dari, sampai, status, page, size, versi, muatUlang]);
 
+  const setelahBatal = (id) => { setMuatUlang((x) => x + 1); onBatal(id); };
+  const list = hasil.data || [];
   const nama = TEMPLATE.find((t) => t.id === jenis)?.nama || jenis;
+  const mulai = hasil.total ? (hasil.page - 1) * hasil.size + 1 : 0;
+  const akhir = Math.min(hasil.total, hasil.page * hasil.size);
 
   // Cetak PDF / Excel / CSV mengikuti jenis tab ini + rentang tanggal awal s.d. akhir + status + pencarian yang dipilih.
   const filterUnduh = { jenis, from: dari, to: sampai, q: q.trim(), status };
@@ -845,21 +970,36 @@ function RiwayatInput({ jenis, versi, edit, onEdit }) {
       <div className="flex flex-wrap items-end justify-between gap-3 mb-3">
         <div>
           <div className="font-semibold text-gray-700">Data {nama.toLowerCase()} yang sudah diinput</div>
-          <div className="text-xs text-gray-500">Klik Edit untuk memuat jurnal ke form di atas.</div>
+          <div className="text-xs text-gray-500">Klik no. bukti untuk melihat akun, debet, dan kredit.</div>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <input className={`${inputCls} w-56`} placeholder="Cari no. bukti / keterangan / nama…" value={q} onChange={(e) => setQ(e.target.value)} />
-          <RentangTanggal className="w-80" dari={dari} sampai={sampai} onChange={(a, b) => { setDari(a); setSampai(b); }} />
-          <select className={`${inputCls} w-32`} value={status} onChange={(e) => setStatus(e.target.value)}>
-            <option value="POSTED">Aktif</option>
-            <option value="VOID">Dibatalkan</option>
-            <option value="">Semua</option>
-          </select>
+        <div className="flex flex-wrap items-end gap-2">
+          <label className="text-xs text-gray-500">Cari
+            <input className={`${inputCls} w-56`} placeholder="No. bukti / keterangan / nama…" value={q} onChange={(e) => setQ(e.target.value)} />
+          </label>
+          <label className="text-xs text-gray-500">Tanggal awal
+            <input type="date" className={`${inputCls} w-40`} value={dari} max={sampai || undefined} onChange={(e) => setDari(e.target.value)} />
+          </label>
+          <label className="text-xs text-gray-500">Tanggal akhir
+            <input type="date" className={`${inputCls} w-40`} value={sampai} min={dari || undefined} onChange={(e) => setSampai(e.target.value)} />
+          </label>
+          <label className="text-xs text-gray-500">Status
+            <select className={`${inputCls} w-32`} value={status} onChange={(e) => setStatus(e.target.value)}>
+              <option value="POSTED">Aktif</option>
+              <option value="VOID">Dibatalkan</option>
+              <option value="">Semua</option>
+            </select>
+          </label>
+          {(dari || sampai) && (
+            <button type="button" className="text-xs text-blue-600 hover:underline pb-3" onClick={() => { setDari(""); setSampai(""); }}>Semua tanggal</button>
+          )}
           <Btn color="gray" onClick={cetakPdf}>Cetak PDF</Btn>
           <Btn color="gray" onClick={unduhExcel}>Excel</Btn>
           <Btn color="gray" onClick={unduhCsv}>CSV</Btn>
         </div>
       </div>
+      {dari && sampai && dari > sampai && (
+        <div className="text-sm text-red-600 mb-2">Tanggal awal tidak boleh sesudah tanggal akhir.</div>
+      )}
       <div className="overflow-x-auto">
         <table className="min-w-full text-sm">
           <thead className="bg-gray-100 text-gray-600 text-xs uppercase">
@@ -878,32 +1018,54 @@ function RiwayatInput({ jenis, versi, edit, onEdit }) {
             {list.map((j) => (
               <tr key={j.id} className={`border-t ${edit?.id === j.id ? "bg-amber-50" : "hover:bg-gray-50"}`}>
                 <td className="py-1.5 px-2 whitespace-nowrap">{tglIso(j.tanggal)}</td>
-                <td className="px-2 whitespace-nowrap">{j.nomorBukti}</td>
+                <td className="px-2 whitespace-nowrap">
+                  <button type="button" className="text-blue-600 hover:underline" onClick={() => setDetailId(j.id)} title="Lihat akun, debet, kredit">{j.nomorBukti}</button>
+                </td>
                 <td className="px-2"><DanaBadge dana={j.dana} /></td>
                 <td className="px-2">{j.pihak || ""}</td>
                 <td className="px-2 max-w-xs truncate" title={j.keterangan || ""}>{j.keterangan || ""}</td>
                 <td className="px-2 text-right tabular-nums whitespace-nowrap">{rp(j.total)}</td>
-                <td className="px-2 text-center"><span className={`px-2 py-0.5 rounded text-xs ${STATUS_WARNA[j.status] || "bg-gray-100"}`}>{j.status}</span></td>
-                <td className="px-2 text-right">
+                <td className="px-2 text-center"><span className={`px-2 py-0.5 rounded text-xs ${STATUS_WARNA[j.status] || "bg-gray-100"}`}>{STATUS_LABEL[j.status] || j.status}</span></td>
+                <td className="px-2 text-right whitespace-nowrap space-x-3">
                   {j.status === "POSTED" && (
                     edit?.id === j.id
                       ? <span className="text-xs text-amber-700">sedang diedit</span>
-                      : <button type="button" className="text-blue-600 hover:underline" onClick={() => onEdit(j)}>Edit</button>
+                      : <>
+                        <button type="button" className="text-blue-600 hover:underline" onClick={() => onEdit(j)}>Edit</button>
+                        <button type="button" className="text-red-600 hover:underline" onClick={async () => { if (await batalkanJurnal(j)) setelahBatal(j.id); }}>Batal</button>
+                      </>
                   )}
                 </td>
               </tr>
             ))}
             {list.length === 0 && (
-              <tr><td colSpan={8} className="py-4 text-center text-gray-400">{memuat ? "Memuat…" : "Belum ada data"}</td></tr>
+              <tr><td colSpan={8} className="py-4 text-center text-gray-400">{memuat ? "Memuat…" : "Tidak ada data pada filter ini"}</td></tr>
             )}
           </tbody>
         </table>
       </div>
-      {list.length >= 100 && <div className="text-xs text-gray-400 mt-2">Menampilkan 100 data terbaru; persempit dengan pencarian atau periode.</div>}
+      <div className="flex flex-wrap items-center justify-between gap-2 mt-3 text-sm text-gray-600">
+        <div>
+          {hasil.total ? `Menampilkan ${mulai}–${akhir} dari ${hasil.total} jurnal` : ""}
+          {memuat && list.length > 0 && <span className="text-gray-400"> · memuat…</span>}
+        </div>
+        <div className="flex items-center gap-2">
+          <select className="border rounded px-2 py-1 text-sm" value={size} onChange={(e) => setSize(Number(e.target.value))} title="Baris per halaman">
+            {UKURAN_HALAMAN.map((u) => <option key={u} value={u}>{u} / halaman</option>)}
+          </select>
+          <Btn color="gray" disabled={page <= 1 || memuat} onClick={() => setPage((x) => Math.max(1, x - 1))}>‹ Sebelumnya</Btn>
+          <span>Hal. {hasil.page} dari {hasil.totalHalaman}</span>
+          <Btn color="gray" disabled={page >= hasil.totalHalaman || memuat} onClick={() => setPage((x) => x + 1)}>Berikutnya ›</Btn>
+        </div>
+      </div>
+      {detailId && (
+        <DetailJurnal id={detailId} onClose={() => setDetailId(null)} onEdit={onEdit} onBatal={setelahBatal}
+          bisaEdit={edit?.id !== detailId} />
+      )}
     </div>
   );
 }
-RiwayatInput.propTypes = { jenis: PropTypes.string, versi: PropTypes.number, edit: PropTypes.object, onEdit: PropTypes.func };
+RiwayatInput.propTypes = { jenis: PropTypes.string, versi: PropTypes.number, edit: PropTypes.object, onEdit: PropTypes.func, onBatal: PropTypes.func };
 
 // ----------------------------------------------------------------------------------------------
 export default function InputJurnal() {
@@ -988,7 +1150,8 @@ export default function InputJurnal() {
       <div className={`bg-white shadow rounded-lg p-4 ${edit ? "ring-2 ring-amber-300" : ""}`}>
         {form || <div className="text-gray-400">Memuat data referensi…</div>}
       </div>
-      <RiwayatInput jenis={tpl} versi={versi} edit={edit} onEdit={mulaiEdit} />
+      <RiwayatInput jenis={tpl} versi={versi} edit={edit} onEdit={mulaiEdit}
+        onBatal={(id) => { if (edit?.id === id) setEdit(null); }} />
     </div>
   );
 }

@@ -42,7 +42,7 @@ export default function BukuBesarPage() {
     if (mode === "multiple" && (!akun1 || !akun2)) return Swal.fire("Pilih akun", "Pilih dua akun COA.", "info");
     setLoading(true);
     try {
-      setData(await keuangan.bukuBesar({ coa: ids.join(",") || undefined, from: dari, to: sampai }));
+      setData(await keuangan.bukuBesarTelusur({ coa: ids.join(",") || undefined, from: dari, to: sampai }));
     } catch (e) {
       Swal.fire("Gagal", errMsg(e), "error");
     } finally {

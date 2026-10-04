@@ -66,7 +66,7 @@ const GRUP = [
       ["jurnal", "Jurnal (lama)", Jurnal],
       ["laporanAktifitas", "Laporan Aktivitas (lama)", LaporanAktifitas],
       ["laporanPengelola", "Laporan Pengelola (lama)", LaporanPengelola],
-      ["bukuBesarLama", "Buku Besar (lama)", BukuBesar],
+      ["bukuBesarAlt", "Buku Besar (alternatif)", BukuBesar],
       ["neracaSaldoLama", "Neraca Saldo (lama)", NeracaSaldo],
       ["posisiKeuanganLama", "Posisi Keuangan (lama)", LaporanPosisiKeuangan],
     ],

@@ -107,3 +107,63 @@ hooks/useJournalData.ts
 2. Set up branch strategy: `feature/bagus-journal` & `feature/admin-config`
 3. Review dependencies antara tugas sebelum mulai
 4. Daily sync untuk handle blocking issues
+
+---
+
+## Revisi Tambahan (2 Oktober 2026) — Pembagian untuk Meminimalkan Conflict
+
+**Prinsip:** satu file utama dipegang satu orang. Lima catatan yang berulang di keempat tab Input Jurnal
+(periode, cetak/Excel, klik no. bukti, pagination, batal jurnal) semuanya ada di **satu komponen tabel yang sama**
+(`RiwayatInput` di `InputJurnal.jsx`), jadi dikerjakan **sekali** dan otomatis berlaku untuk Penerimaan, Penyaluran,
+Beban Operasional, dan Transfer Antar Dana.
+
+### Tabel Mapping
+
+| # | Menu | Task | Assigned To | File yang disentuh |
+|---|------|------|-------------|--------------------|
+| R1 | Input Jurnal - Penerimaan & Penyaluran | Dropdown jenis campaign bisa dicari (pakai `SearchSelect`) | **Bagus** | BO: `keuangan/InputJurnal.jsx` (FormPenerimaan, FormPenyaluran) |
+| R2 | Input Jurnal - semua tab | Periode tanggal dinamis (tgl awal & tgl akhir) di tabel data | **Bagus** | BO: `InputJurnal.jsx` (RiwayatInput) · BE: `KeuanganController.jurnal()` tambah param `from`, `to` |
+| R3 | Input Jurnal - semua tab | Pagination tabel data | **Bagus** | BO: `InputJurnal.jsx` (RiwayatInput) · BE: `KeuanganController.jurnal()` tambah `page`, `size` + total data |
+| R4 | Input Jurnal - semua tab | Klik no. bukti → tampil akun, debet, kredit | **Bagus** | BO: `InputJurnal.jsx` (modal detail; endpoint `GET /keuangan/jurnal/{id}` sudah ada) |
+| R5 | Input Jurnal - semua tab | Fitur batal jurnal (dengan alasan) | **Bagus** | BO: `InputJurnal.jsx` (endpoint `POST /keuangan/jurnal/{id}/void` sudah ada) |
+| R6 | Input Jurnal - semua tab | Cetak jurnal (PDF) per jurnal & per periode | **Shafwan** | BO: file baru `keuangan/cetakJurnal.js` (pakai `jspdf` yang sudah terpasang) |
+| R7 | Input Jurnal - semua tab | Download Excel per jurnal & per periode | **Shafwan** | BE: controller baru `posting/JurnalExportController.java` (pakai Apache POI yang sudah ada di pom) |
+| R8 | Input Jurnal - semua tab | Pasang tombol Cetak & Excel di tabel data | **Bagus** | BO: `InputJurnal.jsx` — memanggil hasil R6 & R7, dikerjakan setelah keduanya di-push |
+| R9 | Saldo Awal | Tambah bulan dan tahun | **Shafwan** | BO: `saldoAwal/SaldoAwal.jsx` · BE: `SaldoAwalService`, `SaldoAwalRequest` (+ migrasi bila perlu) |
+| R10 | Rekening & Harian | Dalami fungsi & output (analisis dulu, tulis usulan sebelum ubah kode) | **Shafwan** | BO: `keuangan/RekeningPage.jsx` · BE: `HarianService` |
+| R11 | Administrasi | Hapus menu Mustahik dari Administrasi | **Shafwan** | BO: `administrasi/Administrasi.jsx` saja |
+
+### Aturan file bersama
+
+| File | Aturan |
+|------|--------|
+| `InputJurnal.jsx` | Hanya Bagus. Shafwan tidak mengubah file ini; hasil R6/R7 dipasang Bagus (R8). |
+| `Administrasi.jsx`, `SaldoAwal.jsx`, `RekeningPage.jsx` | Hanya Shafwan. |
+| `KeuanganController.java` (BE) | Bagus hanya mengubah method `jurnal()` (daftar jurnal). Fitur export Shafwan ditaruh di controller baru, tidak di file ini. |
+| `keuanganApi.js` | Keduanya boleh menambah fungsi, tetapi hanya **menambah baris baru** di kelompok masing-masing: Bagus di bawah `voidJurnal`, Shafwan di bagian paling akhir. Jangan mengubah/merapikan baris yang sudah ada. |
+| `ui.jsx` (`SearchSelect`, `Btn`, dll.) | Jangan diubah. Kalau perlu komponen baru, bicarakan dulu siapa yang menambahkan. |
+| `package.json`, `pom.xml` | Tidak perlu diubah (`jspdf` dan Apache POI sudah ada). Kalau ternyata butuh library baru, satu orang saja yang menambahkan. |
+| Migrasi database | Nomor terakhir **V26**. Bagus memakai **V27**, Shafwan **V28** (dan seterusnya bergantian) supaya tidak bentrok nomor seperti V24 kemarin. |
+
+### Kesepakatan sebelum mulai (supaya R6–R8 tidak saling tunggu)
+
+1. **Parameter filter daftar jurnal** dipakai bersama oleh tabel (R2/R3) dan export (R6/R7):
+   `jenis`, `from`, `to` (format `yyyy-MM-dd`), `q`, `status`. Bagus push perubahan `KeuanganController.jurnal()` lebih dulu.
+2. **Kontrak R6 (cetak):** `cetakJurnal(daftarDetail, { judul, periode })` — `daftarDetail` = array hasil `GET /keuangan/jurnal/{id}`.
+3. **Kontrak R7 (Excel):** `GET /api/keuangan/jurnal/{id}/excel` (per jurnal) dan `GET /api/keuangan/jurnal/excel?jenis&from&to&q&status` (per periode), mengembalikan file `.xlsx`.
+
+### Urutan kerja yang disarankan
+
+| Tahap | Bagus | Shafwan |
+|-------|-------|---------|
+| 1 | R2 + R3 backend (param filter & pagination) → push | R9, R11 |
+| 2 | R1, R4, R5 | R6, R7 (pakai param filter dari tahap 1) → push |
+| 3 | R8 (pasang tombol Cetak & Excel) | R10 (analisis Rekening & Harian) |
+
+Kebiasaan kerja: `git pull` sebelum mulai, commit kecil-kecil, push di akhir tiap task. Jangan `git stash` lama-lama.
+
+### Perlu dikonfirmasi
+
+- Baris catatan **"Input Jurnal - Penyaluran → Input Jurnal - Penyaluran"** kolom catatannya sama dengan nama menu (kemungkinan salah salin). Isi sebenarnya apa?
+- **Beban Operasional** tidak tercantum "batal jurnal" di catatan, tetapi karena tabelnya satu komponen, fitur batal ikut muncul juga di tab ini. Apakah memang boleh?
+- **R11 (hapus menu Mustahik)** berkaitan dengan task lama #19: form Penyaluran masih memakai daftar mustahik terdaftar. Yang dihapus hanya menunya, atau data mustahik juga tidak dipakai lagi di Penyaluran?

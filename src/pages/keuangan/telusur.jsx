@@ -190,7 +190,7 @@ export function ModalBukuBesar({ judul, params, onClose }) {
   const [data, setData] = useState(null);
   const [jurnal, setJurnal] = useState(null);
   useEffect(() => {
-    keuangan.bukuBesar(params).then(setData).catch((e) => { Swal.fire("Gagal", errMsg(e), "error"); onClose(); });
+    keuangan.bukuBesarTelusur(params).then(setData).catch((e) => { Swal.fire("Gagal", errMsg(e), "error"); onClose(); });
   }, [JSON.stringify(params)]); // eslint-disable-line react-hooks/exhaustive-deps
   const jalankan = (aksi) => async () => {
     try { await aksi(); } catch (e) { Swal.fire("Gagal", e.message, "error"); }

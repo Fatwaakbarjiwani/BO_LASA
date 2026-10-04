@@ -73,7 +73,7 @@ export default function DaftarJurnal({ initialFilter }) {
 
   const muat = useCallback(() => {
     setLoading(true);
-    keuangan.jurnalHalaman({ ...paramsDari(f), page, size: UKURAN_HALAMAN })
+    keuangan.jurnalBerhalaman({ ...paramsDari(f), page, size: UKURAN_HALAMAN })
       .then((r) => { setRows(r.items); setTotal(r.total); })
       .catch((e) => Swal.fire("Gagal", errMsg(e), "error")).finally(() => setLoading(false));
   }, [f, page]);

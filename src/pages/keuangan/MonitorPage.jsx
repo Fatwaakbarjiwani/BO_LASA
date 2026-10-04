@@ -26,8 +26,13 @@ const TAB = [
 
 export default function MonitorPage() {
   const [tab, setTab] = useState("ringkas");
-  const [data, setDataTab] = useState(null);
-  const setData = setDataTab;
+  // Data disimpan bersama nama tab pemiliknya. Sebelumnya, saat pindah tab, halaman sempat dirender dengan data
+  // tab lama (mis. objek "Sinkron Mobile" diberikan ke tabel Kontaminasi) sehingga crash/blank, dan respons
+  // yang datang terlambat bisa menimpa data tab yang sedang dibuka.
+  const [muatan, setMuatan] = useState({ tab: null, isi: null });
+  const tabAktif = useRef(tab);
+  tabAktif.current = tab;
+  const data = muatan.tab === tab ? muatan.isi : null;
   const [konfig, setKonfig] = useState([]);
   const [alokasi, setAlokasi] = useState([]);
   const KOSONG_AL = { dana: "ZAKAT", jenis: "", persen: "12.5", berlakuSejak: "", aktif: true };
@@ -36,27 +41,26 @@ export default function MonitorPage() {
   const [aktifAwal, setAktifAwal] = useState(true); // status tersimpan saat mulai edit, untuk mendeteksi perubahan status
   const [refJenis, setRefJenis] = useState({ zakat: [], infaq: [], wakaf: [] });
 
-  const tabAktif = useRef(tab);
-  tabAktif.current = tab;
   const muat = useCallback(async () => {
-    // Respons tab lama yang datang terlambat diabaikan agar tidak dirender di tab lain.
-    const setData = (v) => { if (tabAktif.current === tab) setDataTab(v); };
+    const t = tab;
+    const simpan = (isi) => { if (tabAktif.current === t) setMuatan({ tab: t, isi }); };
     try {
-      setDataTab(null);
-      if (tab === "ringkas") setData({ ...(await keuangan.versi()), mobile: await keuangan.versiMobile() });
-      else if (tab === "kontaminasi") setData(await keuangan.kontaminasi());
-      else if (tab === "timpang") setData(await keuangan.timpang());
-      else if (tab === "netral") setData(await keuangan.netral());
-      else if (tab === "pelanggaran") setData(await keuangan.pelanggaran());
-      else if (tab === "audit") setData(await keuangan.audit());
-      else if (tab === "pengaturan") {
-        setKonfig(await keuangan.konfigurasi());
-        const [daftar, meta, zakat] = await Promise.all([keuangan.alokasi(), keuangan.meta(), keuangan.jenisZakat(true)]);
+      setMuatan({ tab: null, isi: null });
+      if (t === "ringkas") simpan({ ...(await keuangan.versi()), mobile: await keuangan.versiMobile() });
+      else if (t === "kontaminasi") simpan(await keuangan.kontaminasi());
+      else if (t === "timpang") simpan(await keuangan.timpang());
+      else if (t === "netral") simpan(await keuangan.netral());
+      else if (t === "pelanggaran") simpan(await keuangan.pelanggaran());
+      else if (t === "audit") simpan(await keuangan.audit());
+      else if (t === "pengaturan") {
+        const [konf, daftar, meta, zakat] = await Promise.all([keuangan.konfigurasi(), keuangan.alokasi(), keuangan.meta(), keuangan.jenisZakat(true)]);
+        if (tabAktif.current !== t) return;
+        setKonfig(konf);
         setRefJenis({ zakat, infaq: meta.jenisInfaq || [], wakaf: meta.jenisWakaf || [] });
         setAlokasi(daftar);
-        setData([]);
+        simpan([]);
       }
-    } catch (e) { Swal.fire("Gagal", errMsg(e), "error"); }
+    } catch (e) { if (tabAktif.current === t) Swal.fire("Gagal memuat", errMsg(e), "error"); }
   }, [tab]);
   useEffect(() => { muat(); }, [muat]);
 
@@ -111,11 +115,12 @@ export default function MonitorPage() {
       <Judul aksi={<Btn color="gray" onClick={muat}>Muat ulang</Btn>}>Monitor & Pengaturan</Judul>
       <div className="flex flex-wrap gap-1 mb-4">
         {TAB.map(([id, nama]) => (
-          <button key={id} onClick={() => { if (id !== tab) { setData(null); setTab(id); } }} className={`px-3 py-1.5 rounded-lg text-sm ${tab === id ? "bg-slate-800 text-white" : "bg-white border hover:bg-gray-50"}`}>{nama}</button>
+          <button key={id} onClick={() => setTab(id)} className={`px-3 py-1.5 rounded-lg text-sm ${tab === id ? "bg-slate-800 text-white" : "bg-white border hover:bg-gray-50"}`}>{nama}</button>
         ))}
       </div>
 
-      {tab === "ringkas" && data?.perubahanTerakhir && (
+      {tab !== "pengaturan" && data === null && <div className="text-gray-400 text-sm py-4">Memuat…</div>}
+      {tab === "ringkas" && data && !Array.isArray(data) && (
         <div className="grid md:grid-cols-2 gap-4">
           <div className="bg-white shadow rounded p-4">
             <h3 className="font-semibold mb-2">Versi data per ruang</h3>
@@ -157,7 +162,7 @@ export default function MonitorPage() {
                       <option>PANTAU</option><option>TEGAS</option>
                     </select>
                   ) : (
-                    <input type="date" className={inputCls} defaultValue={k.nilai} onBlur={(e) => e.target.value !== k.nilai && ubahKonfig(k.kunci, e.target.value)} />
+                    <input key={`${k.kunci}-${k.nilai}`} type="date" className={inputCls} defaultValue={k.nilai} onBlur={(e) => e.target.value && e.target.value !== k.nilai && ubahKonfig(k.kunci, e.target.value)} />
                   )}
                 </Field>
               </div>

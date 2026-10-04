@@ -22,17 +22,21 @@ export const keuangan = {
   jurnal: (params) =>
     api.get("/keuangan/jurnal", { params }).then((r) => r.data),
   /** Daftar jurnal berhalaman: params + {page, size}; hasil {items, total}. */
-  jurnalHalaman: (params) =>
-    api.get("/keuangan/jurnal", { params }).then((r) => ({
-      items: r.data,
-      total: Number(r.headers["x-total-count"] ?? r.data.length),
-    })),
+  /** Daftar Jurnal berhalaman: bentuk {items, total} dari GET /jurnal/halaman. */
+  jurnalBerhalaman: (params) =>
+    api.get("/keuangan/jurnal/halaman", { params }).then((r) => ({ items: r.data.data, total: r.data.total })),
   jurnalDetail: (id) => api.get(`/keuangan/jurnal/${id}`).then((r) => r.data),
   postJurnal: (cmd) => api.post("/keuangan/jurnal", cmd).then((r) => r.data),
   /** Edit di tempat: nomor bukti tetap, baris lama ditandai terhapus. cmd boleh berisi `alasan`. */
   editJurnal: (id, cmd) => api.put(`/keuangan/jurnal/${id}`, cmd).then((r) => r.data),
   voidJurnal: (id, alasan) =>
     api.post(`/keuangan/jurnal/${id}/void`, { alasan }).then((r) => r.data),
+  /** Daftar jurnal berhalaman: params jenis, status, q, from, to (yyyy-MM-dd), page (mulai 1), size. */
+  jurnalHalaman: (params) =>
+    api.get("/keuangan/jurnal/halaman", { params }).then((r) => r.data),
+  /** Buku Besar dari ledger: params akun ("" = semua, "1" atau "1,2,3"), from, to (yyyy-MM-dd). */
+  bukuBesar: (params) =>
+    api.get("/keuangan/buku-besar", { params }).then((r) => r.data),
 
   periode: () => api.get("/keuangan/periode").then((r) => r.data),
   periksa: (p) => api.get(`/keuangan/periode/${p}/periksa`).then((r) => r.data),
@@ -91,7 +95,8 @@ export const keuangan = {
     api.get(`/keuangan/laporan/lpd/${fund}`, { params: { year } }).then((r) => r.data),
   panduan: () => api.get("/keuangan/panduan").then((r) => r.data),
   panduanSimpan: (bagian) => api.put("/keuangan/panduan", bagian).then((r) => r.data),
-  bukuBesar: (params) => api.get("/keuangan/buku-besar", { params }).then((r) => r.data),
+  /** Buku besar untuk pop-up telusur & halaman Buku Besar: params coa, kelompok, dana, lr, from, to. */
+  bukuBesarTelusur: (params) => api.get("/keuangan/buku-besar/telusur", { params }).then((r) => r.data),
   neraca: (year, mode) =>
     api.get("/keuangan/laporan/neraca", { params: { year, mode } }).then((r) => r.data),
   labaRugi: (year) =>
