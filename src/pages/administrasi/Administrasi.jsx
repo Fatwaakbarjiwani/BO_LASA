@@ -11,8 +11,11 @@ import CoaPage from "../keuangan/CoaPage";
 import InputJurnal from "../keuangan/InputJurnal";
 import DaftarJurnal from "../keuangan/DaftarJurnal";
 import LpdPage from "../keuangan/LpdPage";
+import LabaRugiPage from "../keuangan/LabaRugiPage";
+import NeracaPage from "../keuangan/NeracaPage";
+import BukuBesarPage from "../keuangan/BukuBesarPage";
+import PanduanPage from "../keuangan/PanduanPage";
 import PeriodePage from "../keuangan/PeriodePage";
-import MustahikPage from "../keuangan/MustahikPage";
 import RekeningPage from "../keuangan/RekeningPage";
 import SetoranPage from "../keuangan/SetoranPage";
 import MonitorPage from "../keuangan/MonitorPage";
@@ -23,6 +26,10 @@ import MonitorPage from "../keuangan/MonitorPage";
  * baris 2 = seluruh laporan. Halaman lama dipertahankan di grup "Lama" (baris 1, ditampilkan pudar)
  * selama masa berjalan paralel dan akan dipensiunkan setelah laporan baru divalidasi terhadap workbook Excel.
  */
+const NeracaNeraca = () => <NeracaPage key="NERACA" mode="NERACA" />;
+const NeracaSaldoBaru = () => <NeracaPage key="NERACA_SALDO" mode="NERACA_SALDO" />;
+const PosisiKeuangan = () => <NeracaPage key="POSISI" mode="POSISI" />;
+
 const GRUP = [
   {
     nama: "Master",
@@ -31,7 +38,6 @@ const GRUP = [
       ["coa", "Daftar Akun (COA)", CoaPage],
       ["saldoAwal", "Saldo Awal", SaldoAwal],
       ["rekening", "Rekening & Harian", RekeningPage],
-      ["mustahik", "Mustahik", MustahikPage],
     ],
   },
   {
@@ -60,6 +66,9 @@ const GRUP = [
       ["jurnal", "Jurnal (lama)", Jurnal],
       ["laporanAktifitas", "Laporan Aktivitas (lama)", LaporanAktifitas],
       ["laporanPengelola", "Laporan Pengelola (lama)", LaporanPengelola],
+      ["bukuBesarLama", "Buku Besar (lama)", BukuBesar],
+      ["neracaSaldoLama", "Neraca Saldo (lama)", NeracaSaldo],
+      ["posisiKeuanganLama", "Posisi Keuangan (lama)", LaporanPosisiKeuangan],
     ],
   },
   {
@@ -67,9 +76,12 @@ const GRUP = [
     baris: "laporan",
     item: [
       ["lpd", "Perubahan Dana (LPD)", LpdPage],
-      ["bukuBesar", "Buku Besar", BukuBesar],
-      ["neracaSaldo", "Neraca Saldo", NeracaSaldo],
-      ["posisiKeuangan", "Posisi Keuangan", LaporanPosisiKeuangan],
+      ["labaRugi", "Laba Rugi", LabaRugiPage],
+      ["bukuBesar", "Buku Besar", BukuBesarPage],
+      ["neraca", "Neraca", NeracaNeraca],
+      ["neracaSaldo", "Neraca Saldo", NeracaSaldoBaru],
+      ["posisiKeuangan", "Posisi Keuangan", PosisiKeuangan],
+      ["panduan", "Panduan (Manual Book)", PanduanPage],
     ],
   },
 ];
@@ -92,7 +104,6 @@ export default function Administrasi({ initial } = {}) {
   const propsHalaman =
     page === "lpd" ? { onLacak: trace }
       : page === "daftarJurnal" ? { initialFilter: lacak }
-      : page === "mustahik" ? { jenisTetap: "MUSTAHIK" }
       : {};
 
   return (

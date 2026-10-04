@@ -3,22 +3,37 @@ import PropTypes from "prop-types";
 import Swal from "sweetalert2";
 import { keuangan, errMsg } from "../../services/keuanganApi";
 import { Btn, DanaBadge, Judul, Modal, SearchSelect, Tabel, inputCls, rp } from "./ui";
+import { barisKopCsv, simpanCsv } from "./kopLaporan";
+import { cetakDaftarJurnal, cetakJurnal } from "./cetakJurnal";
+import { unduhExcelJurnal, unduhExcelJurnalSatu } from "../../services/jurnalExport";
+import { Paginasi, RentangTanggal, rentangBulan, teksRentang } from "./alatJurnal";
 
 const hariIni = () => new Date().toISOString().slice(0, 10);
+const BATAS_UNDUH = 1000; // batas baris dari backend untuk CSV/cetak; Excel mengambil seluruh hasil filter
 
-/** Unduh baris jurnal yang sedang tampil (sudah terfilter) sebagai CSV. */
-function unduhJurnalCsv(rows, namaAkun) {
-  const kolom = [
-    ["No. Bukti", (j) => j.nomorBukti], ["Tanggal", (j) => String(j.tanggal).slice(0, 10)],
-    ["Jenis", (j) => j.jenis], ["Dana", (j) => j.dana], ["Keterangan", (j) => j.keterangan],
-    ["Nilai", (j) => j.total], ["Status", (j) => j.status],
+const UKURAN_HALAMAN = 50;
+// dari/sampai di state = from/to di backend
+const paramsDari = (f) => Object.fromEntries(
+  Object.entries({ ...f, from: f.dari, to: f.sampai }).filter(([k, v]) => v && !["akunLabel", "dari", "sampai"].includes(k)),
+);
+const teksPeriode = (f) => teksRentang(f.dari, f.sampai);
+const teksFilter = (f) =>
+  [f.dana && `Dana ${f.dana}`, f.jenis && `Jenis ${f.jenis}`, f.status && `Status ${f.status}`, f.akun && `Akun ${f.akunLabel || f.akun}`,
+    f.q && `Cari "${f.q}"`].filter(Boolean).join(", ");
+
+/** CSV rapi: kop lembaga + periode + filter, baris data, lalu total jurnal POSTED. Nilai berupa angka polos agar bisa dihitung di Excel. */
+function unduhJurnalCsv(rows, f) {
+  const ket = [teksPeriode(f), teksFilter(f)].filter(Boolean).join(" | ");
+  const total = rows.filter((j) => j.status === "POSTED").reduce((s, j) => s + (Number(j.total) || 0), 0);
+  const tabel = [
+    ...barisKopCsv("DAFTAR JURNAL", ket),
+    ["No", "No. Bukti", "Tanggal", "Jenis", "Dana", "Pihak", "Keterangan", "Status", "Nilai"],
+    ...rows.map((j, i) => [i + 1, j.nomorBukti, String(j.tanggal).slice(0, 10), j.jenis, j.dana, j.pihak, j.keterangan, j.status, Math.round(Number(j.total) || 0)]),
+    ["", "", "", "", "", "", "", "Total (POSTED)", Math.round(total)],
   ];
-  const table = [kolom.map(([judul]) => judul), ...rows.map((j) => kolom.map(([, ambil]) => ambil(j)))];
-  const csv = table.map((row) => row.map((c) => `"${String(c ?? "").replace(/"/g, '""')}"`).join(";")).join("\n");
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8" }));
-  a.download = `Daftar-Jurnal${namaAkun ? `-${namaAkun.replace(/\s+/g, "-")}` : ""}-${hariIni()}.csv`;
-  a.click();
+  const akun = f.akunLabel ? `-${f.akunLabel.replace(/[^A-Za-z0-9]+/g, "-")}` : "";
+  const rentang = f.dari || f.sampai ? `${f.dari || "awal"}_sd_${f.sampai || "sekarang"}` : "semua";
+  simpanCsv(tabel, `Daftar-Jurnal${akun}-${rentang}-${hariIni()}.csv`);
 }
 
 const STATUS_WARNA = {
@@ -27,7 +42,9 @@ const STATUS_WARNA = {
   DRAFT: "bg-yellow-100 text-yellow-800",
 };
 
-const KOSONG = { dana: "", jenis: "", periode: "", status: "", q: "", akun: "" };
+const KOSONG = { dana: "", jenis: "", dari: "", sampai: "", status: "", q: "", akun: "" };
+/** Filter dari "Lacak sumber" masih berbentuk periode (bulan): ubah ke rentang tanggal bulan itu. */
+const dariLacak = ({ periode, ...x }) => ({ ...KOSONG, ...x, ...(periode ? rentangBulan(periode) : {}) });
 
 /**
  * initialFilter: dikirim dari halaman laporan lain lewat tombol "Lacak sumber" (mis. LpdPage).
@@ -38,12 +55,14 @@ const KOSONG = { dana: "", jenis: "", periode: "", status: "", q: "", akun: "" }
 export default function DaftarJurnal({ initialFilter }) {
   const [rows, setRows] = useState([]);
   const [rekening, setRekening] = useState([]);
-  const [f, setF] = useState(() => (initialFilter ? { ...KOSONG, ...initialFilter } : KOSONG));
+  const [f, setF] = useState(() => (initialFilter ? dariLacak(initialFilter) : KOSONG));
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
   const [detail, setDetail] = useState(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (initialFilter) setF({ ...KOSONG, ...initialFilter });
+    if (initialFilter) setF(dariLacak(initialFilter));
   }, [initialFilter]);
 
   // Rekening bank/kas untuk filter "per rekening bank" (kelompok KAS_BANK), dipakai juga untuk nama file unduhan.
@@ -54,10 +73,12 @@ export default function DaftarJurnal({ initialFilter }) {
 
   const muat = useCallback(() => {
     setLoading(true);
-    const params = Object.fromEntries(Object.entries(f).filter(([k, v]) => v && k !== "akunLabel"));
-    keuangan.jurnal(params).then(setRows).catch((e) => Swal.fire("Gagal", errMsg(e), "error")).finally(() => setLoading(false));
-  }, [f]);
+    keuangan.jurnalHalaman({ ...paramsDari(f), page, size: UKURAN_HALAMAN })
+      .then((r) => { setRows(r.items); setTotal(r.total); })
+      .catch((e) => Swal.fire("Gagal", errMsg(e), "error")).finally(() => setLoading(false));
+  }, [f, page]);
   useEffect(() => { muat(); }, [muat]);
+  useEffect(() => { setPage(1); }, [f]);
 
   const buka = (id) => keuangan.jurnalDetail(id).then(setDetail).catch((e) => Swal.fire("Gagal", errMsg(e), "error"));
 
@@ -81,25 +102,43 @@ export default function DaftarJurnal({ initialFilter }) {
     }
   };
 
-  const akunTerpilih = rekening.find((r) => String(r.id) === String(f.akun));
+  // CSV & cetak mengambil ulang hingga BATAS_UNDUH baris sesuai filter (tabel di layar hanya satu halaman).
+  const ambilUntukUnduh = async () => {
+    const semua = await keuangan.jurnal({ ...paramsDari(f), limit: BATAS_UNDUH });
+    if (!semua.length) throw new Error("Tidak ada jurnal pada filter/periode ini.");
+    if (semua.length >= BATAS_UNDUH) {
+      await Swal.fire("Dibatasi", `Hanya ${BATAS_UNDUH} jurnal teratas yang dimasukkan. Gunakan "Unduh Excel" untuk hasil lengkap, atau persempit filternya.`, "info");
+    }
+    return semua;
+  };
+  const jalankan = (aksi) => async () => {
+    try { await aksi(); } catch (e) { Swal.fire("Gagal", e?.response ? errMsg(e) : e.message, "error"); }
+  };
+  const unduhCsv = jalankan(async () => unduhJurnalCsv(await ambilUntukUnduh(), f));
+  const cetak = jalankan(async () => cetakDaftarJurnal(await ambilUntukUnduh(), { rentang: teksPeriode(f), filter: teksFilter(f) }));
+  const unduhExcel = jalankan(() => unduhExcelJurnal({
+    dana: f.dana, jenis: f.jenis, status: f.status, q: f.q, akun: f.akun, from: f.dari, to: f.sampai,
+  }));
   return (
     <div>
       <Judul
         aksi={
-          <Btn color="gray" onClick={() => unduhJurnalCsv(rows, akunTerpilih ? `${akunTerpilih.accountCode}-${akunTerpilih.accountName}` : f.akunLabel)} disabled={!rows.length}>
-            Unduh CSV
-          </Btn>
+          <>
+            <Btn color="gray" onClick={unduhExcel}>Unduh Excel</Btn>
+            <Btn color="gray" onClick={unduhCsv}>Unduh CSV</Btn>
+            <Btn color="gray" onClick={cetak}>Cetak</Btn>
+          </>
         }
       >
         Daftar Jurnal
       </Judul>
       {f.akun && (
         <div className="mb-3 flex items-center gap-2 bg-blue-50 border border-blue-200 text-blue-800 text-sm rounded-lg px-3 py-2 w-fit">
-          <span>Menelusuri akun: <b>{f.akunLabel || f.akun}</b>{f.periode ? ` · ${f.periode}` : ""}</span>
+          <span>Menelusuri akun: <b>{f.akunLabel || f.akun}</b>{f.dari || f.sampai ? ` · ${teksRentang(f.dari, f.sampai).replace("Periode: ", "")}` : ""}</span>
           <button className="text-blue-500 hover:text-blue-800 font-bold" onClick={() => setF({ ...f, akun: "", akunLabel: "" })} title="Hapus filter akun">×</button>
         </div>
       )}
-      <div className="grid grid-cols-2 md:grid-cols-6 gap-2 mb-3">
+      <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-7 gap-2 mb-3">
         <select className={inputCls} value={f.dana} onChange={(e) => setF({ ...f, dana: e.target.value })}>
           <option value="">Semua dana</option>
           {["ZAKAT", "INFAQ", "DSKL", "PENGELOLA", "WAKAF"].map((d) => <option key={d}>{d}</option>)}
@@ -120,7 +159,7 @@ export default function DaftarJurnal({ initialFilter }) {
           ]}
           placeholder="Cari rekening bank…"
         />
-        <input type="month" className={inputCls} value={f.periode} onChange={(e) => setF({ ...f, periode: e.target.value })} />
+        <RentangTanggal className="md:col-span-2" dari={f.dari} sampai={f.sampai} onChange={(dari, sampai) => setF({ ...f, dari, sampai })} />
         <select className={inputCls} value={f.status} onChange={(e) => setF({ ...f, status: e.target.value })}>
           <option value="">Semua status</option>
           {["POSTED", "VOID"].map((d) => <option key={d}>{d}</option>)}
@@ -144,6 +183,7 @@ export default function DaftarJurnal({ initialFilter }) {
         baris={rows}
         kosong={loading ? "Memuat…" : "Tidak ada jurnal"}
       />
+      <Paginasi page={page} size={UKURAN_HALAMAN} total={total} onPage={setPage} />
       {detail && (
         <Modal wide title={`Jurnal ${detail.nomorBukti}`} onClose={() => setDetail(null)}>
           <div className="text-sm text-gray-600 mb-3 grid grid-cols-2 gap-1">
@@ -182,11 +222,11 @@ export default function DaftarJurnal({ initialFilter }) {
               />
             </div>
           )}
-          {detail.status === "POSTED" && (
-            <div className="mt-4 text-right">
-              <Btn color="red" onClick={() => batalkan(detail)}>Batalkan (VOID)</Btn>
-            </div>
-          )}
+          <div className="mt-4 flex justify-end gap-2">
+            <Btn color="gray" onClick={jalankan(() => cetakJurnal(detail))}>Cetak</Btn>
+            <Btn color="gray" onClick={jalankan(() => unduhExcelJurnalSatu(detail.id))}>Unduh Excel</Btn>
+            {detail.status === "POSTED" && <Btn color="red" onClick={() => batalkan(detail)}>Batalkan (VOID)</Btn>}
+          </div>
         </Modal>
       )}
     </div>

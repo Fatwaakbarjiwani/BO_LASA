@@ -5,6 +5,10 @@ import { useDispatch, useSelector } from "react-redux";
 import { getCategoryZiswaf } from "../../redux/actions/ziswafAction";
 import { keuangan, errMsg } from "../../services/keuanganApi";
 import { Btn, DanaBadge, Field, Judul, SearchSelect, inputCls, num, rp, today } from "./ui";
+import { RentangTanggal, teksRentang } from "./alatJurnal";
+import { barisKopCsv, simpanCsv } from "./kopLaporan";
+import { cetakDaftarJurnal } from "./cetakJurnal";
+import { unduhExcelJurnal } from "../../services/jurnalExport";
 
 const TEMPLATE = [
   { id: "PENERIMAAN", nama: "Penerimaan", info: "Zakat, Infaq, DSKL, Wakaf masuk" },
@@ -788,37 +792,54 @@ function keFormAwal(tpl, d) {
 // ----------------------------------------------------------------------------------------------
 // Tabel data yang sudah diinput (tepat di bawah form), per jenis template.
 
-const NAMA_BULAN = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
-/** 24 bulan terakhir (termasuk bulan ini), terbaru di atas: { value: "2026-09", label: "September 2026" }. */
-const OPSI_PERIODE = (() => {
-  const d = new Date();
-  return Array.from({ length: 24 }, (_, i) => {
-    const t = new Date(d.getFullYear(), d.getMonth() - i, 1);
-    return { value: `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, "0")}`, label: `${NAMA_BULAN[t.getMonth()]} ${t.getFullYear()}` };
-  });
-})();
-
 const STATUS_WARNA = { POSTED: "bg-green-100 text-green-800", VOID: "bg-gray-200 text-gray-600", DRAFT: "bg-amber-100 text-amber-800" };
 
 function RiwayatInput({ jenis, versi, edit, onEdit }) {
   const [list, setList] = useState([]);
   const [q, setQ] = useState("");
-  const [periode, setPeriode] = useState("");
+  const [dari, setDari] = useState("");
+  const [sampai, setSampai] = useState("");
   const [status, setStatus] = useState("POSTED");
   const [memuat, setMemuat] = useState(false);
 
   useEffect(() => {
     const t = setTimeout(() => {
       setMemuat(true);
-      keuangan.jurnal({ jenis, q: q.trim() || undefined, periode: periode || undefined, status: status || undefined, limit: 100 })
+      keuangan.jurnal({ jenis, q: q.trim() || undefined, from: dari || undefined, to: sampai || undefined, status: status || undefined, limit: 100 })
         .then(setList)
         .catch((e) => Swal.fire({ icon: "error", title: "Gagal memuat data", text: errMsg(e) }))
         .finally(() => setMemuat(false));
     }, 250);
     return () => clearTimeout(t);
-  }, [jenis, q, periode, status, versi]);
+  }, [jenis, q, dari, sampai, status, versi]);
 
   const nama = TEMPLATE.find((t) => t.id === jenis)?.nama || jenis;
+
+  // Cetak PDF / Excel / CSV mengikuti jenis tab ini + rentang tanggal awal s.d. akhir + status + pencarian yang dipilih.
+  const filterUnduh = { jenis, from: dari, to: sampai, q: q.trim(), status };
+  const ketFilter = [`Jenis ${jenis}`, status && `Status ${status}`, q.trim() && `Cari "${q.trim()}"`].filter(Boolean).join(", ");
+  const BATAS = 1000;
+  const ambil = async () => {
+    const semua = await keuangan.jurnal({ jenis, q: q.trim() || undefined, from: dari || undefined, to: sampai || undefined, status: status || undefined, limit: BATAS });
+    if (!semua.length) throw new Error("Tidak ada jurnal pada rentang tanggal/filter ini.");
+    if (semua.length >= BATAS) await Swal.fire("Dibatasi", `Hanya ${BATAS} jurnal teratas yang dimasukkan. Gunakan "Excel" untuk hasil lengkap atau persempit rentang tanggal.`, "info");
+    return semua;
+  };
+  const jalan = (aksi) => async () => {
+    try { await aksi(); } catch (e) { Swal.fire({ icon: "error", title: "Gagal", text: e?.response ? errMsg(e) : e.message }); }
+  };
+  const cetakPdf = jalan(async () => cetakDaftarJurnal(await ambil(), { rentang: teksRentang(dari, sampai), filter: ketFilter }));
+  const unduhExcel = jalan(() => unduhExcelJurnal(filterUnduh));
+  const unduhCsv = jalan(async () => {
+    const rows = await ambil();
+    const total = rows.filter((j) => j.status === "POSTED").reduce((a, j) => a + (Number(j.total) || 0), 0);
+    simpanCsv([
+      ...barisKopCsv(`DAFTAR JURNAL ${nama.toUpperCase()}`, [teksRentang(dari, sampai), ketFilter].join(" | ")),
+      ["No", "No. Bukti", "Tanggal", "Dana", "Pihak", "Keterangan", "Status", "Nilai"],
+      ...rows.map((j, i) => [i + 1, j.nomorBukti, tglIso(j.tanggal), j.dana, j.pihak, j.keterangan, j.status, Math.round(Number(j.total) || 0)]),
+      ["", "", "", "", "", "", "Total (POSTED)", Math.round(total)],
+    ], `Jurnal-${jenis}-${dari || "awal"}_sd_${sampai || "sekarang"}.csv`);
+  });
   return (
     <div className="bg-white shadow rounded-lg p-4 mt-4">
       <div className="flex flex-wrap items-end justify-between gap-3 mb-3">
@@ -828,17 +849,15 @@ function RiwayatInput({ jenis, versi, edit, onEdit }) {
         </div>
         <div className="flex flex-wrap gap-2">
           <input className={`${inputCls} w-56`} placeholder="Cari no. bukti / keterangan / nama…" value={q} onChange={(e) => setQ(e.target.value)} />
-          {/* Filter periode (bulan). Dropdown, bukan <input type="month">: Safari menampilkan input bulan sebagai
-              kotak teks kosong tanpa petunjuk. */}
-          <select className={`${inputCls} w-44`} value={periode} onChange={(e) => setPeriode(e.target.value)} title="Filter periode (bulan)">
-            <option value="">Semua periode</option>
-            {OPSI_PERIODE.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-          </select>
+          <RentangTanggal className="w-80" dari={dari} sampai={sampai} onChange={(a, b) => { setDari(a); setSampai(b); }} />
           <select className={`${inputCls} w-32`} value={status} onChange={(e) => setStatus(e.target.value)}>
             <option value="POSTED">Aktif</option>
             <option value="VOID">Dibatalkan</option>
             <option value="">Semua</option>
           </select>
+          <Btn color="gray" onClick={cetakPdf}>Cetak PDF</Btn>
+          <Btn color="gray" onClick={unduhExcel}>Excel</Btn>
+          <Btn color="gray" onClick={unduhCsv}>CSV</Btn>
         </div>
       </div>
       <div className="overflow-x-auto">

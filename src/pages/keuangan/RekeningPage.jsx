@@ -65,10 +65,19 @@ export default function RekeningPage() {
           {RUANG.map((r) => <option key={r.id} value={r.id}>{r.nama}</option>)}
         </select>
       }>Rekening & Rekonsiliasi Harian</Judul>
-      <p className="text-sm text-gray-500 mb-3">
-        Saldo bank diisi dari mutasi/m-banking (bila belum diisi, dipakai saldo buku besar). Saldo dana dihitung dari buku
-        besar dan tidak diinput manual. Selisih menandakan dana yang tercatat di rekening/kas dana lain.
-      </p>
+      <div className="bg-blue-50 border border-blue-200 text-blue-900 text-sm rounded-lg p-3 mb-4 space-y-1">
+        <div className="font-semibold">Untuk apa halaman ini?</div>
+        <p>
+          Mencocokkan <b>uang yang tercatat di sistem</b> dengan <b>uang yang sebenarnya ada di rekening bank/kas</b>, sehingga
+          kesalahan pencatatan cepat ketahuan. Hasilnya juga tampil di Laporan Harian pada aplikasi mobile.
+        </p>
+        <ol className="list-decimal ml-5">
+          <li><b>Langkah 1 — Saldo bank:</b> isi saldo riil tiap rekening dari mutasi/m-banking. Bila belum diisi, dipakai saldo buku besar.</li>
+          <li><b>Langkah 2 — Sumber dana:</b> saldo tiap dana (Zakat, Infaq, DSKL, Pengelola) dihitung otomatis dari jurnal; tidak diinput manual.</li>
+          <li><b>Selisih</b> berarti total rekening tidak sama dengan saldo dana, mis. uang satu dana tercatat di rekening dana lain atau ada transaksi yang belum dijurnal.</li>
+          <li><b>Master rekening:</b> daftar rekening bank/kas yang dipakai sebagai sumber kas pada Input Jurnal.</li>
+        </ol>
+      </div>
       {h && (
         <>
           <div className="grid md:grid-cols-3 gap-3 mb-4">

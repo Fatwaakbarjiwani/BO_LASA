@@ -133,11 +133,11 @@ export function Btn({ color = "blue", className = "", ...props }) {
 }
 Btn.propTypes = { color: PropTypes.string, className: PropTypes.string };
 
-export function Modal({ title, onClose, children, wide }) {
+export function Modal({ title, onClose, children, wide, lebar }) {
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
       <div
-        className={`bg-white rounded-xl p-5 w-full shadow-lg relative max-h-[92vh] overflow-y-auto ${wide ? "max-w-3xl" : "max-w-lg"}`}
+        className={`bg-white rounded-xl p-5 w-full shadow-lg relative max-h-[92vh] overflow-y-auto ${lebar || (wide ? "max-w-3xl" : "max-w-lg")}`}
       >
         <button
           className="absolute top-3 right-4 text-gray-500 hover:text-red-600 text-2xl"
@@ -157,6 +157,7 @@ Modal.propTypes = {
   onClose: PropTypes.func,
   children: PropTypes.node,
   wide: PropTypes.bool,
+  lebar: PropTypes.string,
 };
 
 export function Tabel({ kolom, baris, kosong = "Tidak ada data" }) {
