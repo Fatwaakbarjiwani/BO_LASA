@@ -21,10 +21,22 @@ export const keuangan = {
 
   jurnal: (params) =>
     api.get("/keuangan/jurnal", { params }).then((r) => r.data),
+  /** Daftar jurnal berhalaman: params + {page, size}; hasil {items, total}. */
+  /** Daftar Jurnal berhalaman: bentuk {items, total} dari GET /jurnal/halaman. */
+  jurnalBerhalaman: (params) =>
+    api.get("/keuangan/jurnal/halaman", { params }).then((r) => ({ items: r.data.data, total: r.data.total })),
   jurnalDetail: (id) => api.get(`/keuangan/jurnal/${id}`).then((r) => r.data),
   postJurnal: (cmd) => api.post("/keuangan/jurnal", cmd).then((r) => r.data),
+  /** Edit di tempat: nomor bukti tetap, baris lama ditandai terhapus. cmd boleh berisi `alasan`. */
+  editJurnal: (id, cmd) => api.put(`/keuangan/jurnal/${id}`, cmd).then((r) => r.data),
   voidJurnal: (id, alasan) =>
     api.post(`/keuangan/jurnal/${id}/void`, { alasan }).then((r) => r.data),
+  /** Daftar jurnal berhalaman: params jenis, status, q, from, to (yyyy-MM-dd), page (mulai 1), size. */
+  jurnalHalaman: (params) =>
+    api.get("/keuangan/jurnal/halaman", { params }).then((r) => r.data),
+  /** Buku Besar dari ledger: params akun ("" = semua, "1" atau "1,2,3"), from, to (yyyy-MM-dd). */
+  bukuBesar: (params) =>
+    api.get("/keuangan/buku-besar", { params }).then((r) => r.data),
 
   periode: () => api.get("/keuangan/periode").then((r) => r.data),
   periksa: (p) => api.get(`/keuangan/periode/${p}/periksa`).then((r) => r.data),
@@ -58,6 +70,7 @@ export const keuangan = {
     api.delete(`/keuangan/mustahik/${id}`).then((r) => r.data),
 
   rekening: () => api.get("/keuangan/rekening").then((r) => r.data),
+  rekeningBaru: (b) => api.post("/keuangan/rekening", b).then((r) => r.data),
   rekeningUbah: (id, b) =>
     api.put(`/keuangan/rekening/${id}`, b).then((r) => r.data),
 
@@ -75,9 +88,22 @@ export const keuangan = {
   alokasi: () => api.get("/keuangan/alokasi-amil").then((r) => r.data),
   alokasiSimpan: (b) =>
     api.post("/keuangan/alokasi-amil", b).then((r) => r.data),
+  alokasiUbah: (id, b) =>
+    api.put(`/keuangan/alokasi-amil/${id}`, b).then((r) => r.data),
 
   lpd: (fund, year) =>
     api.get(`/keuangan/laporan/lpd/${fund}`, { params: { year } }).then((r) => r.data),
+  panduan: () => api.get("/keuangan/panduan").then((r) => r.data),
+  panduanSimpan: (bagian) => api.put("/keuangan/panduan", bagian).then((r) => r.data),
+  /** Buku besar untuk pop-up telusur & halaman Buku Besar: params coa, kelompok, dana, lr, from, to. */
+  bukuBesarTelusur: (params) => api.get("/keuangan/buku-besar/telusur", { params }).then((r) => r.data),
+  /** Rincian CAMPAIGN, BIDANG, BANK/TUNAI seperti blok LAP BANK; bulan "yyyy-MM" atau kosong = setahun. */
+  rincianLapBank: (year, bulan) =>
+    api.get("/keuangan/laporan/rincian", { params: { year, bulan: bulan || undefined } }).then((r) => r.data),
+  neraca: (year, mode) =>
+    api.get("/keuangan/laporan/neraca", { params: { year, mode } }).then((r) => r.data),
+  labaRugi: (year) =>
+    api.get("/keuangan/laporan/laba-rugi", { params: { year } }).then((r) => r.data),
   statement: (type, ruang, period) =>
     api
       .get(`/keuangan/laporan/statement/${type}`, { params: { ruang, period } })
@@ -99,6 +125,17 @@ export const keuangan = {
   coaCreate: (b) => api.post("/coa/create", b).then((r) => r.data),
   coaEdit: (id, b) => api.put(`/coa/edit/${id}`, b).then((r) => r.data),
   coaDelete: (id) => api.delete(`/coa/delete/${id}`).then((r) => r.data),
+};
+
+/** Pendaftaran akun dari aplikasi mobile — diverifikasi admin di menu Pengguna > Pendaftar Aplikasi. */
+export const pendaftarMobile = {
+  list: (status = "MENUNGGU") =>
+    api.get("/admin/pendaftar-mobile", { params: { status } }).then((r) => r.data),
+  jumlah: () => api.get("/admin/pendaftar-mobile/jumlah").then((r) => r.data),
+  setujui: (id, b) =>
+    api.post(`/admin/pendaftar-mobile/${id}/setujui`, b).then((r) => r.data),
+  tolak: (id, catatan) =>
+    api.post(`/admin/pendaftar-mobile/${id}/tolak`, { catatan }).then((r) => r.data),
 };
 
 export default api;

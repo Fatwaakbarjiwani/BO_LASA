@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Swal from "sweetalert2";
 import { keuangan, errMsg } from "../../services/keuanganApi";
-import { Btn, DanaBadge, Field, Judul, Modal, inputCls } from "./ui";
+import { Btn, DanaBadge, Field, Judul, Modal, SearchSelect, inputCls } from "./ui";
 
 const DANA = ["ZAKAT", "INFAQ", "DSKL", "PENGELOLA", "WAKAF"];
 const KELOMPOK = ["KAS_BANK", "ASET_LAIN", "KEWAJIBAN", "SALDO_DANA", "PENERIMAAN", "PENDAYAGUNAAN", "BEBAN_OPERASIONAL", "ANTAR_DANA", "BAGI_HASIL"];
@@ -73,7 +73,7 @@ export default function CoaPage() {
 
   return (
     <div>
-      <Judul aksi={<Btn onClick={() => buka(null)}>+ Tambah akun</Btn>}>Daftar COA</Judul>
+      <Judul aksi={<Btn onClick={() => buka(null)}>+ Tambah akun</Btn>}>Daftar Akun (COA)</Judul>
       {netral > 0 && (
         <div className="bg-amber-50 border border-amber-200 text-amber-800 text-sm rounded p-2 mb-3">
           {netral} akun postable belum memiliki dana (netral). Akun netral hanya boleh ada pada masa transisi.
@@ -119,10 +119,16 @@ export default function CoaPage() {
             <Field label="Tipe akun"><select className={inputCls} value={form.accountType} onChange={(e) => set("accountType", e.target.value)}>{TIPE.map((t) => <option key={t}>{t}</option>)}</select></Field>
             <div className="md:col-span-2"><Field label="Nama akun"><input required className={inputCls} value={form.accountName} onChange={(e) => set("accountName", e.target.value)} /></Field></div>
             <Field label="Akun induk (opsional)">
-              <select className={inputCls} value={form.parentId} onChange={(e) => set("parentId", e.target.value)}>
-                <option value="">—</option>
-                {rows.filter((r) => r.postable === false || !r.parentAccount).map((r) => <option key={r.id} value={r.id}>{r.accountCode} {r.accountName}</option>)}
-              </select>
+              <SearchSelect
+                value={form.parentId}
+                onChange={(v) => set("parentId", v)}
+                options={[
+                  { value: "", label: "—" },
+                  ...rows.filter((r) => r.postable === false || !r.parentAccount)
+                    .map((r) => ({ value: r.id, label: `${r.accountCode} ${r.accountName}` })),
+                ]}
+                placeholder="Cari akun induk…"
+              />
             </Field>
             <Field label="Dana" hint="Menentukan buku/ruang tempat akun ini tampil">
               <select className={inputCls} value={form.danaKode} onChange={(e) => set("danaKode", e.target.value)}><option value="">(otomatis dari kode)</option>{DANA.map((d) => <option key={d}>{d}</option>)}</select>

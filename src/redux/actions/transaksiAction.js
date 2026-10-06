@@ -535,13 +535,16 @@ export const getSearchTransaksi = (name, page) => async (dispatch) => {
     return;
   }
 };
-export const createSaldoAwal = (input) => async (dispatch) => {
+export const createSaldoAwal = (input, periode) => async (dispatch) => {
   try {
-    const hasil = input.map((item) => ({
-      coaId: item.id,
-      debit: item.debet,
-      kredit: item.kredit,
-    }));
+    const hasil = input
+      .filter((item) => item.nilai > 0)
+      .map((item) => ({
+        coaId: item.id,
+        nilai: item.nilai,
+        bulan: periode?.bulan,
+        tahun: periode?.tahun,
+      }));
     const response = await axios.post(`${API_URL}/saldo-awal/input`, hasil);
     if (response) {
       Swal.fire({

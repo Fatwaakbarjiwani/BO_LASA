@@ -49,6 +49,8 @@ export const menuItems = [
     title: "Administrasi",
     route: "/administrasi",
   },
+  // Buku wakaf terpisah dari Administrasi Keuangan ZIS (rapat 25-09-2026)
+  { src: Amil, srcActive: AmilWhite, title: "Wakaf", route: "/wakaf" },
   { src: Amil, srcActive: AmilWhite, title: "Amil", route: "/amil" },
   {
     src: Transaksi,
