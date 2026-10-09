@@ -441,6 +441,91 @@ FormPenerimaan.propTypes = {
 };
 
 // ----------------------------------------------------------------------------------------------
+const URUT_BIDANG = ["PENDIDIKAN", "SOSIAL", "KEAGAMAAN", "DAKWAH", "KEMANUSIAAN", "EKONOMI_PEMBERDAYAAN", "LINGKUNGAN", "KESEHATAN"];
+const labelBidang = (b) =>
+  b ? b.toLowerCase().split("_").map((k) => k.charAt(0).toUpperCase() + k.slice(1)).join(" / ") : "Belum ada bidang";
+
+/**
+ * Dropdown dengan pencarian yang menampilkan pilihan per grup (judul grup tidak bisa dipilih).
+ * options: [{ value, label, grup, nonaktif?, ket? }] — urutan grup mengikuti urutan pertama kemunculannya.
+ * buka: angka yang dinaikkan pemanggil untuk membuka daftar secara otomatis (mis. setelah memilih dana sumber).
+ */
+function PilihGrup({ value, onChange, options, placeholder = "Cari…", buka = 0 }) {
+  const [open, setOpen] = useState(false);
+  const [q, setQ] = useState("");
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const onDocClick = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener("mousedown", onDocClick);
+    return () => document.removeEventListener("mousedown", onDocClick);
+  }, []);
+  useEffect(() => { if (buka > 0) { setOpen(true); setQ(""); } }, [buka]);
+
+  const selected = options.find((o) => String(o.value) === String(value));
+  const kata = q.trim().toLowerCase();
+  const filtered = kata ? options.filter((o) => `${o.label} ${o.grup || ""}`.toLowerCase().includes(kata)) : options;
+  const grup = [];
+  filtered.forEach((o) => {
+    const g = grup.find((x) => x.nama === (o.grup || ""));
+    if (g) g.isi.push(o); else grup.push({ nama: o.grup || "", isi: [o] });
+  });
+
+  return (
+    <div className="relative" ref={ref}>
+      <input
+        className={inputCls}
+        value={open ? q : (selected?.label ?? "")}
+        placeholder={placeholder}
+        onFocus={() => { setOpen(true); setQ(""); }}
+        onClick={() => setOpen(true)}
+        onChange={(e) => { setQ(e.target.value); setOpen(true); }}
+      />
+      {open && (
+        <div className="absolute z-20 mt-1 w-full max-h-72 overflow-y-auto bg-white border border-gray-300 rounded-lg shadow-lg"
+          onMouseDown={(e) => e.preventDefault()} onClick={(e) => e.preventDefault()}>
+          {filtered.length === 0 && <div className="px-3 py-2 text-sm text-gray-400">Tidak ditemukan</div>}
+          {grup.map((g) => (
+            <div key={g.nama}>
+              {g.nama && (
+                <div className="sticky top-0 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-gray-500 bg-gray-100 border-y border-gray-200">
+                  {g.nama} <span className="font-normal normal-case">({g.isi.length})</span>
+                </div>
+              )}
+              {g.isi.map((o) => (
+                <div
+                  key={o.value}
+                  title={o.ket || undefined}
+                  className={o.nonaktif
+                    ? "px-3 py-2 text-sm text-gray-400 cursor-not-allowed"
+                    : `px-3 py-2 text-sm cursor-pointer hover:bg-blue-50 ${String(o.value) === String(value) ? "bg-blue-50 font-medium" : ""}`}
+                  onMouseDown={() => { if (o.nonaktif) return; onChange(o.value); setOpen(false); setQ(""); }}
+                >
+                  {o.label}
+                  {o.ket && <span className="block text-xs text-gray-400">{o.ket}</span>}
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+PilihGrup.propTypes = {
+  value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  onChange: PropTypes.func.isRequired,
+  options: PropTypes.arrayOf(PropTypes.shape({
+    value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+    label: PropTypes.string.isRequired,
+    grup: PropTypes.string,
+    nonaktif: PropTypes.bool,
+    ket: PropTypes.string,
+  })).isRequired,
+  placeholder: PropTypes.string,
+  buka: PropTypes.number,
+};
+
 function FormPenyaluran({ meta, campaign, awal, edit, onSelesai, onBatalEdit }) {
   const danaOpsi = [...meta.dana.filter((d) => d.kode !== "PENGELOLA"), OPSI_CAMPAIGN];
   const kosong = { tanggal: today(), dana: "ZAKAT", jenis: "", akunId: "", rekId: "", ket: "" };
@@ -451,17 +536,44 @@ function FormPenyaluran({ meta, campaign, awal, edit, onSelesai, onBatalEdit }) 
   const isCampaign = f.dana === CAMPAIGN;
   const dana = danaPosting(f.dana);
   const campaignOpsi = opsiCampaign(campaign);
-  const akunList = akunDana(meta, dana, "PENDAYAGUNAAN");
-  const rekList = rekDana(meta, dana);
+  const namaDana = (kode) => meta.dana.find((d) => d.kode === kode)?.nama || `Dana ${kode}`;
+  // Semua program (akun pendayagunaan) milik dana sumber, dikelompokkan per bidang. Akun tanpa dana (umum) ikut.
+  const akunList = meta.akun
+    .filter((a) => a.kelompok === "PENDAYAGUNAAN" && bisaPosting(a) && (a.dana === dana || !a.dana))
+    .sort((a, b) => {
+      const ua = a.bidang ? URUT_BIDANG.indexOf(a.bidang) : 99;
+      const ub = b.bidang ? URUT_BIDANG.indexOf(b.bidang) : 99;
+      return (ua < 0 ? 98 : ua) - (ub < 0 ? 98 : ub) || String(a.kode).localeCompare(String(b.kode));
+    });
+  const akunOpsi = akunList.map((a) => ({ value: a.id, label: `${a.kode} ${a.nama}`, grup: `Bidang ${labelBidang(a.bidang)}` }));
+  // Semua rekening ditampilkan. Rekening milik dana lain tetap terlihat tetapi tidak bisa dipilih, karena server
+  // menolak akun dana lain (harus lewat Transfer Antar Dana).
+  const bolehRek = (r) => r.dana === dana || !r.dana;
+  const rekList = meta.rekening.filter(bolehRek);
+  const rekOpsi = [
+    ...meta.rekening.filter((r) => r.dana === dana).map((r) => ({ r, grup: `Rekening ${namaDana(dana)}` })),
+    ...meta.rekening.filter((r) => !r.dana).map((r) => ({ r, grup: "Rekening umum (semua dana)" })),
+    ...meta.rekening.filter((r) => !bolehRek(r)).map((r) => ({
+      r, grup: "Rekening dana lain", nonaktif: true,
+      ket: `Milik ${namaDana(r.dana)} — gunakan Transfer Antar Dana`,
+    })),
+  ].map(({ r, ...o }) => ({ value: r.coaId, label: `${r.kas ? "Kas: " : ""}${r.namaBank} ${r.noRek || ""}`.trim(), ...o }));
+  const [bukaProgram, setBukaProgram] = useState(0);
   useEffect(() => {
+    // Pilihan lama dipertahankan bila masih berlaku (mis. saat edit); selain itu dikosongkan agar pengguna memilih
+    // sendiri dari daftar lengkap. Hanya bila pilihannya tunggal, langsung diisi.
     setF((s) => ({
       ...s,
       jenis: !isCampaign ? "" : campaignOpsi.some((c) => c.kode === s.jenis) || campaignOpsi.length === 0 ? s.jenis : campaignOpsi[0]?.kode || "",
-      akunId: akunList.some((a) => String(a.id) === String(s.akunId)) ? s.akunId : akunList[0]?.id || "",
-      rekId: rekList.some((r) => String(r.coaId) === String(s.rekId)) ? s.rekId : rekList.find((r) => !r.kas)?.coaId || rekList[0]?.coaId || "",
+      akunId: akunList.some((a) => String(a.id) === String(s.akunId)) ? s.akunId : akunList.length === 1 ? akunList[0].id : "",
+      rekId: rekList.some((r) => String(r.coaId) === String(s.rekId)) ? s.rekId : rekList.length === 1 ? rekList[0].coaId : "",
     }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [f.dana, campaign]);
+  const gantiDana = (v) => {
+    setF((s) => ({ ...s, dana: v, akunId: "", rekId: "" }));
+    setBukaProgram((n) => n + 1);
+  };
 
   const akun = meta.akun.find((a) => String(a.id) === String(f.akunId));
   const rek = meta.rekening.find((r) => String(r.coaId) === String(f.rekId));
@@ -500,7 +612,7 @@ function FormPenyaluran({ meta, campaign, awal, edit, onSelesai, onBatalEdit }) 
         <div className="grid grid-cols-2 gap-3">
           <Field label="Tanggal"><input type="date" max={today()} className={inputCls} value={f.tanggal} onChange={(e) => set("tanggal", e.target.value)} /></Field>
           <Field label="Dana sumber">
-            <select className={inputCls} value={f.dana} onChange={(e) => set("dana", e.target.value)}>
+            <select className={inputCls} value={f.dana} onChange={(e) => gantiDana(e.target.value)}>
               {danaOpsi.map((d) => <option key={d.kode} value={d.kode}>{d.nama}</option>)}
             </select>
           </Field>
@@ -516,19 +628,21 @@ function FormPenyaluran({ meta, campaign, awal, edit, onSelesai, onBatalEdit }) 
           )
         )}
         <Field label="Program / akun pendayagunaan" hint={zakat && akun ? `Asnaf akun ini: ${akun.asnaf || "belum ditentukan (lengkapi di COA)"}` : akun?.bidang ? `Bidang: ${akun.bidang}` : undefined}>
-          <SearchSelect
+          <PilihGrup
             value={f.akunId}
             onChange={(v) => set("akunId", v)}
-            options={akunList.map((a) => ({ value: a.id, label: `${a.kode} ${a.nama}` }))}
-            placeholder="Cari akun pendayagunaan…"
+            options={akunOpsi}
+            buka={bukaProgram}
+            placeholder={`Pilih program (${akunList.length} program ${namaDana(dana)}, per bidang)…`}
           />
         </Field>
-        <Field label="Dibayar dari rekening">
-          <SearchSelect
+        <Field label="Dibayar dari rekening"
+          hint="Semua rekening ditampilkan. Rekening milik dana lain berwarna abu-abu dan tidak bisa dipilih.">
+          <PilihGrup
             value={f.rekId}
             onChange={(v) => set("rekId", v)}
-            options={rekList.map((r) => ({ value: r.coaId, label: `${r.kas ? "Kas: " : ""}${r.namaBank} ${r.noRek || ""}` }))}
-            placeholder="Cari rekening…"
+            options={rekOpsi}
+            placeholder={`Pilih rekening (${rekList.length} bisa dipakai)…`}
           />
         </Field>
         <Field label="Keterangan"><input className={inputCls} value={f.ket} onChange={(e) => set("ket", e.target.value)} /></Field>
