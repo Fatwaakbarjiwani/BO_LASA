@@ -19,6 +19,8 @@ import PeriodePage from "../keuangan/PeriodePage";
 import RekeningPage from "../keuangan/RekeningPage";
 import SetoranPage from "../keuangan/SetoranPage";
 import MonitorPage from "../keuangan/MonitorPage";
+import InventoryPage from "../keuangan/InventoryPage";
+import AsetPage from "../keuangan/AsetPage";
 
 /**
  * Administrasi Keuangan. Halaman dikelompokkan menurut alur kerja, lalu ditata dalam dua baris:
@@ -46,6 +48,8 @@ const GRUP = [
     item: [
       ["inputJurnal", "Input Jurnal", InputJurnal],
       ["daftarJurnal", "Daftar Jurnal", DaftarJurnal],
+      ["inventory", "Inventory Barang", InventoryPage],
+      ["aset", "Aset & Penyusutan", AsetPage],
     ],
   },
   {

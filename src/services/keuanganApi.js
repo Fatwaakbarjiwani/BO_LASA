@@ -31,6 +31,36 @@ export const keuangan = {
   editJurnal: (id, cmd) => api.put(`/keuangan/jurnal/${id}`, cmd).then((r) => r.data),
   voidJurnal: (id, alasan) =>
     api.post(`/keuangan/jurnal/${id}/void`, { alasan }).then((r) => r.data),
+  /** Penyaluran/beban yang masih bisa dikembalikan (sisa > 0): params q, from, to, limit. */
+  pengembalianSumber: (params) =>
+    api.get("/keuangan/pengembalian/sumber", { params }).then((r) => r.data),
+  /** Catat pengembalian dana: { jurnalAsalId, tanggal, rekeningCoaId, nominal, keterangan, diBulanBerjalan }. */
+  pengembalian: (b) => api.post("/keuangan/pengembalian", b).then((r) => r.data),
+
+  // Inventory zakat/infaq berupa barang
+  inventoryBarang: (semua = false) =>
+    api.get("/keuangan/inventory/barang", { params: { semua } }).then((r) => r.data),
+  inventoryBarangBaru: (b) => api.post("/keuangan/inventory/barang", b).then((r) => r.data),
+  inventoryBarangUbah: (id, b) => api.put(`/keuangan/inventory/barang/${id}`, b).then((r) => r.data),
+  inventoryStok: () => api.get("/keuangan/inventory/stok").then((r) => r.data),
+  /** Riwayat mutasi barang: params from, to (yyyy-MM-dd), barang (id), status, limit. */
+  inventoryMutasi: (params) => api.get("/keuangan/inventory/mutasi", { params }).then((r) => r.data),
+  /** Penerimaan barang (bentuk Barang di Input Jurnal > Penerimaan). */
+  inventoryMasuk: (b) => api.post("/keuangan/inventory/masuk", b).then((r) => r.data),
+  /** Penyaluran barang dari stok (menu Inventory > Barang keluar). */
+  inventoryKeluar: (b) => api.post("/keuangan/inventory/keluar", b).then((r) => r.data),
+
+  // Aset internal & penyusutan
+  asetKategori: () => api.get("/keuangan/aset/kategori").then((r) => r.data),
+  aset: (semua = false) => api.get("/keuangan/aset", { params: { semua } }).then((r) => r.data),
+  asetJadwal: (id) => api.get(`/keuangan/aset/${id}/jadwal`).then((r) => r.data),
+  asetTambah: (b) => api.post("/keuangan/aset", b).then((r) => r.data),
+  asetUbah: (id, b) => api.put(`/keuangan/aset/${id}`, b).then((r) => r.data),
+  asetBatal: (id, alasan) => api.post(`/keuangan/aset/${id}/batal`, { alasan }).then((r) => r.data),
+  asetPratinjau: (sampai) => api.get("/keuangan/aset/penyusutan/pratinjau", { params: { sampai } }).then((r) => r.data),
+  asetProses: (sampai) => api.post("/keuangan/aset/penyusutan/proses", { sampai }).then((r) => r.data),
+  /** Grup neraca akun aset/liabilitas (null = ikut bawaan kelompok). */
+  coaGrupNeraca: (id, grupNeraca) => api.put(`/keuangan/coa/${id}/grup-neraca`, { grupNeraca }).then((r) => r.data),
   /** Daftar jurnal berhalaman: params jenis, status, q, from, to (yyyy-MM-dd), page (mulai 1), size. */
   jurnalHalaman: (params) =>
     api.get("/keuangan/jurnal/halaman", { params }).then((r) => r.data),

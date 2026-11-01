@@ -145,7 +145,7 @@ export default function DaftarJurnal({ initialFilter }) {
         </select>
         <select className={inputCls} value={f.jenis} onChange={(e) => setF({ ...f, jenis: e.target.value })}>
           <option value="">Semua jenis</option>
-          {["PENERIMAAN", "PENYALURAN", "BEBAN_OPERASIONAL", "TRANSFER_DANA", "ALOKASI_AMIL", "BAGI_HASIL_BANK", "PENYESUAIAN"].map((d) => <option key={d}>{d}</option>)}
+          {["PENERIMAAN", "PENYALURAN", "BEBAN_OPERASIONAL", "MUTASI_REKENING", "PENGEMBALIAN", "PEROLEHAN_ASET", "PENYUSUTAN", "TRANSFER_DANA", "ALOKASI_AMIL", "BAGI_HASIL_BANK", "PENYESUAIAN"].map((d) => <option key={d}>{d}</option>)}
         </select>
         <SearchSelect
           value={f.akun}

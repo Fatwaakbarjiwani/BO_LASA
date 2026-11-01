@@ -35,23 +35,32 @@ const KOSONG = { awal: 0, masuk: 0, keluar: 0, akhir: 0 };
  *  - CAMPAIGN, BIDANG, BANK/TUNAI : dari GET /keuangan/laporan/rincian (LaporanService.rincianLapBank).
  * Setiap tabel berkolom saldo awal | masuk | keluar | saldo akhir; Dana dan Bidang punya diagram pie seperti Excel.
  */
-export default function RingkasanDana({ year, bulan }) {
+export default function RingkasanDana({ year, bulan, tab: tabLuar, onTab }) {
   const [lpd, setLpd] = useState(null);
   const [rincian, setRincian] = useState(null);
   const [gagal, setGagal] = useState("");
-  const [tab, setTab] = useState("dana");
+  // Tab bisa dikendalikan halaman induk (LpdPage) supaya tabel LPD di bawahnya ikut tab yang aktif.
+  const [tabSendiri, setTabSendiri] = useState("dana");
+  const tab = tabLuar || tabSendiri;
+  const setTab = (k) => (onTab ? onTab(k) : setTabSendiri(k));
   const [telusur, setTelusur] = useState(null); // { judul, params } pop-up buku besar rekening
 
+  // Respons yang datang terlambat (tahun/bulan sudah diganti) diabaikan supaya data lama tidak menimpa yang baru.
   useEffect(() => {
+    let batal = false;
     setLpd(null);
+    setGagal("");
     Promise.all(["ZAKAT", "INFAQ", "CAMPAIGN", "DSKL", "OPERASIONAL"].map((f) => keuangan.lpd(f, year)))
-      .then(([zakat, infaq, campaign, dskl, amil]) => setLpd({ zakat, infaq, campaign, dskl, amil }))
-      .catch((e) => setGagal(errMsg(e)));
+      .then(([zakat, infaq, campaign, dskl, amil]) => { if (!batal) setLpd({ zakat, infaq, campaign, dskl, amil }); })
+      .catch((e) => { if (!batal) setGagal(errMsg(e)); });
+    return () => { batal = true; };
   }, [year]);
 
   useEffect(() => {
+    let batal = false;
     setRincian(null);
-    keuangan.rincianLapBank(year, bulan).then(setRincian).catch((e) => setGagal(errMsg(e)));
+    keuangan.rincianLapBank(year, bulan).then((r) => { if (!batal) setRincian(r); }).catch((e) => { if (!batal) setGagal(errMsg(e)); });
+    return () => { batal = true; };
   }, [year, bulan]);
 
   if (gagal) return <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded p-3 mb-4">Ringkasan gagal dimuat: {gagal}</div>;
@@ -174,7 +183,10 @@ export default function RingkasanDana({ year, bulan }) {
   );
 }
 
-RingkasanDana.propTypes = { year: PropTypes.oneOfType([PropTypes.number, PropTypes.string]), bulan: PropTypes.string };
+RingkasanDana.propTypes = {
+  year: PropTypes.oneOfType([PropTypes.number, PropTypes.string]), bulan: PropTypes.string,
+  tab: PropTypes.string, onTab: PropTypes.func,
+};
 
 /** Satu tabel ringkasan (uraian | saldo awal | masuk | keluar | saldo akhir), opsional dengan diagram pie. */
 function TabelRingkasan({ baris, kepala, total, pie, luarPie = [], catatan, onKlik }) {

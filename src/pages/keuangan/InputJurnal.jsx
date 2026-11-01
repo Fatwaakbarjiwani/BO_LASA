@@ -18,11 +18,20 @@ const today = () => {
 };
 
 const TEMPLATE = [
-  { id: "PENERIMAAN", nama: "Penerimaan", info: "Zakat, Infaq, DSKL, Wakaf masuk" },
+  { id: "PENERIMAAN", nama: "Penerimaan", info: "Zakat, Infaq, DSKL masuk · pengembalian dana" },
   { id: "PENYALURAN", nama: "Penyaluran", info: "Pendayagunaan ke mustahik / program" },
   { id: "BEBAN_OPERASIONAL", nama: "Beban Operasional", info: "Biaya kantor dari Dana Pengelola" },
   { id: "TRANSFER_DANA", nama: "Transfer Antar Dana", info: "Perpindahan kas antar dana" },
+  { id: "MUTASI_REKENING", nama: "Mutasi Rekening", info: "Pindah buku antar rekening (tanpa dana)" },
 ];
+/** Nama jenis jurnal untuk tampilan (termasuk jenis yang tidak punya tab sendiri). */
+const NAMA_JENIS = {
+  ...Object.fromEntries(TEMPLATE.map((t) => [t.id, t.nama])),
+  PENGEMBALIAN: "Pengembalian Dana",
+  ALOKASI_AMIL: "Alokasi Hak Amil",
+  BAGI_HASIL_BANK: "Bagi Hasil Bank",
+  PENYESUAIAN: "Penyesuaian",
+};
 
 /** Pilihan jenis dari /keuangan/meta berbentuk {kode, nama}; tetap menerima bentuk lama (string). */
 /** Label tampilan untuk kode jenis, dipakai juga bila backend masih mengirim kode saja (versi lama). */
@@ -52,9 +61,67 @@ const opsiCampaign = (list) =>
 
 const akunDana = (meta, dana, kelompok) =>
   meta.akun.filter((a) => a.dana === dana && a.kelompok === kelompok && a.postable);
+// Dipakai form Transfer Antar Dana (tetap seperti semula): rekening berdana pokok sama & akun Rekening Antar Dana.
 const rekDana = (meta, dana) => meta.rekening.filter((r) => r.dana === dana);
 const antarDana = (meta, dana) =>
   meta.akun.find((a) => a.kelompok === "ANTAR_DANA" && a.dana === dana);
+
+/**
+ * Rekening dinamis: semua rekening bisa dipakai dana apa pun (dana ditentukan oleh jurnal, bukan rekening).
+ * `r.dana` hanya dana pokok rekening — dipakai untuk memilih rekening bawaan, bukan pembatas.
+ */
+const labelRekening = (r) =>
+  `${r.kas ? "Kas: " : ""}${r.namaBank || ""} ${r.noRek || ""}`.trim() + (r.namaAkun ? ` — ${r.namaAkun}` : "");
+const opsiRekening = (list) =>
+  list.map((r) => ({ value: r.coaId, label: labelRekening(r), grup: r.kas ? "Kas tunai" : "Rekening bank" }));
+/** Rekening bawaan: rekening bank berdana pokok sama, lalu kas berdana pokok sama, lalu rekening pertama. */
+const rekBawaan = (list, dana) =>
+  (list.find((r) => r.dana === dana && !r.kas) || list.find((r) => r.dana === dana) || list.find((r) => !r.kas) || list[0])?.coaId || "";
+const HINT_REKENING = "Semua rekening bisa dipakai untuk dana apa pun. Ketik nama bank / nomor rekening untuk mencari.";
+
+/** Kuantitas barang dari isian teks (koma atau titik desimal, maks. 3 angka di belakang koma). */
+const angkaQty = (v) => {
+  const n = parseFloat(String(v ?? "").trim().replace(",", "."));
+  return Number.isFinite(n) && n > 0 ? Math.round(n * 1000) / 1000 : 0;
+};
+const teksQty = (n) => Number(n || 0).toLocaleString("id-ID", { maximumFractionDigits: 3 });
+/** Akun persediaan barang per dana (akun lama COA): 1201 Zakat Fitrah Barang, 1401 Infaq Barang. Sama dengan InventoryService. */
+const KODE_PERSEDIAAN = { ZAKAT: "1201", INFAQ: "1401" };
+const akunPersediaan = (meta, dana) =>
+  meta.akun.find((a) => a.dana === dana && a.kode === KODE_PERSEDIAAN[dana] && bisaPosting(a));
+/** Tambah barang baru lewat dialog; mengembalikan id barang baru atau null bila dibatalkan. */
+async function tambahBarangDialog() {
+  const r = await Swal.fire({
+    title: "Barang baru",
+    html: `<input id="brg-nama" class="swal2-input" placeholder="Nama barang, mis. Beras">`
+      + `<input id="brg-satuan" class="swal2-input" placeholder="Satuan, mis. kg / paket / dus">`
+      + `<input id="brg-kategori" class="swal2-input" placeholder="Kategori (opsional), mis. Sembako">`,
+    focusConfirm: false,
+    showCancelButton: true,
+    confirmButtonText: "Simpan",
+    cancelButtonText: "Batal",
+    preConfirm: () => {
+      const nama = document.getElementById("brg-nama").value.trim();
+      const satuan = document.getElementById("brg-satuan").value.trim();
+      const kategori = document.getElementById("brg-kategori").value.trim();
+      if (!nama || !satuan) { Swal.showValidationMessage("Nama dan satuan wajib diisi"); return false; }
+      return { nama, satuan, kategori: kategori || null };
+    },
+  });
+  if (!r.isConfirmed) return null;
+  try {
+    const b = await keuangan.inventoryBarangBaru(r.value);
+    return b.id;
+  } catch (e) {
+    Swal.fire({ icon: "error", title: "Gagal menambah barang", text: errMsg(e) });
+    return null;
+  }
+}
+const TAMBAH_BARANG = "__TAMBAH_BARANG__";
+
+/** Nama program tanpa akhiran asnaf, mis. "Beasiswa YBWSA (Fisabilillah)" -> "Beasiswa YBWSA". */
+const POLA_ASNAF = /\s*\(\s*(fakir\s*miskin|fakir|miskin|amil|mu'?all?af|riqab|gharim(in)?|fi+\s*sabilillah|fisabilillah|ibnu\s*sabil)\s*\)\s*$/i;
+const namaProgram = (nama) => String(nama || "").replace(POLA_ASNAF, "").trim();
 
 /**
  * Akun yang dipakai jurnal alokasi hak amil — aturan pemilihannya sama dengan PostingService.alokasiAmil di server:
@@ -196,10 +263,6 @@ async function kirim(cmd, reset, edit, onSelesai) {
   }
 }
 
-/** Opsi rekening untuk dropdown yang bisa dicari. */
-const opsiRekening = (list) =>
-  list.map((r) => ({ value: r.coaId, label: `${r.kas ? "Kas: " : ""}${r.namaBank || ""} ${r.noRek || ""}`.trim() + (r.namaAkun ? ` — ${r.namaAkun}` : "") }));
-
 function TombolSimpan({ edit, onBatalEdit, disabled, onClick, children }) {
   return (
     <div className="flex gap-2">
@@ -216,9 +279,11 @@ function FormPenerimaan({ meta, alokasi, campaign, onJenisZakatBaru, awal, edit,
   const kosong = {
     tanggal: today(), dana: "ZAKAT", jenis: "FITRAH", akunId: "", rekId: "", donatur: "", donaturId: null,
     anonim: false, samarkan: false, metode: "TRANSFER_BANK", nominal: 0, ket: "", bukti: "",
+    bentuk: "UANG", barangId: "", qty: "", nilaiSatuan: 0,
   };
   const [f, setF] = useState(awal ? { ...kosong, ...awal } : kosong);
   const [saran, setSaran] = useState([]);
+  const [barangList, setBarangList] = useState(null);
   // Akun penerimaan dipilih otomatis hanya saat dana/jenis benar-benar berubah, supaya akun hasil muat-edit
   // (atau pilihan manual) tidak tertimpa ketika daftar campaign selesai dimuat.
   const sebelum = useRef(awal ? { dana: awal.dana, jenis: awal.jenis } : null);
@@ -227,7 +292,7 @@ function FormPenerimaan({ meta, alokasi, campaign, onJenisZakatBaru, awal, edit,
   const isCampaign = f.dana === CAMPAIGN;
   const dana = danaPosting(f.dana);
   const akunList = akunDana(meta, dana, "PENERIMAAN");
-  const rekList = rekDana(meta, dana);
+  const rekList = meta.rekening;
   const jenisOpsi = isCampaign
     ? opsiCampaign(campaign)
     : opsiJenis(f.dana === "ZAKAT" ? meta.jenisZakat : f.dana === "WAKAF" ? meta.jenisWakaf : f.dana === "INFAQ" ? meta.jenisInfaq : []);
@@ -244,7 +309,7 @@ function FormPenerimaan({ meta, alokasi, campaign, onJenisZakatBaru, awal, edit,
       // Daftar campaign dimuat asinkron: selama masih kosong, jangan buang campaign yang sudah terpilih.
       jenis: jenisList.includes(s.jenis) || (isCampaign && jenisList.length === 0) ? s.jenis : jenisList[0] || "",
       akunId: !berubah && akunList.some((a) => String(a.id) === String(s.akunId)) ? s.akunId : cocok ? cocok.id : akunList[0]?.id || "",
-      rekId: rekList.some((r) => String(r.coaId) === String(s.rekId)) ? s.rekId : rekList.find((r) => !r.kas)?.coaId || rekList[0]?.coaId || "",
+      rekId: rekList.some((r) => String(r.coaId) === String(s.rekId)) ? s.rekId : rekBawaan(rekList, dana),
     }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [f.dana, f.jenis, campaign]);
@@ -283,14 +348,36 @@ function FormPenerimaan({ meta, alokasi, campaign, onJenisZakatBaru, awal, edit,
   };
   const persen = pilihKebijakanAmil(alokasi, dana, isCampaign ? "TERIKAT" : f.jenis, f.tanggal);
 
-  const baris = [
-    { dana, akun: rek?.namaAkun, debit: f.nominal },
-    { dana, akun: akun ? `${akun.kode} ${akun.nama}` : null, kredit: f.nominal },
-  ];
-  const siap = f.nominal > 0 && akun && rek && f.donatur.trim() && (!isCampaign || f.jenis);
+  // Bentuk Barang (no. 13 & 14): zakat/infaq/campaign berupa barang -> stok inventory bertambah; tanpa hak amil.
+  const bolehBarang = !edit && ["ZAKAT", "INFAQ", CAMPAIGN].includes(f.dana);
+  const isBarang = bolehBarang && f.bentuk === "BARANG";
+  useEffect(() => {
+    if (!isBarang || barangList) return;
+    keuangan.inventoryBarang().then(setBarangList).catch((e) => { setBarangList([]); Swal.fire({ icon: "error", title: "Gagal memuat barang", text: errMsg(e) }); });
+  }, [isBarang, barangList]);
+  const barang = (barangList || []).find((b) => String(b.id) === String(f.barangId));
+  const qtyNum = angkaQty(f.qty);
+  const nilaiBarang = Math.round(qtyNum * (f.nilaiSatuan || 0));
+  const persediaan = isBarang ? akunPersediaan(meta, dana) : null;
+  const nominal = isBarang ? nilaiBarang : f.nominal;
+  const pilihBarang = async (v) => {
+    if (v !== TAMBAH_BARANG) return set("barangId", v);
+    const id = await tambahBarangDialog();
+    if (!id) return;
+    const list = await keuangan.inventoryBarang().catch(() => barangList || []);
+    setBarangList(list);
+    set("barangId", id);
+  };
 
-  // Potongan hak amil (dibulatkan ke rupiah, sama dengan server) dan jurnal alokasinya.
-  const amilPersen = persen && dana !== "PENGELOLA" ? Number(persen.persen) : 0;
+  const baris = [
+    { dana, akun: isBarang ? (persediaan ? `${persediaan.kode} ${persediaan.nama}` : null) : rek ? labelRekening(rek) : null, debit: nominal },
+    { dana, akun: akun ? `${akun.kode} ${akun.nama}` : null, kredit: nominal },
+  ];
+  const siap = nominal > 0 && akun && f.donatur.trim() && (!isCampaign || f.jenis)
+    && (isBarang ? barang && qtyNum > 0 && persediaan : rek);
+
+  // Potongan hak amil (dibulatkan ke rupiah, sama dengan server) dan jurnal alokasinya. Barang tidak dipotong.
+  const amilPersen = persen && dana !== "PENGELOLA" && !isBarang ? Number(persen.persen) : 0;
   const amil = amilPersen > 0 && f.nominal > 0 ? Math.round((f.nominal * amilPersen) / 100) : 0;
   const akunAmil = amil > 0 ? akunAlokasiAmil(meta, dana) : null;
   const amilJalan = amil > 0 && akunAmil.kurang.length === 0;
@@ -301,7 +388,29 @@ function FormPenerimaan({ meta, alokasi, campaign, onJenisZakatBaru, awal, edit,
     { dana: "PENGELOLA", akun: labelAkun(akunAmil.penerimaanAmil), kredit: amil },
   ] : [];
 
+  const simpanBarang = async () => {
+    try {
+      const r = await keuangan.inventoryMasuk({
+        tanggal: f.tanggal, dana, akunPenerimaanId: akun.id,
+        jenisZakat: f.dana === "ZAKAT" ? f.jenis : null, jenisInfaq: f.dana === "INFAQ" ? f.jenis : isCampaign ? "TERIKAT" : null,
+        campaignId: isCampaign && f.jenis ? Number(f.jenis) : null,
+        donaturId: f.donaturId, donaturNama: f.donatur.trim(), donaturTipe: "INDIVIDU", anonim: f.anonim, samarkan: f.samarkan,
+        barangId: barang.id, qty: qtyNum, nilaiSatuan: f.nilaiSatuan, keterangan: f.ket || null, buktiUrl: f.bukti || null,
+      });
+      await Swal.fire({
+        icon: "success", title: "Penerimaan barang tersimpan",
+        html: `<b>${r.nomorBukti}</b>${r.peringatan?.length ? "<br/><small>" + r.peringatan.join("<br/>") + "</small>" : ""}`,
+      });
+      setF({ ...kosong, tanggal: f.tanggal, dana: f.dana, bentuk: "BARANG" });
+      setBarangList(null);
+      onSelesai?.();
+    } catch (e) {
+      Swal.fire({ icon: "error", title: "Penerimaan barang ditolak", text: errMsg(e) });
+    }
+  };
+
   const simpan = async () => {
+    if (isBarang) return simpanBarang();
     if (amil > 0 && !amilJalan) {
       const k = await Swal.fire({
         icon: "warning",
@@ -373,15 +482,55 @@ function FormPenerimaan({ meta, alokasi, campaign, onJenisZakatBaru, awal, edit,
             placeholder="Cari akun penerimaan…"
           />
         </Field>
-        <Field label="Masuk ke rekening" hint="Ketik nama bank / nomor rekening untuk mencari. Hanya rekening milik dana terpilih yang ditampilkan.">
-          <SearchSelect
-            value={f.rekId}
-            onChange={(v) => set("rekId", v)}
-            options={opsiRekening(rekList)}
-            placeholder="Cari bank / no. rekening…"
-          />
-        </Field>
-        <Field label="Nominal (rupiah)"><Nominal value={f.nominal} onChange={(v) => set("nominal", v)} /></Field>
+        {bolehBarang && (
+          <Field label="Bentuk penerimaan">
+            <div className="flex gap-2" role="radiogroup" aria-label="Bentuk penerimaan">
+              {[["UANG", "Uang"], ["BARANG", "Barang"]].map(([v, n]) => (
+                <button key={v} type="button" role="radio" aria-checked={f.bentuk === v} onClick={() => set("bentuk", v)}
+                  className={`px-4 py-1.5 rounded-lg border text-sm ${f.bentuk === v ? "bg-blue-600 text-white border-blue-600" : "bg-white hover:bg-blue-50"}`}>
+                  {n}
+                </button>
+              ))}
+            </div>
+          </Field>
+        )}
+        {isBarang ? (
+          <>
+            <Field label="Barang" hint="Stok barang ini (per dana) bertambah dan bisa disalurkan dari menu Inventory Barang.">
+              <PilihGrup
+                value={f.barangId}
+                onChange={pilihBarang}
+                options={[
+                  ...(barangList || []).map((b) => ({ value: b.id, label: `${b.nama} (${b.satuan})`, grup: b.kategori || "Tanpa kategori", ket: `${b.kode} · stok total ${teksQty(b.stokTotal)} ${b.satuan}` })),
+                  { value: TAMBAH_BARANG, label: "+ Tambah barang baru…", grup: "Lainnya" },
+                ]}
+                placeholder={barangList == null ? "Memuat…" : `Cari barang (${barangList.length})…`}
+              />
+            </Field>
+            <div className="grid grid-cols-2 gap-3">
+              <Field label={`Kuantitas${barang ? ` (${barang.satuan})` : ""}`}>
+                <input inputMode="decimal" className={inputCls} value={f.qty} placeholder="0" onChange={(e) => set("qty", e.target.value.replace(/[^0-9.,]/g, ""))} />
+              </Field>
+              <Field label={`Nilai per ${barang?.satuan || "satuan"}`} hint="Nilai wajar / harga pasar">
+                <Nominal value={f.nilaiSatuan} onChange={(v) => set("nilaiSatuan", v)} />
+              </Field>
+            </div>
+            <div className="text-sm text-gray-600">Nilai barang: <b>{rp(nilaiBarang)}</b>{qtyNum > 0 && barang ? ` (${teksQty(qtyNum)} ${barang.satuan} × ${rp(f.nilaiSatuan || 0)})` : ""}</div>
+            {!persediaan && <div className="text-sm text-red-600">Akun barang {KODE_PERSEDIAAN[dana]} Dana {dana} tidak ditemukan di COA.</div>}
+          </>
+        ) : (
+          <>
+            <Field label="Masuk ke rekening" hint={HINT_REKENING}>
+              <PilihGrup
+                value={f.rekId}
+                onChange={(v) => set("rekId", v)}
+                options={opsiRekening(rekList)}
+                placeholder={`Cari bank / no. rekening (${rekList.length} rekening)…`}
+              />
+            </Field>
+            <Field label="Nominal (rupiah)"><Nominal value={f.nominal} onChange={(v) => set("nominal", v)} /></Field>
+          </>
+        )}
       </div>
       <div className="space-y-3">
         <Field label="Nama donatur / muzaki" hint="Ketik untuk mencari donatur terdaftar">
@@ -397,23 +546,26 @@ function FormPenerimaan({ meta, alokasi, campaign, onJenisZakatBaru, awal, edit,
           <label className="flex items-center gap-2"><input type="checkbox" checked={f.anonim} onChange={(e) => set("anonim", e.target.checked)} /> Tampil “Anonim”</label>
           <label className="flex items-center gap-2"><input type="checkbox" checked={f.samarkan} onChange={(e) => set("samarkan", e.target.checked)} /> Samarkan nama</label>
         </div>
-        <div className="grid grid-cols-2 gap-3">
-          <Field label="Metode bayar">
-            <select className={inputCls} value={f.metode} onChange={(e) => set("metode", e.target.value)}>
-              {meta.metodeBayar.map((m) => <option key={m} value={m}>{m.replace("_", " ")}</option>)}
-            </select>
-          </Field>
-        </div>
+        {!isBarang && (
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Metode bayar">
+              <select className={inputCls} value={f.metode} onChange={(e) => set("metode", e.target.value)}>
+                {meta.metodeBayar.map((m) => <option key={m} value={m}>{m.replace("_", " ")}</option>)}
+              </select>
+            </Field>
+          </div>
+        )}
         <Field label="Keterangan"><input className={inputCls} value={f.ket} onChange={(e) => set("ket", e.target.value)} /></Field>
-        <Pratinjau baris={baris} judul="Pratinjau jurnal penerimaan (per dana)" />
+        <Pratinjau baris={baris} judul={isBarang ? "Pratinjau jurnal penerimaan barang" : "Pratinjau jurnal penerimaan (per dana)"}
+          catatan={isBarang ? "Penerimaan barang tidak dipotong hak amil." : undefined} />
         {amil > 0 && (
           <div className="text-sm bg-amber-50 border border-amber-200 rounded p-3 text-amber-900 space-y-1">
             <div className="font-semibold">Potongan hak amil {amilPersen}%</div>
             <table className="w-full tabular-nums">
               <tbody>
-                <tr><td>Penerimaan bruto</td><td className="text-right">{rp(f.nominal)}</td></tr>
-                <tr><td>Hak amil {amilPersen}% × {rp(f.nominal)}</td><td className="text-right">− {rp(amil)}</td></tr>
-                <tr className="border-t border-amber-200 font-semibold"><td>Bersih untuk Dana {dana}</td><td className="text-right">{rp(f.nominal - amil)}</td></tr>
+                <tr><td>Penerimaan bruto</td><td className="text-right">{rp(nominal)}</td></tr>
+                <tr><td>Hak amil {amilPersen}% × {rp(nominal)}</td><td className="text-right">− {rp(amil)}</td></tr>
+                <tr className="border-t border-amber-200 font-semibold"><td>Bersih untuk Dana {dana}</td><td className="text-right">{rp(nominal - amil)}</td></tr>
                 <tr><td>Masuk ke Dana Pengelola</td><td className="text-right">{rp(amil)}</td></tr>
               </tbody>
             </table>
@@ -430,7 +582,7 @@ function FormPenerimaan({ meta, alokasi, campaign, onJenisZakatBaru, awal, edit,
             <div className="mt-1 text-xs">Lengkapi di Administrasi → Daftar Akun (COA). Bila tetap disimpan, penerimaan dicatat penuh tanpa jurnal alokasi.</div>
           </div>
         )}
-        <TombolSimpan edit={edit} onBatalEdit={onBatalEdit} disabled={!siap} onClick={simpan}>Simpan penerimaan</TombolSimpan>
+        <TombolSimpan edit={edit} onBatalEdit={onBatalEdit} disabled={!siap} onClick={simpan}>{isBarang ? "Simpan penerimaan barang" : "Simpan penerimaan"}</TombolSimpan>
       </div>
     </div>
   );
@@ -526,52 +678,75 @@ PilihGrup.propTypes = {
   buka: PropTypes.number,
 };
 
+/**
+ * Penyaluran: Dana sumber dipilih lebih dulu (seperti semula), lalu Bidang menyaring Program milik dana itu.
+ * Bidang "Semua bidang" = tampilkan semua program dana sumber; "Tanpa bidang" = program yang belum diberi bidang
+ * di COA. Rekening dinamis: semua rekening bisa dipakai. Asnaf bisa diisi untuk semua dana (wajib untuk Zakat).
+ */
+const SEMUA_BIDANG = "";
+const TANPA_BIDANG = "__TANPA__";
+const barisKosong = () => ({ mustahikId: "", nama: "", asnaf: "", jumlah: 0, jml: 1 });
+
 function FormPenyaluran({ meta, campaign, awal, edit, onSelesai, onBatalEdit }) {
   const danaOpsi = [...meta.dana.filter((d) => d.kode !== "PENGELOLA"), OPSI_CAMPAIGN];
-  const kosong = { tanggal: today(), dana: "ZAKAT", jenis: "", akunId: "", rekId: "", ket: "" };
+  const kosong = { tanggal: today(), dana: "ZAKAT", jenis: "", bidang: SEMUA_BIDANG, akunId: "", rekId: "", ket: "" };
   const [f, setF] = useState(awal ? { ...kosong, ...awal, rows: undefined } : kosong);
-  const [rows, setRows] = useState(awal?.rows?.length ? awal.rows : [{ mustahikId: "", nama: "", asnaf: "", jumlah: 0, jml: 1 }]);
+  const [rows, setRows] = useState(awal?.rows?.length ? awal.rows : [barisKosong()]);
   const set = (k, v) => setF((s) => ({ ...s, [k]: v }));
 
   const isCampaign = f.dana === CAMPAIGN;
   const dana = danaPosting(f.dana);
   const campaignOpsi = opsiCampaign(campaign);
   const namaDana = (kode) => meta.dana.find((d) => d.kode === kode)?.nama || `Dana ${kode}`;
-  // Semua program (akun pendayagunaan) milik dana sumber, dikelompokkan per bidang. Akun tanpa dana (umum) ikut.
-  const akunList = meta.akun
+  // Semua program (akun pendayagunaan) milik dana sumber; akun tanpa dana (umum) ikut.
+  const programDana = meta.akun
     .filter((a) => a.kelompok === "PENDAYAGUNAAN" && bisaPosting(a) && (a.dana === dana || !a.dana))
     .sort((a, b) => {
       const ua = a.bidang ? URUT_BIDANG.indexOf(a.bidang) : 99;
       const ub = b.bidang ? URUT_BIDANG.indexOf(b.bidang) : 99;
       return (ua < 0 ? 98 : ua) - (ub < 0 ? 98 : ub) || String(a.kode).localeCompare(String(b.kode));
     });
-  const akunOpsi = akunList.map((a) => ({ value: a.id, label: `${a.kode} ${a.nama}`, grup: `Bidang ${labelBidang(a.bidang)}` }));
-  // Semua rekening ditampilkan. Rekening milik dana lain tetap terlihat tetapi tidak bisa dipilih, karena server
-  // menolak akun dana lain (harus lewat Transfer Antar Dana).
-  const bolehRek = (r) => r.dana === dana || !r.dana;
-  const rekList = meta.rekening.filter(bolehRek);
-  const rekOpsi = [
-    ...meta.rekening.filter((r) => r.dana === dana).map((r) => ({ r, grup: `Rekening ${namaDana(dana)}` })),
-    ...meta.rekening.filter((r) => !r.dana).map((r) => ({ r, grup: "Rekening umum (semua dana)" })),
-    ...meta.rekening.filter((r) => !bolehRek(r)).map((r) => ({
-      r, grup: "Rekening dana lain", nonaktif: true,
-      ket: `Milik ${namaDana(r.dana)} — gunakan Transfer Antar Dana`,
-    })),
-  ].map(({ r, ...o }) => ({ value: r.coaId, label: `${r.kas ? "Kas: " : ""}${r.namaBank} ${r.noRek || ""}`.trim(), ...o }));
+  // Semua bidang selalu ditampilkan; jumlah program menunjukkan berapa program dana sumber ini yang sudah dipetakan
+  // ke bidang tersebut (pemetaan di COA, kolom Bidang program).
+  const jumlahPerBidang = {};
+  programDana.forEach((a) => { const b = a.bidang || TANPA_BIDANG; jumlahPerBidang[b] = (jumlahPerBidang[b] || 0) + 1; });
+  const adaBidang = programDana.some((a) => a.bidang);
+  const bidangOpsi = [
+    { value: SEMUA_BIDANG, label: `Semua bidang (${programDana.length} program)` },
+    ...URUT_BIDANG.map((b) => ({ value: b, label: `${labelBidang(b)} (${jumlahPerBidang[b] ? `${jumlahPerBidang[b]} program` : "belum ada program"})` })),
+    ...(jumlahPerBidang[TANPA_BIDANG] ? [{ value: TANPA_BIDANG, label: `Tanpa bidang (${jumlahPerBidang[TANPA_BIDANG]} program)` }] : []),
+  ];
+  const akunList = programDana.filter((a) => f.bidang === SEMUA_BIDANG
+    || (f.bidang === TANPA_BIDANG ? !a.bidang : a.bidang === f.bidang));
+  const akunOpsi = akunList.map((a) => ({ value: a.id, label: `${a.kode} ${namaProgram(a.nama)}`, grup: `Bidang ${labelBidang(a.bidang)}` }));
+  // Rekening dinamis: semua rekening bisa dipakai dana apa pun.
+  const rekList = meta.rekening;
+  // Buka otomatis: ganti Dana sumber -> daftar Bidang terbuka; pilih Bidang -> daftar Program terbuka.
+  const [bukaBidang, setBukaBidang] = useState(0);
   const [bukaProgram, setBukaProgram] = useState(0);
   useEffect(() => {
     // Pilihan lama dipertahankan bila masih berlaku (mis. saat edit); selain itu dikosongkan agar pengguna memilih
-    // sendiri dari daftar lengkap. Hanya bila pilihannya tunggal, langsung diisi.
-    setF((s) => ({
-      ...s,
-      jenis: !isCampaign ? "" : campaignOpsi.some((c) => c.kode === s.jenis) || campaignOpsi.length === 0 ? s.jenis : campaignOpsi[0]?.kode || "",
-      akunId: akunList.some((a) => String(a.id) === String(s.akunId)) ? s.akunId : akunList.length === 1 ? akunList[0].id : "",
-      rekId: rekList.some((r) => String(r.coaId) === String(s.rekId)) ? s.rekId : rekList.length === 1 ? rekList[0].coaId : "",
-    }));
+    // sendiri. Bidang yang tidak dimiliki dana baru dikembalikan ke "Semua bidang".
+    setF((s) => {
+      const bidang = s.bidang === TANPA_BIDANG && !jumlahPerBidang[TANPA_BIDANG] ? SEMUA_BIDANG : s.bidang;
+      const daftar = programDana.filter((a) => bidang === SEMUA_BIDANG || (bidang === TANPA_BIDANG ? !a.bidang : a.bidang === bidang));
+      return {
+        ...s,
+        bidang,
+        jenis: !isCampaign ? "" : campaignOpsi.some((c) => c.kode === s.jenis) || campaignOpsi.length === 0 ? s.jenis : campaignOpsi[0]?.kode || "",
+        akunId: daftar.some((a) => String(a.id) === String(s.akunId)) ? s.akunId : daftar.length === 1 ? daftar[0].id : "",
+        rekId: rekList.some((r) => String(r.coaId) === String(s.rekId)) ? s.rekId : rekBawaan(rekList, dana),
+      };
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [f.dana, campaign]);
   const gantiDana = (v) => {
+    // Bidang terpilih dipertahankan saat dana sumber diganti.
     setF((s) => ({ ...s, dana: v, akunId: "", rekId: "" }));
+    setBukaBidang((n) => n + 1);
+  };
+  const gantiBidang = (v) => {
+    setF((s) => ({ ...s, bidang: v, akunId: "" }));
     setBukaProgram((n) => n + 1);
   };
 
@@ -583,8 +758,8 @@ function FormPenyaluran({ meta, campaign, awal, edit, onSelesai, onBatalEdit }) 
   const ubah = (i, k, v) => setRows((rs) => rs.map((r, j) => (j === i ? { ...r, [k]: v } : r)));
 
   const baris = [
-    { dana, akun: akun ? `${akun.kode} ${akun.nama}` : null, debit: total },
-    { dana, akun: rek?.namaAkun, kredit: total },
+    { dana, akun: akun ? `${akun.kode} ${namaProgram(akun.nama)}` : null, debit: total },
+    { dana, akun: rek ? labelRekening(rek) : null, kredit: total },
   ];
   const zakat = f.dana === "ZAKAT";
   const siap = total > 0 && akun && rek && (!isCampaign || f.jenis) && rows.every((r) => r.jumlah > 0 && r.nama.trim());
@@ -601,7 +776,7 @@ function FormPenyaluran({ meta, campaign, awal, edit, onSelesai, onBatalEdit }) 
           asnaf: r.asnaf || null, coaId: akun.id, jumlah: r.jumlah, jmlPenerima: r.jml || 1, keterangan: null,
         })),
       },
-      () => { setF({ ...kosong, tanggal: f.tanggal, dana: f.dana, jenis: f.jenis }); setRows([{ mustahikId: "", nama: "", asnaf: "", jumlah: 0, jml: 1 }]); },
+      () => { setF({ ...kosong, tanggal: f.tanggal, dana: f.dana, jenis: f.jenis, bidang: f.bidang }); setRows([barisKosong()]); },
       edit,
       onSelesai,
     );
@@ -627,22 +802,32 @@ function FormPenyaluran({ meta, campaign, awal, edit, onSelesai, onBatalEdit }) 
             <div className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded p-2">Belum ada campaign.</div>
           )
         )}
-        <Field label="Program / akun pendayagunaan" hint={zakat && akun ? `Asnaf akun ini: ${akun.asnaf || "belum ditentukan (lengkapi di COA)"}` : akun?.bidang ? `Bidang: ${akun.bidang}` : undefined}>
+        <Field label="Bidang" hint={adaBidang
+          ? `Menyaring program ${namaDana(dana)} menurut bidangnya (diatur di COA).`
+          : `Program ${namaDana(dana)} belum dipetakan ke bidang mana pun. Isi kolom Bidang program di Daftar Akun (COA).`}>
+          <PilihGrup
+            value={f.bidang}
+            onChange={gantiBidang}
+            options={bidangOpsi}
+            buka={bukaBidang}
+            placeholder="Pilih bidang…"
+          />
+        </Field>
+        <Field label="Program / akun pendayagunaan" hint={zakat && akun ? `Asnaf bawaan program: ${akun.asnaf || "belum ditentukan (isi di rincian penerima atau lengkapi di COA)"}` : akun?.bidang ? `Bidang: ${labelBidang(akun.bidang)}` : undefined}>
           <PilihGrup
             value={f.akunId}
             onChange={(v) => set("akunId", v)}
             options={akunOpsi}
             buka={bukaProgram}
-            placeholder={`Pilih program (${akunList.length} program ${namaDana(dana)}, per bidang)…`}
+            placeholder={`Pilih program (${akunList.length} program ${namaDana(dana)})…`}
           />
         </Field>
-        <Field label="Dibayar dari rekening"
-          hint="Semua rekening ditampilkan. Rekening milik dana lain berwarna abu-abu dan tidak bisa dipilih.">
+        <Field label="Dibayar dari rekening" hint={HINT_REKENING}>
           <PilihGrup
             value={f.rekId}
             onChange={(v) => set("rekId", v)}
-            options={rekOpsi}
-            placeholder={`Pilih rekening (${rekList.length} bisa dipakai)…`}
+            options={opsiRekening(rekList)}
+            placeholder={`Pilih rekening (${rekList.length} rekening)…`}
           />
         </Field>
         <Field label="Keterangan"><input className={inputCls} value={f.ket} onChange={(e) => set("ket", e.target.value)} /></Field>
@@ -652,7 +837,7 @@ function FormPenyaluran({ meta, campaign, awal, edit, onSelesai, onBatalEdit }) 
       </div>
       <div>
         <div className="text-sm font-semibold text-gray-600 mb-2">
-          {wakaf ? "Rincian mauquf 'alaih (penerima manfaat wakaf)" : "Rincian penerima"} {zakat && "(asnaf wajib)"}
+          {wakaf ? "Rincian mauquf 'alaih (penerima manfaat wakaf)" : "Rincian penerima"} {zakat ? "(asnaf wajib)" : wakaf ? "" : "(asnaf opsional)"}
         </div>
         <div className="space-y-2">
           {rows.map((r, i) => (
@@ -661,9 +846,9 @@ function FormPenyaluran({ meta, campaign, awal, edit, onSelesai, onBatalEdit }) 
                 value={r.nama} onChange={(e) => ubah(i, "nama", e.target.value)} />
               <div className="col-span-3"><Nominal value={r.jumlah} onChange={(v) => ubah(i, "jumlah", v)} /></div>
               <input type="number" min="1" className={`${inputCls} col-span-1`} title="Jumlah penerima" value={r.jml} onChange={(e) => ubah(i, "jml", parseInt(e.target.value, 10) || 1)} />
-              {zakat ? (
-                <select className={`${inputCls} col-span-2`} value={r.asnaf} onChange={(e) => ubah(i, "asnaf", e.target.value)}>
-                  <option value="">{akun?.asnaf ? `(ikut akun: ${akun.asnaf})` : "asnaf…"}</option>
+              {!wakaf ? (
+                <select className={`${inputCls} col-span-2`} value={r.asnaf} onChange={(e) => ubah(i, "asnaf", e.target.value)} title="Asnaf penerima">
+                  <option value="">{akun?.asnaf ? `(ikut program: ${akun.asnaf})` : zakat ? "asnaf…" : "asnaf (opsional)"}</option>
                   {meta.asnaf.map((a) => <option key={a} value={a}>{a}</option>)}
                 </select>
               ) : <span className="col-span-2" />}
@@ -671,7 +856,7 @@ function FormPenyaluran({ meta, campaign, awal, edit, onSelesai, onBatalEdit }) 
             </div>
           ))}
         </div>
-        <Btn color="gray" className="mt-2" onClick={() => setRows((rs) => [...rs, { mustahikId: "", nama: "", asnaf: "", jumlah: 0, jml: 1 }])}>+ Tambah penerima</Btn>
+        <Btn color="gray" className="mt-2" onClick={() => setRows((rs) => [...rs, barisKosong()])}>+ Tambah penerima</Btn>
       </div>
     </div>
   );
@@ -687,16 +872,16 @@ function FormBeban({ meta, awal, edit, onSelesai, onBatalEdit }) {
   const [f, setF] = useState(awal ? { ...kosong, ...awal } : kosong);
   const set = (k, v) => setF((s) => ({ ...s, [k]: v }));
   const akunList = akunDana(meta, "PENGELOLA", "BEBAN_OPERASIONAL");
-  const rekList = rekDana(meta, "PENGELOLA");
+  const rekList = meta.rekening;
   useEffect(() => {
-    setF((s) => ({ ...s, akunId: s.akunId || akunList[0]?.id || "", rekId: s.rekId || rekList.find((r) => !r.kas)?.coaId || rekList[0]?.coaId || "" }));
+    setF((s) => ({ ...s, akunId: s.akunId || akunList[0]?.id || "", rekId: s.rekId || rekBawaan(rekList, "PENGELOLA") }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const akun = meta.akun.find((a) => String(a.id) === String(f.akunId));
   const rek = meta.rekening.find((r) => String(r.coaId) === String(f.rekId));
   const baris = [
     { dana: "PENGELOLA", akun: akun ? `${akun.kode} ${akun.nama}` : null, debit: f.nominal },
-    { dana: "PENGELOLA", akun: rek?.namaAkun, kredit: f.nominal },
+    { dana: "PENGELOLA", akun: rek ? labelRekening(rek) : null, kredit: f.nominal },
   ];
   const simpan = () =>
     kirim(
@@ -718,11 +903,11 @@ function FormBeban({ meta, awal, edit, onSelesai, onBatalEdit }) {
             placeholder="Cari akun beban…"
           />
         </Field>
-        <Field label="Dibayar dari rekening (Dana Pengelola)">
-          <SearchSelect
+        <Field label="Dibayar dari rekening" hint={`${HINT_REKENING} Dicatat sebagai kas Dana Pengelola.`}>
+          <PilihGrup
             value={f.rekId}
             onChange={(v) => set("rekId", v)}
-            options={rekList.map((r) => ({ value: r.coaId, label: `${r.kas ? "Kas: " : ""}${r.namaBank} ${r.noRek || ""}` }))}
+            options={opsiRekening(rekList)}
             placeholder="Cari rekening…"
           />
         </Field>
@@ -828,6 +1013,191 @@ function FormTransfer({ meta, awal, edit, onSelesai, onBatalEdit }) {
 FormTransfer.propTypes = { meta: PropTypes.object, awal: PropTypes.object, edit: PropTypes.object, onSelesai: PropTypes.func, onBatalEdit: PropTypes.func };
 
 // ----------------------------------------------------------------------------------------------
+/**
+ * Mutasi Rekening: pindah buku antar rekening (mis. setor kas ke bank, pindah dari BSI ke BRI). Tanpa dana —
+ * dicatat pada dana teknis MUTASI sehingga saldo dana mana pun tidak berubah, tidak masuk LPD, dan tidak dihitung
+ * sebagai masuk/keluar dana. Pengganti Transfer Antar Dana untuk input baru (transfer lama tetap ada sebagai riwayat).
+ */
+const DANA_MUTASI = "MUTASI";
+
+function FormMutasi({ meta, awal, edit, onSelesai, onBatalEdit }) {
+  const kosong = { tanggal: today(), rekAsal: "", rekTujuan: "", nominal: 0, ket: "" };
+  const [f, setF] = useState(awal ? { ...kosong, ...awal } : kosong);
+  const set = (k, v) => setF((s) => ({ ...s, [k]: v }));
+  const ra = meta.rekening.find((r) => String(r.coaId) === String(f.rekAsal));
+  const rt = meta.rekening.find((r) => String(r.coaId) === String(f.rekTujuan));
+  const sama = ra && rt && ra.coaId === rt.coaId;
+  const baris = [
+    { dana: DANA_MUTASI, akun: rt ? labelRekening(rt) : null, debit: f.nominal },
+    { dana: DANA_MUTASI, akun: ra ? labelRekening(ra) : null, kredit: f.nominal },
+  ];
+  const siap = f.nominal > 0 && ra && rt && !sama;
+  const simpan = () =>
+    kirim(
+      {
+        jenis: "MUTASI_REKENING", tanggal: f.tanggal, danaKode: DANA_MUTASI,
+        keterangan: f.ket || `Mutasi ${ra.namaBank || ra.namaAkun} ke ${rt.namaBank || rt.namaAkun}`,
+        lines: [
+          { coaId: rt.coaId, danaKode: DANA_MUTASI, debit: f.nominal },
+          { coaId: ra.coaId, danaKode: DANA_MUTASI, kredit: f.nominal },
+        ],
+      },
+      () => setF({ ...kosong, tanggal: f.tanggal, rekAsal: f.rekAsal, rekTujuan: f.rekTujuan }),
+      edit,
+      onSelesai,
+    );
+  return (
+    <div className="grid md:grid-cols-2 gap-4">
+      <div className="space-y-3">
+        <div className="bg-blue-50 text-blue-800 text-sm rounded p-2">
+          Untuk uang yang berpindah antar rekening/kas. Tidak memilih dana: saldo setiap dana tetap, tidak masuk Laporan
+          Perubahan Dana, dan tidak dihitung sebagai dana masuk/keluar. Saldo kedua rekening tetap berubah.
+        </div>
+        <Field label="Tanggal"><input type="date" max={today()} className={inputCls} value={f.tanggal} onChange={(e) => set("tanggal", e.target.value)} /></Field>
+        <Field label="Dari rekening">
+          <PilihGrup value={f.rekAsal} onChange={(v) => set("rekAsal", v)} options={opsiRekening(meta.rekening)} placeholder="Cari rekening asal…" />
+        </Field>
+        <Field label="Ke rekening">
+          <PilihGrup value={f.rekTujuan} onChange={(v) => set("rekTujuan", v)} options={opsiRekening(meta.rekening)} placeholder="Cari rekening tujuan…" />
+        </Field>
+        <Field label="Nominal (rupiah)"><Nominal value={f.nominal} onChange={(v) => set("nominal", v)} /></Field>
+        <Field label="Keterangan"><input className={inputCls} value={f.ket} onChange={(e) => set("ket", e.target.value)} placeholder="mis. setor kas ke bank" /></Field>
+      </div>
+      <div className="space-y-3">
+        <Pratinjau baris={baris} judul="Pratinjau jurnal mutasi" catatan="Dana MUTASI = penanda teknis, bukan dana sungguhan." />
+        {sama && <div className="text-sm text-red-600">Rekening asal dan tujuan harus berbeda.</div>}
+        <TombolSimpan edit={edit} onBatalEdit={onBatalEdit} disabled={!siap} onClick={simpan}>Simpan mutasi</TombolSimpan>
+      </div>
+    </div>
+  );
+}
+FormMutasi.propTypes = { meta: PropTypes.object, awal: PropTypes.object, edit: PropTypes.object, onSelesai: PropTypes.func, onBatalEdit: PropTypes.func };
+
+// ----------------------------------------------------------------------------------------------
+/**
+ * Pengembalian dana: sisa uang penyaluran/operasional yang dikembalikan (mis. dicairkan Rp1.000.000, terpakai
+ * Rp800.000, kembali Rp200.000). Bukan penerimaan baru: penyaluran asal dikurangi di BULAN PENYALURAN ASAL tanpa
+ * mengedit jurnal asal, dan tidak masuk LPD sebagai penerimaan. Rekening tujuan boleh berbeda dari rekening pengirim.
+ */
+const bulanLabel = (p) => {
+  const [y, m] = String(p || "").split("-");
+  return m ? `${["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"][Number(m) - 1]} ${y}` : p;
+};
+
+function FormPengembalian({ meta, onSelesai }) {
+  const kosong = { tanggal: today(), asalId: "", rekId: "", nominal: 0, ket: "", diBulanBerjalan: false };
+  const [f, setF] = useState(kosong);
+  const [sumber, setSumber] = useState(null);
+  const [muat, setMuat] = useState(0);
+  const set = (k, v) => setF((s) => ({ ...s, [k]: v }));
+
+  useEffect(() => {
+    let batal = false;
+    keuangan.pengembalianSumber({ limit: 300 })
+      .then((d) => { if (!batal) setSumber(d); })
+      .catch((e) => { if (!batal) { setSumber([]); Swal.fire({ icon: "error", title: "Gagal memuat penyaluran", text: errMsg(e) }); } });
+    return () => { batal = true; };
+  }, [muat]);
+
+  const asal = (sumber || []).find((x) => String(x.id) === String(f.asalId));
+  const rek = meta.rekening.find((r) => String(r.coaId) === String(f.rekId));
+  const sisa = asal ? Number(asal.sisa) || 0 : 0;
+  const tglAsal = asal ? tglIso(asal.tanggal) : "";
+  const periodeKembali = f.tanggal.slice(0, 7);
+  const bulanSama = asal && asal.periode === periodeKembali;
+  const asalTutup = asal && !!Number(asal.periodeTutup);
+  const duaJurnal = asal && !bulanSama && !asalTutup;
+  const opsi = (sumber || []).map((x) => ({
+    value: x.id,
+    label: `${x.nomorBukti} · ${tglIso(x.tanggal)} · ${rp(x.nilai)}`,
+    grup: `Penyaluran ${bulanLabel(x.periode)}`,
+    ket: [x.dana, x.akun, x.pihak || x.keterangan, `sisa ${rp(x.sisa)}`].filter(Boolean).join(" · "),
+  }));
+  const akunProgram = asal?.akun || "akun program asal";
+  const piutang = `Piutang Pengembalian Penyaluran (${asal?.dana || "dana"})`;
+  const baris = !asal ? [] : duaJurnal ? [
+    { dana: asal.dana, akun: `[${tglAsal}] ${piutang}`, debit: f.nominal },
+    { dana: asal.dana, akun: `[${tglAsal}] ${akunProgram}`, kredit: f.nominal },
+    { dana: asal.dana, akun: `[${f.tanggal}] ${rek ? labelRekening(rek) : "rekening tujuan"}`, debit: f.nominal },
+    { dana: asal.dana, akun: `[${f.tanggal}] ${piutang}`, kredit: f.nominal },
+  ] : [
+    { dana: asal.dana, akun: rek ? labelRekening(rek) : null, debit: f.nominal },
+    { dana: asal.dana, akun: akunProgram, kredit: f.nominal },
+  ];
+  const salahTanggal = asal && f.tanggal < tglAsal;
+  const lebih = asal && f.nominal > sisa;
+  const perluCentang = asal && !bulanSama && asalTutup && !f.diBulanBerjalan;
+  const siap = asal && rek && f.nominal > 0 && !lebih && !salahTanggal && !perluCentang;
+
+  const simpan = async () => {
+    try {
+      const r = await keuangan.pengembalian({
+        jurnalAsalId: asal.id, tanggal: f.tanggal, rekeningCoaId: rek.coaId, nominal: f.nominal,
+        keterangan: f.ket || null, diBulanBerjalan: f.diBulanBerjalan,
+      });
+      const nomor = [...(r.alokasi || []), r.nomorBukti].join(" & ");
+      await Swal.fire({
+        icon: "success", title: "Pengembalian tersimpan",
+        html: `<b>${nomor}</b>${r.peringatan?.length ? "<br/><small>" + r.peringatan.join("<br/>") + "</small>" : ""}`,
+      });
+      setF({ ...kosong, tanggal: f.tanggal, rekId: f.rekId });
+      setMuat((x) => x + 1);
+      onSelesai?.();
+    } catch (e) {
+      Swal.fire({ icon: "error", title: "Pengembalian ditolak", text: errMsg(e) });
+    }
+  };
+
+  return (
+    <div className="grid md:grid-cols-2 gap-4">
+      <div className="space-y-3">
+        <div className="bg-amber-50 border border-amber-200 text-amber-900 text-sm rounded p-2">
+          Sisa uang penyaluran/operasional yang dikembalikan. <b>Bukan penerimaan baru</b>: penyaluran asal berkurang di
+          bulan penyaluran asal (jurnal asal tidak diedit) dan tidak tampil sebagai penerimaan di LPD.
+        </div>
+        <Field label="Penyaluran asal" hint="Hanya penyaluran/beban yang masih punya sisa. Ketik no. bukti, nama penerima, atau keterangan.">
+          <PilihGrup value={f.asalId} onChange={(v) => setF((s) => ({ ...s, asalId: v, nominal: 0, diBulanBerjalan: false }))}
+            options={opsi} placeholder={sumber == null ? "Memuat…" : `Cari penyaluran (${opsi.length})…`} />
+        </Field>
+        {asal && (
+          <div className="text-sm bg-gray-50 border rounded p-2 grid grid-cols-2 gap-x-3 gap-y-1">
+            <span className="text-gray-500">Dana / akun</span><span><DanaBadge dana={asal.dana} /> {asal.akun}</span>
+            <span className="text-gray-500">Nilai penyaluran</span><span className="tabular-nums">{rp(asal.nilai)}</span>
+            <span className="text-gray-500">Sudah dikembalikan</span><span className="tabular-nums">{rp(asal.sudahKembali)}</span>
+            <span className="text-gray-500">Sisa bisa dikembalikan</span><span className="tabular-nums font-semibold">{rp(sisa)}</span>
+          </div>
+        )}
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="Tanggal uang kembali"><input type="date" max={today()} min={tglAsal || undefined} className={inputCls} value={f.tanggal} onChange={(e) => set("tanggal", e.target.value)} /></Field>
+          <Field label="Nominal dikembalikan"><Nominal value={f.nominal} onChange={(v) => set("nominal", v)} /></Field>
+        </div>
+        <Field label="Masuk ke rekening" hint="Boleh berbeda dengan rekening pengirim penyaluran.">
+          <PilihGrup value={f.rekId} onChange={(v) => set("rekId", v)} options={opsiRekening(meta.rekening)} placeholder="Cari rekening…" />
+        </Field>
+        <Field label="Keterangan"><input className={inputCls} value={f.ket} onChange={(e) => set("ket", e.target.value)} placeholder="mis. sisa dana kegiatan" /></Field>
+        {asal && !bulanSama && asalTutup && (
+          <label className="flex items-start gap-2 text-sm bg-red-50 border border-red-200 text-red-800 rounded p-2">
+            <input type="checkbox" className="mt-1" checked={f.diBulanBerjalan} onChange={(e) => set("diBulanBerjalan", e.target.checked)} />
+            <span>Periode {bulanLabel(asal.periode)} sudah ditutup, jadi penyaluran tidak bisa dikurangi di bulan itu.
+              Centang untuk mencatat pengurangannya di bulan {bulanLabel(periodeKembali)}, atau buka kembali periodenya dulu.</span>
+          </label>
+        )}
+      </div>
+      <div className="space-y-3">
+        <Pratinjau baris={baris} judul={duaJurnal ? "Pratinjau 2 jurnal pengembalian" : "Pratinjau jurnal pengembalian"}
+          catatan={!asal ? null : duaJurnal
+            ? `Jurnal 1 bertanggal penyaluran asal (${tglAsal}) mengurangi penyaluran ${bulanLabel(asal.periode)}; jurnal 2 mencatat uang masuk ${f.tanggal}.`
+            : `Penyaluran berkurang di bulan ${bulanLabel(periodeKembali)}.`} />
+        {salahTanggal && <div className="text-sm text-red-600">Tanggal pengembalian tidak boleh sebelum tanggal penyaluran ({tglAsal}).</div>}
+        {lebih && <div className="text-sm text-red-600">Nominal melebihi sisa yang bisa dikembalikan ({rp(sisa)}).</div>}
+        <TombolSimpan disabled={!siap} onClick={simpan}>Simpan pengembalian</TombolSimpan>
+      </div>
+    </div>
+  );
+}
+FormPengembalian.propTypes = { meta: PropTypes.object, onSelesai: PropTypes.func };
+
+// ----------------------------------------------------------------------------------------------
 // Edit: ubah detail jurnal (GET /keuangan/jurnal/{id}) menjadi isian awal form. Mengembalikan null bila struktur
 // jurnal tidak cocok dengan form (mis. jurnal impor/lama berbaris banyak) — koreksinya lewat Daftar Jurnal.
 
@@ -851,11 +1221,13 @@ const pasangan = (d) => {
 };
 const benar = (v) => !!Number(v);
 
-function keFormAwal(tpl, d) {
+function keFormAwal(tpl, d, meta) {
   if (d.jenis !== tpl) return null;
   if (tpl === "PENERIMAAN") {
     const p2 = pasangan(d);
     if (!p2) return null;
+    // Penerimaan barang (debit Persediaan Barang, bukan rekening) tidak diedit lewat form: batalkan lalu input ulang.
+    if (!meta.rekening.some((r) => String(r.coaId) === String(p2.deb.coaId))) return null;
     const p = (d.penerimaan || [])[0] || {};
     const campaignId = p.campaign_id ?? d.campaignId;
     const dana = campaignId && d.dana === "INFAQ" ? CAMPAIGN : d.dana;
@@ -870,13 +1242,16 @@ function keFormAwal(tpl, d) {
   if (tpl === "PENYALURAN") {
     const p2 = pasangan(d);
     if (!p2) return null;
-    const dana = d.campaignId && d.dana === "INFAQ" ? CAMPAIGN : d.dana;
+    const akun = meta.akun.find((a) => String(a.id) === String(p2.deb.coaId));
     const rows = (d.penyaluran || []).map((x) => ({
       mustahikId: x.mustahikId ? String(x.mustahikId) : "", nama: x.namaPenerima || x.penerima || "",
       asnaf: x.asnaf || "", jumlah: Number(x.jumlah) || 0, jml: x.jmlPenerima || 1,
     }));
+    const dana = d.campaignId && d.dana === "INFAQ" ? CAMPAIGN : d.dana;
     return {
       tanggal: tglIso(d.tanggal), dana, jenis: dana === CAMPAIGN ? String(d.campaignId) : "",
+      // Bidang ikut bidang program yang tersimpan (supaya program langsung terlihat di dropdown).
+      bidang: akun ? akun.bidang || TANPA_BIDANG : SEMUA_BIDANG,
       akunId: p2.deb.coaId, rekId: p2.kre.coaId, ket: d.keterangan || "",
       rows: rows.length ? rows : [{ mustahikId: "", nama: "", asnaf: "", jumlah: debitDari(p2.deb), jml: 1 }],
     };
@@ -886,19 +1261,27 @@ function keFormAwal(tpl, d) {
     if (!p2 || d.dana !== "PENGELOLA") return null;
     return { tanggal: tglIso(d.tanggal), akunId: p2.deb.coaId, rekId: p2.kre.coaId, nominal: debitDari(p2.deb), ket: d.keterangan || "" };
   }
-  // TRANSFER_DANA: 4 baris — dana asal (antar dana D / rekening K) dan dana tujuan (rekening D / antar dana K).
-  const bs = barisAktif(d);
-  if (bs.length !== 4) return null;
-  const asal = d.dana;
-  const bA = bs.filter((b) => b.dana === asal);
-  const bT = bs.filter((b) => b.dana !== asal);
-  const rekA = bA.find((b) => kreditDari(b) > 0);
-  const rekT = bT.find((b) => debitDari(b) > 0);
-  if (bA.length !== 2 || bT.length !== 2 || !rekA || !rekT) return null;
-  return {
-    tanggal: tglIso(d.tanggal), asal, tujuan: rekT.dana, rekAsal: rekA.coaId, rekTujuan: rekT.coaId,
-    nominal: kreditDari(rekA), ket: d.keterangan || "",
-  };
+  if (tpl === "MUTASI_REKENING") {
+    const p2 = pasangan(d);
+    if (!p2) return null;
+    return { tanggal: tglIso(d.tanggal), rekAsal: p2.kre.coaId, rekTujuan: p2.deb.coaId, nominal: kreditDari(p2.kre), ket: d.keterangan || "" };
+  }
+  if (tpl === "TRANSFER_DANA") {
+    // TRANSFER_DANA: 4 baris — dana asal (antar dana D / rekening K) dan dana tujuan (rekening D / antar dana K).
+    const bs = barisAktif(d);
+    if (bs.length !== 4) return null;
+    const asal = d.dana;
+    const bA = bs.filter((b) => b.dana === asal);
+    const bT = bs.filter((b) => b.dana !== asal);
+    const rekA = bA.find((b) => kreditDari(b) > 0);
+    const rekT = bT.find((b) => debitDari(b) > 0);
+    if (bA.length !== 2 || bT.length !== 2 || !rekA || !rekT) return null;
+    return {
+      tanggal: tglIso(d.tanggal), asal, tujuan: rekT.dana, rekAsal: rekA.coaId, rekTujuan: rekT.coaId,
+      nominal: kreditDari(rekA), ket: d.keterangan || "",
+    };
+  }
+  return null;
 }
 
 // ----------------------------------------------------------------------------------------------
@@ -958,7 +1341,7 @@ function DetailJurnal({ id, onClose, onEdit, onBatal, bisaEdit }) {
         <div className="space-y-3 text-sm">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
             <div><div className="text-xs text-gray-500">Tanggal</div>{tglIso(d.tanggal)}</div>
-            <div><div className="text-xs text-gray-500">Jenis</div>{TEMPLATE.find((t) => t.id === d.jenis)?.nama || d.jenis}</div>
+            <div><div className="text-xs text-gray-500">Jenis</div>{NAMA_JENIS[d.jenis] || d.jenis}</div>
             <div><div className="text-xs text-gray-500">Dana</div><DanaBadge dana={d.dana} /></div>
             <div><div className="text-xs text-gray-500">Status</div><span className={`px-2 py-0.5 rounded text-xs ${STATUS_WARNA[d.status] || "bg-gray-100"}`}>{STATUS_LABEL[d.status] || d.status}</span></div>
           </div>
@@ -1005,9 +1388,29 @@ function DetailJurnal({ id, onClose, onEdit, onBatal, bisaEdit }) {
               </table>
             </div>
           )}
+          {(d.pengembalian || []).length > 0 && (
+            <div>
+              <div className="text-xs font-semibold text-gray-600 mb-1">Pengembalian dana</div>
+              <table className="w-full">
+                <tbody>
+                  {d.pengembalian.map((x) => (
+                    <tr key={x.id} className={`border-t ${x.status === "BATAL" ? "text-gray-400 line-through" : ""}`}>
+                      <td className="py-1 px-2">
+                        {tglIso(x.tanggal)} · asal {x.asalNomorBukti} · pengurang {x.kurangNomorBukti}
+                        {x.kasNomorBukti ? ` · kas ${x.kasNomorBukti}` : ""}
+                        <span className="text-xs text-gray-500"> · {x.rekening}{x.keterangan ? ` · ${x.keterangan}` : ""}</span>
+                      </td>
+                      <td className="px-2 text-right tabular-nums">{rp(x.nominal)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <div className="text-xs text-gray-500 mt-1">Membatalkan salah satu jurnal pengembalian (atau penyaluran asalnya) ikut membatalkan pasangannya.</div>
+            </div>
+          )}
           {d.status === "POSTED" && (
             <div className="flex justify-end gap-2 pt-2">
-              {bisaEdit && <Btn color="blue" onClick={() => { onClose(); onEdit({ id: d.id }); }}>Edit</Btn>}
+              {bisaEdit && d.jenis !== "PENGEMBALIAN" && <Btn color="blue" onClick={() => { onClose(); onEdit({ id: d.id }); }}>Edit</Btn>}
               <Btn color="red" onClick={async () => { if (await batalkanJurnal({ id: d.id, nomorBukti: d.nomorBukti })) { onClose(); onBatal(d.id); } }}>Batalkan jurnal</Btn>
             </div>
           )}
@@ -1050,7 +1453,8 @@ function RiwayatInput({ jenis, versi, edit, onEdit, onBatal }) {
 
   const setelahBatal = (id) => { setMuatUlang((x) => x + 1); onBatal(id); };
   const list = hasil.data || [];
-  const nama = TEMPLATE.find((t) => t.id === jenis)?.nama || jenis;
+  const nama = NAMA_JENIS[jenis] || jenis;
+  const bisaEdit = jenis !== "PENGEMBALIAN";
   const mulai = hasil.total ? (hasil.page - 1) * hasil.size + 1 : 0;
   const akhir = Math.min(hasil.total, hasil.page * hasil.size);
 
@@ -1121,7 +1525,7 @@ function RiwayatInput({ jenis, versi, edit, onEdit, onBatal }) {
               <th className="text-left py-2 px-2">Tanggal</th>
               <th className="text-left px-2">No. bukti</th>
               <th className="text-left px-2">Dana</th>
-              <th className="text-left px-2">{jenis === "PENERIMAAN" ? "Donatur" : jenis === "PENYALURAN" ? "Penerima" : "Pihak"}</th>
+              <th className="text-left px-2">{jenis === "PENERIMAAN" ? "Donatur" : jenis === "PENYALURAN" ? "Penerima" : jenis === "MUTASI_REKENING" ? "-" : "Pihak"}</th>
               <th className="text-left px-2">Keterangan</th>
               <th className="text-right px-2">Nominal</th>
               <th className="text-center px-2">Status</th>
@@ -1145,7 +1549,7 @@ function RiwayatInput({ jenis, versi, edit, onEdit, onBatal }) {
                     edit?.id === j.id
                       ? <span className="text-xs text-amber-700">sedang diedit</span>
                       : <>
-                        <button type="button" className="text-blue-600 hover:underline" onClick={() => onEdit(j)}>Edit</button>
+                        {bisaEdit && <button type="button" className="text-blue-600 hover:underline" onClick={() => onEdit(j)}>Edit</button>}
                         <button type="button" className="text-red-600 hover:underline" onClick={async () => { if (await batalkanJurnal(j)) setelahBatal(j.id); }}>Batal</button>
                       </>
                   )}
@@ -1189,6 +1593,8 @@ export default function InputJurnal() {
   const [meta, setMeta] = useState(null);
   const [alokasi, setAlokasi] = useState([]);
   const [tpl, setTpl] = useState("PENERIMAAN");
+  // Di tab Penerimaan: false = penerimaan dana baru, true = pengembalian dana (sisa penyaluran).
+  const [kembali, setKembali] = useState(false);
   const [err, setErr] = useState("");
   const [edit, setEdit] = useState(null); // { id, nomorBukti, awal }
   const [versi, setVersi] = useState(0);
@@ -1208,19 +1614,21 @@ export default function InputJurnal() {
     return () => window.removeEventListener("focus", muatAlokasi);
   }, [dispatch]);
 
-  const gantiTpl = (id) => { setEdit(null); setTpl(id); };
+  const gantiTpl = (id) => { setEdit(null); setTpl(id); if (id !== "PENERIMAAN") setKembali(false); };
+  const modeKembali = tpl === "PENERIMAAN" && kembali;
+  const jenisRiwayat = modeKembali ? "PENGEMBALIAN" : tpl;
   const batalEdit = () => setEdit(null);
   const selesai = () => { setEdit(null); setVersi((v) => v + 1); };
 
   const mulaiEdit = async (j) => {
     try {
       const d = await keuangan.jurnalDetail(j.id);
-      const awal = keFormAwal(tpl, d);
+      const awal = keFormAwal(tpl, d, meta);
       if (!awal) {
         Swal.fire({
           icon: "info",
           title: "Tidak bisa diedit lewat form",
-          text: `Susunan baris jurnal ${d.nomorBukti} tidak sesuai form ${TEMPLATE.find((t) => t.id === tpl)?.nama} (mis. jurnal impor/lama dengan banyak baris). Koreksi lewat Daftar Jurnal: batalkan lalu input ulang.`,
+          text: `Susunan baris jurnal ${d.nomorBukti} tidak sesuai form ${NAMA_JENIS[tpl] || tpl} (mis. jurnal impor/lama dengan banyak baris, atau penerimaan berupa barang). Koreksi dengan membatalkan jurnalnya lalu input ulang.`,
         });
         return;
       }
@@ -1235,12 +1643,13 @@ export default function InputJurnal() {
     if (!meta) return null;
     const k = `${tpl}-${edit?.id || "baru"}`;
     const umum = { meta, awal: edit?.awal, edit, onSelesai: selesai, onBatalEdit: batalEdit };
+    if (tpl === "PENERIMAAN" && kembali) return <FormPengembalian key="kembali" meta={meta} onSelesai={selesai} />;
     if (tpl === "PENERIMAAN") return <FormPenerimaan key={k} {...umum} alokasi={alokasi} campaign={campaign} onJenisZakatBaru={muatUlangJenisZakat} />;
     if (tpl === "PENYALURAN") return <FormPenyaluran key={k} {...umum} campaign={campaign} />;
     if (tpl === "BEBAN_OPERASIONAL") return <FormBeban key={k} {...umum} />;
-    return <FormTransfer key={k} {...umum} />;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [meta, tpl, alokasi, campaign, edit]);
+    if (tpl === "TRANSFER_DANA") return <FormTransfer key={k} {...umum} />;
+    return <FormMutasi key={k} {...umum} />;
+  }, [meta, tpl, kembali, alokasi, campaign, edit]);
 
   return (
     <div ref={atas}>
@@ -1261,10 +1670,21 @@ export default function InputJurnal() {
           <Btn color="gray" onClick={batalEdit}>Batal edit</Btn>
         </div>
       )}
+      {tpl === "PENERIMAAN" && !edit && (
+        <div className="flex flex-wrap gap-2 mb-3" role="radiogroup" aria-label="Jenis penerimaan">
+          {[[false, "Penerimaan dana baru", "Zakat, infaq, DSKL, campaign"], [true, "Pengembalian dana", "Sisa penyaluran/operasional yang dikembalikan"]].map(([v, n, info]) => (
+            <button key={n} type="button" role="radio" aria-checked={kembali === v} onClick={() => setKembali(v)}
+              className={`text-left px-3 py-1.5 rounded-lg border text-sm ${kembali === v ? "bg-green-600 text-white border-green-600" : "bg-white hover:bg-green-50"}`}>
+              <div className="font-semibold">{n}</div>
+              <div className={`text-xs ${kembali === v ? "text-green-100" : "text-gray-500"}`}>{info}</div>
+            </button>
+          ))}
+        </div>
+      )}
       <div className={`bg-white shadow rounded-lg p-4 ${edit ? "ring-2 ring-amber-300" : ""}`}>
         {form || <div className="text-gray-400">Memuat data referensi…</div>}
       </div>
-      <RiwayatInput jenis={tpl} versi={versi} edit={edit} onEdit={mulaiEdit}
+      <RiwayatInput jenis={jenisRiwayat} versi={versi} edit={edit} onEdit={mulaiEdit}
         onBatal={(id) => { if (edit?.id === id) setEdit(null); }} />
     </div>
   );

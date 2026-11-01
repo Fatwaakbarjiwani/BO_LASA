@@ -12,14 +12,14 @@ const BULAN = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "O
 const NAMA_BULAN = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
 const namaBulan = (p) => BULAN[parseInt(p.slice(5), 10) - 1] || p;
 const namaPanjang = (p) => NAMA_BULAN[parseInt(p.slice(5), 10) - 1] || p;
-const TIPE = { HEADER: "header", ITEM: "item", TOTAL: "total" };
+const TIPE = { HEADER: "header", SUB: "sub", ITEM: "item", TOTAL: "total" };
 const UKURAN = 25;
 
 const INFO = {
   NERACA: {
     judul: "Neraca",
     file: "Neraca",
-    ket: "Saldo akhir tiap akun per akhir bulan (saldo awal + seluruh jurnal POSTED s/d bulan tsb.), gabungan Zakat, Infaq, DSKL, dan Pengelola. Wakaf punya laporan sendiri di menu Wakaf.",
+    ket: "Format neraca umum: Aset Lancar & Tidak Lancar, Liabilitas jangka pendek & panjang, dan Saldo Dana per dana. Saldo akhir tiap akun per akhir bulan (saldo awal + seluruh jurnal POSTED s/d bulan tsb.), gabungan Zakat, Infaq, DSKL, dan Pengelola. Kelompok akun diatur di Daftar Akun (kolom Grup neraca). Wakaf punya laporan sendiri di menu Wakaf.",
   },
   POSISI: {
     judul: "Posisi Keuangan",
@@ -140,7 +140,7 @@ export default function NeracaPage({ mode = "NERACA" }) {
                     </tr>
                   ) : (
                     <tr key={`${l.label}-${i}`}>
-                      <td colSpan={kolom.length + 1} className="py-2 px-3 font-bold text-green-800 bg-green-50">{l.label}</td>
+                      <td colSpan={kolom.length + 1} className={l.style === "SUB" ? "py-1.5 px-3 pl-5 font-semibold text-gray-700" : "py-2 px-3 font-bold text-green-800 bg-green-50"}>{l.label}</td>
                     </tr>
                   ),
                 )}

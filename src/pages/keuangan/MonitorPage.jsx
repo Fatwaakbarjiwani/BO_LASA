@@ -161,6 +161,12 @@ export default function MonitorPage() {
                     <select className={inputCls} value={k.nilai} onChange={(e) => ubahKonfig(k.kunci, e.target.value)}>
                       <option>PANTAU</option><option>TEGAS</option>
                     </select>
+                  ) : k.kunci === "cek_saldo_kas" ? (
+                    <select className={inputCls} value={k.nilai} onChange={(e) => ubahKonfig(k.kunci, e.target.value)}>
+                      <option value="TOLAK">TOLAK — penyaluran/beban yang membuat kas dana minus ditolak</option>
+                      <option value="PERINGATAN">PERINGATAN — tetap disimpan, diberi peringatan</option>
+                      <option value="MATI">MATI — tidak dicek</option>
+                    </select>
                   ) : (
                     <input key={`${k.kunci}-${k.nilai}`} type="date" className={inputCls} defaultValue={k.nilai} onBlur={(e) => e.target.value && e.target.value !== k.nilai && ubahKonfig(k.kunci, e.target.value)} />
                   )}

@@ -7,13 +7,16 @@ import { barisKopCsv, simpanCsv } from "./kopLaporan";
 import { cetakLaporanBulanan } from "./cetakLaporan";
 import RingkasanDana from "./RingkasanDana";
 
+// Tab Dana: LPD per dana (pilih dananya). Tab Campaign & Bidang punya LPD sendiri; tab Bank/Tunai tidak punya LPD.
 const FUND = [
   { id: "ZAKAT", nama: "Zakat" },
   { id: "INFAQ", nama: "Infaq / Shodaqoh" },
   { id: "DSKL", nama: "DSKL" },
   { id: "OPERASIONAL", nama: "Operasional (Amil)" },
-  { id: "CAMPAIGN", nama: "Campaign (Infaq Terikat)" },
 ];
+const FUND_TAB = { campaign: "CAMPAIGN", bidang: "BIDANG" };
+/** Dana buku besar untuk "Lacak sumber" (CAMPAIGN & BIDANG lintas dana: tanpa saringan dana). */
+const DANA_LACAK = { ZAKAT: "ZAKAT", INFAQ: "INFAQ", DSKL: "DSKL", OPERASIONAL: "PENGELOLA" };
 const BULAN = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
 const namaBulan = (p) => BULAN[parseInt(p.slice(5), 10) - 1] || p;
 const NAMA_BULAN = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
@@ -21,15 +24,26 @@ const namaPanjang = (p) => NAMA_BULAN[parseInt(p.slice(5), 10) - 1] || p;
 const jumlah = (arr) => arr.reduce((s, v) => s + (v || 0), 0);
 
 export default function LpdPage({ onLacak }) {
-  const [fund, setFund] = useState("ZAKAT");
+  const [tab, setTab] = useState("dana"); // tab Ringkasan; tabel LPD di bawah mengikuti tab ini
+  const [danaPilih, setDanaPilih] = useState("ZAKAT");
   const [year, setYear] = useState(new Date().getFullYear());
   const [r, setR] = useState(null);
   const [loading, setLoading] = useState(false);
   const [bulan, setBulan] = useState(""); // "" = semua bulan (tahunan); "2026-09" = satu bulan saja
+  const fund = tab === "dana" ? danaPilih : FUND_TAB[tab] || null;
+  const tanpaSaldo = fund === "BIDANG"; // bidang bukan dana: tanpa surplus & saldo
 
   useEffect(() => {
+    // Respons terlambat dari tab/dana sebelumnya diabaikan, supaya tabel tidak tertinggal di data Zakat.
+    let batal = false;
+    setR(null);
+    if (!fund) return undefined;
     setLoading(true);
-    keuangan.lpd(fund, year).then(setR).catch((e) => Swal.fire("Gagal", errMsg(e), "error")).finally(() => setLoading(false));
+    keuangan.lpd(fund, year)
+      .then((x) => { if (!batal) setR(x); })
+      .catch((e) => { if (!batal) Swal.fire("Gagal", errMsg(e), "error"); })
+      .finally(() => { if (!batal) setLoading(false); });
+    return () => { batal = true; };
   }, [fund, year]);
 
   // Bulan terpilih: tabel, CSV, dan cetak hanya memuat kolom bulan itu (tanpa kolom Jumlah).
@@ -53,6 +67,7 @@ export default function LpdPage({ onLacak }) {
       g.lines.forEach((l) => rows.push({ tipe: "item", label: l.label, nilai: l.monthly }));
     });
     rows.push({ tipe: "total", label: "Jumlah Pendayagunaan", nilai: r.usageTotals });
+    if (tanpaSaldo) return rows;
     rows.push({ tipe: "total", label: "Surplus (Defisit)", nilai: r.surplus });
     rows.push({ tipe: "item", label: "Saldo Awal", nilai: r.openingBalance, jumlah: false });
     rows.push({ tipe: "total", label: "Saldo Akhir", nilai: r.closingBalance, jumlah: false });
@@ -98,7 +113,7 @@ export default function LpdPage({ onLacak }) {
               type="button"
               className="hover:underline hover:text-blue-700"
               title={`Lacak jurnal sumber ${label} · ${r.months[i]}`}
-              onClick={() => onLacak({ dana: fund, periode: r.months[i], akun: accountId, akunLabel: label })}
+              onClick={() => onLacak({ dana: DANA_LACAK[fund] || "", periode: r.months[i], akun: accountId, akunLabel: label })}
             >
               {num(v)}
             </button>
@@ -115,9 +130,11 @@ export default function LpdPage({ onLacak }) {
       <Judul
         aksi={
           <>
-            <select className={inputCls} value={fund} onChange={(e) => setFund(e.target.value)}>
-              {FUND.map((f) => <option key={f.id} value={f.id}>{f.nama}</option>)}
-            </select>
+            {tab === "dana" && (
+              <select className={inputCls} value={danaPilih} onChange={(e) => setDanaPilih(e.target.value)} title="Dana yang ditampilkan di tabel LPD">
+                {FUND.map((f) => <option key={f.id} value={f.id}>{f.nama}</option>)}
+              </select>
+            )}
             <input type="number" className={`${inputCls} w-28`} value={year} onChange={(e) => { setYear(e.target.value); setBulan(""); }} />
             <select className={`${inputCls} w-44`} value={bulan} onChange={(e) => setBulan(e.target.value)} title="Tampilkan seluruh bulan atau satu bulan saja">
               <option value="">Semua bulan (tahunan)</option>
@@ -135,8 +152,13 @@ export default function LpdPage({ onLacak }) {
         dihitung mundur dari saldo awal.
         {onLacak && <> Klik angka pada baris akun untuk melacak jurnal sumbernya.</>}
       </p>
-      <RingkasanDana year={year} bulan={bulan} />
-      {loading && <div className="text-gray-400">Memuat…</div>}
+      <RingkasanDana year={year} bulan={bulan} tab={tab} onTab={setTab} />
+      {!fund && (
+        <div className="bg-gray-50 border text-gray-600 text-sm p-3 rounded">
+          Tab Bank/Tunai hanya berupa ringkasan saldo rekening di atas. Pilih tab Dana, Campaign, atau Bidang untuk melihat tabel LPD.
+        </div>
+      )}
+      {fund && loading && <div className="text-gray-400">Memuat…</div>}
       {r && n === 0 && !loading && <div className="bg-yellow-50 border border-yellow-200 p-4 rounded">Belum ada data untuk {r.reportTitle} tahun {r.year}.</div>}
       {r && n > 0 && (
         <div className="overflow-x-auto bg-white shadow rounded-lg">
@@ -158,9 +180,13 @@ export default function LpdPage({ onLacak }) {
                 <FragmentGrup key={gi} g={g} kolom={kolomTabel} Baris={Baris} />
               ))}
               <Baris label="Jumlah Pendayagunaan" vals={r.usageTotals} tebal />
-              <Baris label="Surplus (Defisit)" vals={r.surplus} tebal />
-              <Baris label="Saldo Awal" vals={r.openingBalance} total={false} />
-              <Baris label="Saldo Akhir" vals={r.closingBalance} tebal total={false} />
+              {!tanpaSaldo && (
+                <>
+                  <Baris label="Surplus (Defisit)" vals={r.surplus} tebal />
+                  <Baris label="Saldo Awal" vals={r.openingBalance} total={false} />
+                  <Baris label="Saldo Akhir" vals={r.closingBalance} tebal total={false} />
+                </>
+              )}
             </tbody>
           </table>
         </div>
