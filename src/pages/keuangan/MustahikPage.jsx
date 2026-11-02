@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import PropTypes from "prop-types";
 import Swal from "sweetalert2";
 import { keuangan, errMsg } from "../../services/keuanganApi";
 import { Btn, Field, Judul, Modal, Tabel, inputCls } from "./ui";
@@ -20,8 +21,12 @@ const kosong = (jenisPenerima) => ({
   nik: "", alamat: "", telepon: "", asnaf: "", peruntukan: "", samarkan: false, terverifikasi: false,
 });
 
-export default function MustahikPage() {
-  const [jenis, setJenis] = useState("MUSTAHIK");
+/**
+ * `jenisTetap`: kunci halaman ini ke satu jenis penerima saja (tanpa tab pemilih), dipakai saat
+ * dipasang di dua tempat berbeda — Mustahik di menu Administrasi, Mauquf 'Alaih di menu Wakaf.
+ */
+export default function MustahikPage({ jenisTetap } = {}) {
+  const [jenis, setJenis] = useState(jenisTetap || "MUSTAHIK");
   const [rows, setRows] = useState([]);
   const [q, setQ] = useState("");
   const [asnaf, setAsnaf] = useState("");
@@ -85,14 +90,16 @@ export default function MustahikPage() {
 
   return (
     <div>
-      <div className="flex gap-2 mb-3">
-        {Object.entries(JENIS).map(([k, v]) => (
-          <button key={k} onClick={() => { setJenis(k); setAsnaf(""); }}
-            className={`px-4 py-2 rounded-lg border text-sm font-semibold transition ${jenis === k ? "bg-blue-600 text-white border-blue-600" : "bg-white hover:bg-blue-50"}`}>
-            {v.label}
-          </button>
-        ))}
-      </div>
+      {!jenisTetap && (
+        <div className="flex gap-2 mb-3">
+          {Object.entries(JENIS).map(([k, v]) => (
+            <button key={k} onClick={() => { setJenis(k); setAsnaf(""); }}
+              className={`px-4 py-2 rounded-lg border text-sm font-semibold transition ${jenis === k ? "bg-blue-600 text-white border-blue-600" : "bg-white hover:bg-blue-50"}`}>
+              {v.label}
+            </button>
+          ))}
+        </div>
+      )}
       <Judul aksi={<Btn onClick={() => setForm(kosong(jenis))}>{JENIS[jenis].tombol}</Btn>}>{JENIS[jenis].judul}</Judul>
       {mauquf && (
         <div className="bg-amber-50 border border-amber-200 text-amber-800 text-sm rounded p-2 mb-3">
@@ -149,3 +156,4 @@ export default function MustahikPage() {
     </div>
   );
 }
+MustahikPage.propTypes = { jenisTetap: PropTypes.string };

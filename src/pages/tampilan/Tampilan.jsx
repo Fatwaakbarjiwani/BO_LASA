@@ -81,7 +81,8 @@ export default function Tampilan() {
   const [activeCampaignsPage, setActiveCampaignsPage] = useState(0);
   const [activeCampaignsPerPage] = useState(10);
 
-  const baseUrl = "https://skyconnect.lazis-sa.org";
+  // Ikuti VITE_API_URL (tanpa akhiran /api) agar lokal tidak memanggil server produksi.
+  const baseUrl = (import.meta.env.VITE_API_URL || "").replace(/\/api\/?$/, "");
 
   const handleImageUpload = (e, imageKey, previewKey) => {
     const file = e.target.files[0];

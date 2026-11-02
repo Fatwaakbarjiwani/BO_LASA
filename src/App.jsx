@@ -22,6 +22,7 @@ import Amil from "./pages/amil/admin/Amil";
 import Campaign2 from "./pages/campaign/subAdmin/Campaign2";
 import Dashboard2 from "./pages/dashboard/subAdmin/Dashboard2";
 import Administrasi from "./pages/administrasi/Administrasi";
+import Wakaf from "./pages/wakaf/Wakaf";
 import Tampilan from "./pages/tampilan/Tampilan";
 import Agen from "./pages/agen/Agen";
 import LogCoa from "./pages/coa/LogCoa";
@@ -105,6 +106,14 @@ function AppContent() {
                     }
                   />
                   <Route
+                    path="/wakaf"
+                    element={
+                      <Protected>
+                        <Wakaf />
+                      </Protected>
+                    }
+                  />
+                  <Route
                     path="/coa-log"
                     element={
                       <Protected>
@@ -177,6 +186,14 @@ function AppContent() {
                     element={
                       <Protected>
                         <Administrasi />
+                      </Protected>
+                    }
+                  />
+                  <Route
+                    path="/wakaf"
+                    element={
+                      <Protected>
+                        <Wakaf />
                       </Protected>
                     }
                   />
